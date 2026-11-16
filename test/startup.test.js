@@ -4,7 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { startFails, startServer, tmpDir, removeDir, SECRET } = require('./helpers');
+const { startFails, startServer, hostedEnv, raw, tmpDir, removeDir, SECRET } = require('./helpers');
 
 const GOOD = {
   APP_BASE_URL: 'https://little.example.test',
@@ -111,35 +111,101 @@ test('a refusal lists every problem at once', async () => {
 
 test('a valid https configuration starts, and the config endpoint reports it', async () => {
   const srv = await startServer({
-    env: {
-      APP_BASE_URL: GOOD.APP_BASE_URL,
-      LITTLE_WINS_FAKE_SSO: undefined,
-      GOOGLE_CLIENT_ID: 'id',
-      GOOGLE_CLIENT_SECRET: 'secret',
-      SIGNUP_MODE: 'invite',
-    },
+    env: hostedEnv({ SIGNUP_MODE: 'invite', FORWARDED_ALLOW_IPS: '127.0.0.1,::1' }),
   });
+  // Behind a trusted proxy that says the request came in over https, the app answers normally.
+  const viaProxy = { 'X-Forwarded-Proto': 'https' };
   try {
-    const cfg = (await srv.api(null, '/api/config')).json;
+    const cfg = (await srv.api(null, '/api/config', undefined, { headers: viaProxy })).json;
     assert.deepEqual(cfg.providers, ['google']);
     assert.equal(cfg.signupMode, 'invite');
     assert.ok(fs.existsSync(srv.dbPath), 'a started server creates its database');
-    const login = await fetch(`${srv.base}/auth/google/login`, { redirect: 'manual' });
+    const login = await fetch(`${srv.base}/auth/google/login`, {
+      redirect: 'manual',
+      headers: viaProxy,
+    });
     assert.equal(login.status, 303);
     assert.match(login.headers.get('location'), /^https:\/\/accounts\.google\.com\//);
     assert.match(login.headers.get('set-cookie'), /Secure/, 'cookies are Secure off localhost');
     assert.equal(
-      (await fetch(`${srv.base}/auth/github/login`, { redirect: 'manual' })).status,
+      (await fetch(`${srv.base}/auth/github/login`, { redirect: 'manual', headers: viaProxy }))
+        .status,
       404,
       'a provider that is not configured is unknown',
     );
     assert.equal(
-      (await fetch(`${srv.base}/_fake-sso/google/authorize`)).status,
+      (await fetch(`${srv.base}/_fake-sso/google/authorize`, { headers: viaProxy })).status,
       404,
       'no fake provider',
     );
   } finally {
     await srv.close();
+  }
+});
+
+test('outside localhost, plain http is redirected to APP_BASE_URL and only /healthz answers', async () => {
+  const srv = await startServer({ env: hostedEnv() });
+  try {
+    for (const [p, hostile] of [
+      ['/', 'evil.example'],
+      ['/api/state?week=2024-01-01', 'evil.example'],
+      ['/auth/google/login', 'evil.example:8080'],
+    ]) {
+      const r = await raw(srv, p, { headers: { Host: hostile } });
+      assert.equal(r.status, 308, p);
+      assert.equal(
+        r.headers.get('location'),
+        `https://little.example.test${p}`,
+        `${p}: the redirect uses APP_BASE_URL, never the Host header`,
+      );
+      assert.ok(!r.headers.get('location').includes('evil'), 'the Host is never echoed');
+    }
+    const post = await raw(srv, '/api/logout', {
+      method: 'POST',
+      headers: { Host: 'evil.example', 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    assert.equal(post.status, 308, 'writes are redirected too, never handled over http');
+    const plain = await fetch(`${srv.base}/api/config`, { redirect: 'manual' });
+    assert.equal(plain.status, 308);
+    assert.equal(plain.headers.get('location'), 'https://little.example.test/api/config');
+
+    const health = await raw(srv, '/healthz', { headers: { Host: 'evil.example' } });
+    assert.equal(health.status, 200, '/healthz answers over plain http');
+    assert.deepEqual(JSON.parse(health.text), { status: 'ok' });
+  } finally {
+    await srv.close();
+  }
+});
+
+test('X-Forwarded-Proto: https from an untrusted peer does not lift the redirect', async () => {
+  for (const FORWARDED_ALLOW_IPS of [undefined, '10.1.2.3']) {
+    const srv = await startServer({ env: hostedEnv({ FORWARDED_ALLOW_IPS }) });
+    try {
+      const r = await raw(srv, '/api/config', { headers: { 'X-Forwarded-Proto': 'https' } });
+      assert.equal(r.status, 308, `FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS}`);
+    } finally {
+      await srv.close();
+    }
+  }
+});
+
+test('behind a trusted proxy that forwards https, the API answers normally', async () => {
+  for (const FORWARDED_ALLOW_IPS of ['127.0.0.1', '*']) {
+    const srv = await startServer({ env: hostedEnv({ FORWARDED_ALLOW_IPS }) });
+    try {
+      const headers = { 'X-Forwarded-Proto': 'https', Host: 'little.example.test' };
+      const r = await raw(srv, '/api/config', { headers });
+      assert.equal(r.status, 200, `FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS}`);
+      assert.deepEqual(JSON.parse(r.text).providers, ['google']);
+      assert.equal((await raw(srv, '/', { headers })).status, 200, 'the page too');
+      const plain = await raw(srv, '/api/config', {
+        headers: { 'X-Forwarded-Proto': 'http', Host: 'little.example.test' },
+      });
+      assert.equal(plain.status, 308, 'a proxy that says http is still redirected');
+    } finally {
+      await srv.close();
+    }
   }
 });
 

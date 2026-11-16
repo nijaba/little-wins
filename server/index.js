@@ -18,10 +18,14 @@ const { createAuth } = require('./auth');
 const { createRouter } = require('./routes');
 const { serveStatic } = require('./static');
 const { handleFakeSso } = require('./fake-sso');
+const { clientInfo, setSecurityHeaders, redirectToHttps } = require('./web');
 
 const repo = createRepo(db);
 const sessions = createSessions(db);
 const limiter = createRateLimiter(config.rateLimit);
+const { reads, writes, windowMs } = config.apiRateLimit;
+const readLimiter = createRateLimiter({ max: reads, windowMs });
+const writeLimiter = createRateLimiter({ max: writes, windowMs });
 const auth = createAuth({ repo, sessions, limiter, clientIp });
 const handleApi = createRouter({ repo, sessions, limiter, clientIp });
 
@@ -29,6 +33,15 @@ http
   .createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://x');
+      req.lw = clientInfo(req);
+      setSecurityHeaders(res);
+      if (redirectToHttps(req, res, req.lw, url.pathname)) return;
+
+      if (url.pathname === '/healthz') {
+        db.prepare('SELECT 1').get(); // throws (500) if the database is unusable
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        return res.end('{"status":"ok"}');
+      }
       const auth_ = /^\/auth\/(google|github)\/(login|callback)$/.exec(url.pathname);
       if (auth_ && req.method === 'GET') {
         return auth_[2] === 'login'
@@ -37,7 +50,15 @@ http
       }
       if (config.fakeSso && url.pathname.startsWith('/_fake-sso/'))
         return await handleFakeSso(req, res, url);
-      if (url.pathname.startsWith('/api/')) return await handleApi(req, res);
+      if (url.pathname.startsWith('/api/')) {
+        const write = req.method !== 'GET';
+        const wait = (write ? writeLimiter : readLimiter).hit(clientIp(req));
+        if (wait) {
+          res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': String(wait) });
+          return res.end(JSON.stringify({ error: messages.tooManyTries(wait) }));
+        }
+        return await handleApi(req, res);
+      }
       if (req.method === 'GET' || req.method === 'HEAD') return serveStatic(req, res);
       res.writeHead(405, { Allow: 'GET, HEAD' });
       res.end();

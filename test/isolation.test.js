@@ -185,6 +185,11 @@ const cases = () => {
       [{ child_id: ids.child }, 404],
       [{ child_id: ids.child2 }, 404],
     ],
+    // B's owner names A's family: the confirmation must match B's own family, so it is refused.
+    '/api/family/delete': [
+      [{ confirm: `${SECRET_WORD} Family` }, 400],
+      [{ family_id: fidA, id: fidA, confirm: `${SECRET_WORD} Family` }, 400],
+    ],
     '/api/session/revoke': [
       [{ id: ids.childSession }, 404],
       [{ id: ids.parentSession }, 404],
@@ -273,4 +278,30 @@ test('a parent of A is a parent of A only: A2 cannot reach B either', async () =
     404,
   );
   assert.ok((await srv.api(B.jar, '/api/state')).json.items.some((i) => i.id === bItems.target));
+});
+
+// Keep this last: it deletes family B.
+test("B's owner deleting with their own family name deletes B only, never A", async () => {
+  const beforeDb = dump(fidA);
+  const beforeView = await aView();
+  const r = await srv.api(B.jar, '/api/family/delete', {
+    family_id: fidA,
+    id: fidA,
+    confirm: 'B renamed',
+  });
+  assert.equal(r.status, 200, r.text);
+  assert.ok(!r.text.includes(SECRET_WORD));
+  assert.equal(dump(fidA), beforeDb, "A's data is unchanged");
+  assert.equal(await aView(), beforeView, 'A sees exactly what it saw');
+  assert.equal(
+    srv.sql((db) => db.prepare('SELECT COUNT(*) n FROM families').get().n),
+    1,
+    'only A is left',
+  );
+  assert.equal((await srv.api(B.jar, '/api/state')).status, 401, 'B is gone');
+  assert.equal((await srv.api(kidDevB.jar, '/api/state')).status, 401);
+  assert.equal(
+    (await srv.api(A.jar, `/api/state?child=${ids.child}`)).json.family.name,
+    `${SECRET_WORD} Family`,
+  );
 });

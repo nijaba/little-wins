@@ -32,6 +32,11 @@ const sessionCookie = (token) =>
 const clearSessionCookie = () => `${config.cookies.session}=; ${config.cookies.attrs}; Max-Age=0`;
 
 function createSessions(db) {
+  // Devices are part of a family's state, so adding or removing one changes its version.
+  const bump = (fid) => {
+    if (fid != null) db.prepare('UPDATE families SET version=version+1 WHERE id=?').run(fid);
+  };
+
   /**
    * Creates a session and returns its id and Set-Cookie value. `owner` is
    * { kind: 'parent', userId, familyId|null } or { kind: 'child', familyId, childId }.
@@ -59,6 +64,7 @@ function createSessions(db) {
           now,
         ).lastInsertRowid,
     );
+    bump(owner.familyId);
     return { id, cookie: sessionCookie(token) };
   }
 
@@ -102,10 +108,13 @@ function createSessions(db) {
   /** Attaches a family to a parent session that was setting one up. */
   function joinFamily(sessionId, familyId) {
     db.prepare('UPDATE sessions SET family_id=? WHERE id=?').run(familyId, sessionId);
+    bump(familyId);
   }
 
   function end(sessionId) {
+    const s = db.prepare('SELECT family_id FROM sessions WHERE id=?').get(sessionId);
     db.prepare('DELETE FROM sessions WHERE id=?').run(sessionId);
+    bump(s?.family_id);
   }
 
   return { create, auth, joinFamily, end };

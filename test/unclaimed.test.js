@@ -2,9 +2,15 @@
 // allowlisted parent may claim it; everyone else gets their own setup.
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
-const { jar, startServer, tmpDir } = require('./helpers');
+const { ROOT, jar, startServer, tmpDir } = require('./helpers');
+
+/** The number of migrations in server/db.js: each is one comment "// N:" in the list. */
+const migrationCount = () =>
+  [...fs.readFileSync(path.join(ROOT, 'server', 'db.js'), 'utf8').matchAll(/^ {2}\/\/ (\d+):/gm)]
+    .length;
 
 const today = new Date().toLocaleDateString('en-CA');
 
@@ -75,7 +81,11 @@ for (const [label, version, childName, expectedChild] of [
         );
         assert.ok(dbRows(srv, 'SELECT * FROM items').every((i) => i.active === 1 && i.family_id));
         assert.equal(dbRows(srv, 'SELECT * FROM sessions').length, 0, 'old PIN sessions are gone');
-        assert.equal(dbRows(srv, 'PRAGMA user_version')[0].user_version, 2);
+        assert.equal(
+          dbRows(srv, 'PRAGMA user_version')[0].user_version,
+          migrationCount(),
+          'migrated to the latest schema version',
+        );
       } finally {
         await srv.close();
       }

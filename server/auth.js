@@ -177,18 +177,29 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
     if (membership) return { userId: user.id, familyId: membership.family_id };
 
     const invite = inviteToken ? repo.findInvite(inviteToken) : null;
-    if (invite && repo.useInvite(invite.id)) {
+    if (
+      invite &&
+      repo.count(invite.family_id, 'parents') < config.limits.parents &&
+      repo.useInvite(invite.id)
+    ) {
       repo.addMember(invite.family_id, user.id, 'parent');
+      repo.bump(invite.family_id);
       return { userId: user.id, familyId: invite.family_id };
     }
 
     const allowlisted = allows(config.allowlist, identity);
-    if (!allowlisted && config.signupMode !== 'open') return null;
+    if (!allowlisted && config.signupMode !== 'open') {
+      // An operator may sign in to see the operator page without a family.
+      return allows(config.operatorAllowlist, identity)
+        ? { userId: user.id, familyId: null }
+        : null;
+    }
     // Only an allowlisted parent may claim a family without parents (migrated data):
     // with open sign-up, a stranger must never land in someone else's family.
     const unclaimed = allowlisted ? repo.unclaimedFamily() : null;
     if (unclaimed) {
       repo.addMember(unclaimed, user.id, 'owner');
+      repo.bump(unclaimed);
       return { userId: user.id, familyId: unclaimed };
     }
     return { userId: user.id, familyId: null };

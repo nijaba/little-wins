@@ -32,6 +32,9 @@ module.exports = {
   notYourself: "You can't do that to yourself",
   codeInvalid:
     "That code doesn't work. It may have expired or been used. Ask a parent for a new one.",
+  limitReached: (what) => `This family has reached its limit for ${what}.`,
+  confirmFamilyName: 'Type the family name exactly to confirm.',
+  operatorOnly: 'Only operators can see this',
   inviteInvalid: "This invite link doesn't work. It may have expired or been used.",
 
   refusingToStart: (problems) =>

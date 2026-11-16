@@ -32,6 +32,32 @@ window.STRINGS = {
     inviteInvalid: "This invite link doesn't work. It may have expired or been used.",
     notNow: 'Not now',
     networkError: "Can't reach the server. Try again.",
+    familyDeleted: 'Family deleted.',
+  },
+  legal: { privacy: 'Privacy', terms: 'Terms' },
+  operator: {
+    title: 'Operator',
+    help: 'Numbers about this installation. Family content is never shown here.',
+    loading: 'Loading…',
+    refresh: 'Refresh',
+    failed: "Couldn't load the numbers. Try again.",
+    families: 'Families',
+    unclaimedFamilies: 'Unclaimed families',
+    parents: 'Parents',
+    children: 'Children',
+    devices: 'Devices',
+    activeDevices30d: 'Active devices (30 days)',
+    entries: 'Entries',
+    dbSize: 'Database size',
+    mb: (n) => `${n} MB`,
+    version: 'Version',
+    uptime: 'Uptime',
+    duration: (s) => {
+      const d = Math.floor(s / 86400);
+      const h = Math.floor((s % 86400) / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      return d ? `${d} d ${h} h` : h ? `${h} h ${m} min` : `${m} min`;
+    },
   },
   setup: {
     title: 'Set up your family',
@@ -44,6 +70,8 @@ window.STRINGS = {
     sunday: 'Sunday',
     starter: 'Start with a sample list of behaviors and rewards',
     create: 'Create',
+    private:
+      'This Little Wins is private. Ask a parent in the family for an invite link, then sign in from it.',
     signOut: 'Sign out',
   },
 
@@ -140,6 +168,13 @@ window.STRINGS = {
     share: 'Share',
     done: 'Done',
     signOut: 'Sign out',
+    exportData: 'Download all our data',
+    deleteTitle: 'Delete this family',
+    deleteWarning:
+      "This deletes all children, history, behaviors, rewards and devices for everyone in the family. It can't be undone. Download your data first.",
+    deleteType: 'Type the family name to confirm',
+    deleteButton: 'Delete this family',
+    confirmDeleteFamily: "Delete this family and everything in it? This can't be undone.",
     behaviors: 'Behaviors',
     penalties: 'Penalties',
     challenges: 'Weekly challenges',

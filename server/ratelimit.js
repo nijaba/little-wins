@@ -20,7 +20,7 @@ function createRateLimiter({ max, windowMs }) {
   };
 }
 
-/** The client's address. Phase 4 adds trusted proxies (FORWARDED_ALLOW_IPS). */
-const clientIp = (req) => req.socket.remoteAddress || 'unknown';
+/** The client's address, as worked out by web.clientInfo (trusted proxies only). */
+const clientIp = (req) => req.lw?.ip || req.socket.remoteAddress || 'unknown';
 
 module.exports = { createRateLimiter, clientIp };

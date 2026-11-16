@@ -154,6 +154,41 @@ const rawStatus = (srv, p) =>
       .on('error', reject);
   });
 
+/**
+ * A raw request to 127.0.0.1 (so the peer address is known), without following redirects and
+ * with any headers, including a hostile Host. Resolves to { status, headers, text }.
+ */
+const raw = (srv, p, { method = 'GET', headers = {}, body } = {}) =>
+  new Promise((resolve, reject) => {
+    const req = http.request(
+      { host: '127.0.0.1', port: srv.port, path: p, method, headers },
+      (r) => {
+        let text = '';
+        r.on('data', (c) => {
+          text += c;
+        });
+        r.on('end', () =>
+          resolve({
+            status: r.statusCode,
+            headers: new Headers(Object.entries(r.headers).map(([k, v]) => [k, String(v)])),
+            text,
+          }),
+        );
+      },
+    );
+    req.on('error', reject);
+    req.end(body);
+  });
+
+/** A configuration like a real deployment: https APP_BASE_URL, a real provider, no fake sign-in. */
+const hostedEnv = (extra = {}) => ({
+  APP_BASE_URL: 'https://little.example.test',
+  LITTLE_WINS_FAKE_SSO: undefined,
+  GOOGLE_CLIENT_ID: 'id',
+  GOOGLE_CLIENT_SECRET: 'secret',
+  ...extra,
+});
+
 // --- Servers -----------------------------------------------------------------------------------
 let counter = 0;
 
@@ -304,6 +339,8 @@ module.exports = {
   signIn,
   api,
   rawStatus,
+  raw,
+  hostedEnv,
   startServer,
   startFails,
   newFamily,

@@ -105,6 +105,48 @@ const allowlist = parseAllowlist(env.PARENT_ALLOWLIST || '');
 for (const bad of allowlist.invalid)
   problems.push(`PARENT_ALLOWLIST has an entry it can't read: "${bad}"`);
 
+// --- Who sees the operator page (counts and health; never family content) ---------------
+const operatorAllowlist = parseAllowlist(env.OPERATOR_ALLOWLIST || '');
+for (const bad of operatorAllowlist.invalid)
+  problems.push(`OPERATOR_ALLOWLIST has an entry it can't read: "${bad}"`);
+
+// --- Reverse proxies whose X-Forwarded-For / X-Forwarded-Proto we believe ----------------
+const forwardedAllow = (env.FORWARDED_ALLOW_IPS || '')
+  .split(',')
+  .map((x) => x.trim())
+  .filter(Boolean);
+
+// --- Legal pages (hosted mode) --------------------------------------------------------
+const legalUrl = (name) => {
+  const value = env[name] || '';
+  if (value && !/^https?:\/\/\S+$/.test(value)) problems.push(`${name} must be an http(s) URL`);
+  return value;
+};
+const privacyUrl = legalUrl('PRIVACY_URL');
+const termsUrl = legalUrl('TERMS_URL');
+
+// --- Per-family limits: generous for a self-hosted family, tighter when sign-up is open ---
+const LIMIT_DEFAULTS = {
+  closed: { children: 20, parents: 10, items: 500, rewards: 200, devices: 50, entriesPerDay: 2000 },
+  open: { children: 8, parents: 6, items: 200, rewards: 100, devices: 30, entriesPerDay: 500 },
+};
+const LIMIT_ENV = {
+  children: 'LIMIT_CHILDREN',
+  parents: 'LIMIT_PARENTS',
+  items: 'LIMIT_ITEMS',
+  rewards: 'LIMIT_REWARDS',
+  devices: 'LIMIT_DEVICES',
+  entriesPerDay: 'LIMIT_ENTRIES_PER_DAY',
+};
+// Hosted modes (open, invite) get the tighter defaults; a self-hosted family (closed) the generous ones.
+const limits = { ...(signupMode === 'closed' ? LIMIT_DEFAULTS.closed : LIMIT_DEFAULTS.open) };
+for (const [key, name] of Object.entries(LIMIT_ENV)) {
+  if (env[name] === undefined || env[name] === '') continue;
+  const n = Number(env[name]);
+  if (!Number.isInteger(n) || n < 1) problems.push(`${name} must be a whole number of at least 1`);
+  else limits[key] = n;
+}
+
 module.exports = {
   port,
   baseUrl,
@@ -115,6 +157,18 @@ module.exports = {
   fakeSso: fakeSso && isLocal,
   signupMode,
   allowlist,
+  operatorAllowlist,
+  forwardedAllow,
+  privacyUrl,
+  termsUrl,
+  limits,
+  version: (() => {
+    try {
+      return require('../package.json').version;
+    } catch {
+      return 'unknown';
+    }
+  })(),
   dbPath: env.DATABASE_PATH || env.DB || '/data/little-wins.db',
   problems,
   warnings,
@@ -137,4 +191,6 @@ module.exports = {
 
   // Per-client limits for sign-in and code redemption: max requests per window.
   rateLimit: { max: 10, windowMs: 60e3 },
+  // Per-client limits for every API request.
+  apiRateLimit: { reads: 600, writes: 120, windowMs: 60e3 },
 };

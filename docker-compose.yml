@@ -1,13 +1,20 @@
-# Settings (address, secret, sign-in apps, allowlist) go in .env, copied from .env.example.
-# .env is git-ignored and never committed. See docs/admin-guide.md.
-# To change the published port or add other compose settings, use docker-compose.override.yml
-# (also git-ignored).
+# Self-host base. Real settings (address, secrets, sign-in apps) go in .env, copied from
+# .env.example. Never put secrets in this file. See docs/admin-guide.md.
+#
+# The host ./data folder must be writable by the container user (uid 10001):
+#   mkdir -p data && sudo chown -R 10001:10001 data
+#
+# The port is bound to 127.0.0.1 so only a reverse proxy on this host can reach the app.
+# To change it, use docker-compose.override.yml (git-ignored). For a ready-made proxy setup
+# see deploy/caddy and deploy/nginx.
 services:
   little-wins:
     build: .
     restart: unless-stopped
     ports: ["127.0.0.1:3000:3000"]
     env_file: .env
-    environment:
-      DATABASE_PATH: /data/little-wins.db
     volumes: ["./data:/data"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]

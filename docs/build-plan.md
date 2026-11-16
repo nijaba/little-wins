@@ -45,14 +45,15 @@ Tick a box when the item is done and tested.
 
 ## Phase 4: ready for the internet
 
-- [ ] Fail-fast configuration (design.md, "Security"); `.env.example`
-- [ ] HTTPS redirect to `APP_BASE_URL`, trusted proxies, security headers, strict CSP, Origin check on writes
-- [ ] Rate limits and hosted-mode limits
-- [ ] `/healthz`; non-root, read-only container with a healthcheck; pinned base image
-- [ ] Deploy examples: Caddy (automatic TLS) and behind an existing nginx
-- [ ] Data export (JSON) and family deletion
-- [ ] Operator page
-- [ ] `304 Not Modified` on unchanged state
+- [x] Fail-fast configuration (design.md, "Security"); `.env.example`
+- [x] HTTPS redirect to `APP_BASE_URL`, trusted proxies, security headers, strict CSP, Origin check on writes
+- [x] Rate limits and hosted-mode limits
+- [x] `/healthz`; non-root, read-only container with a healthcheck; pinned base image
+- [x] Deploy examples: Caddy (automatic TLS) and behind an existing nginx
+- [x] Data export (JSON) and family deletion
+- [x] Operator page
+- [x] `304 Not Modified` on unchanged state
+- [x] Pairing code refused for the device limit stays usable
 
 ## Phase 5: tests and CI
 

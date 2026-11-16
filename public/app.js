@@ -12,6 +12,13 @@
   let chSel = null; // child id being viewed by a parent, or null for the first child
   let cfg = { appName: STR.appName, providers: [] }; // public config, for the signed-out screen
   let screen = 'out'; // 'app' while the signed-in state is shown
+  let etag = null; // ETag of the last state for this selection (see poll)
+  let etagKey = ''; // the selection (week/child) that ETag belongs to
+  let gen = 0; // bumped on every state change, so a slow poll reply is dropped
+  let notice = ''; // one-time message on the signed-out screen
+  let ops = null; // operator numbers, once loaded
+  let opsErr = false;
+  let delTxt = ''; // what was typed in the "delete family" box
   let iss = null; // device code or invite link just issued, shown until Done
   let cdTimer; // countdown of the device code
   try {
@@ -43,11 +50,23 @@
       body: JSON.stringify(body || {}),
     });
 
+  // Privacy and Terms links, for the pages that are set in the public config.
+  const legal = () => {
+    const a = [
+      [cfg.privacyUrl, STR.legal.privacy],
+      [cfg.termsUrl, STR.legal.terms],
+    ]
+      .filter(([u]) => /^https?:\/\//i.test(u || ''))
+      .map(([u, t]) => `<a href="${esc(u)}" target=_blank rel="noopener noreferrer">${t}</a>`);
+    return a.length ? `<p class="center legal"><small>${a.join(' · ')}</small></p>` : '';
+  };
+
   // ---- API ----
 
   // Take a state reply: remember the selection it shows and redraw.
   function take(j) {
     S = j;
+    gen++;
     if (S.setup) return renderSetup();
     wkSel = S.week.current ? null : S.week.start;
     if (P()) {
@@ -61,7 +80,8 @@
 
   // Call the API; on success store the new state and redraw. Returns true on success.
   async function api(path, body) {
-    const r = await fetch(`/api/${path}${wq()}`, {
+    const key = wq();
+    const r = await fetch(`/api/${path}${key}`, {
       method: body ? 'POST' : 'GET',
       headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
@@ -80,6 +100,9 @@
       alert(j.error || STR.login.networkError);
       return false;
     }
+    // Writes return fresh state without an ETag; a state read gives the tag for polling.
+    etag = body ? null : r.headers.get('ETag');
+    etagKey = key;
     iss = j.issued ? { ...j.issued, type: path, child: body?.child_id } : iss;
     take(j);
     return true;
@@ -97,6 +120,8 @@
     screen = 'out';
     clearInterval(cdTimer);
     const L = STR.login;
+    const note = notice ? `<p class=note>${notice}</p>` : '';
+    notice = '';
     const q = invite ? `?invite=${encodeURIComponent(invite.token)}` : '';
     const btns = cfg.providers
       .map(
@@ -104,7 +129,7 @@
           `<p><a class="b lnk" href="/auth/${esc(p)}/login${q}">${esc(L.signInWith[p] || p)}</a></p>`,
       )
       .join('');
-    let h = `<main class=center><h2>${esc(cfg.appName)}</h2>`;
+    let h = `<main class=center><h2>${esc(cfg.appName)}</h2>${note}`;
     if (invite) {
       h += invite.family
         ? `<h3>${L.joinTitle(esc(invite.family))}</h3><p><small>${L.joinHelp}</small></p>${btns}<p><button class="b g" data-action=not-now>${L.notNow}</button></p>`
@@ -112,7 +137,7 @@
     } else {
       h += `<div class=card><h3 class=edit-title>${L.parentsOnly}</h3>${btns}</div><div class=card><h3 class=edit-title>${L.codeTitle}</h3><p><small>${L.codeHelp}</small></p><p><input id=code aria-label="${L.codeTitle}" autocapitalize=characters autocomplete=off autocorrect=off spellcheck=false placeholder="${L.codePlaceholder}"></p><p class=err id=err></p><p><button class=b data-action=pair-code>${L.codeButton}</button></p></div>`;
     }
-    $('app').innerHTML = `${h}</main>`;
+    $('app').innerHTML = `${h}${legal()}</main>`;
   }
 
   // Redeem a pairing code; on success load the child's state.
@@ -136,7 +161,59 @@
     await post('logout').catch(() => {});
     S = null;
     iss = null;
+    ops = null;
     login();
+  }
+
+  // Delete the family (owner only): ask once more, then show the signed-out screen.
+  async function delFamily() {
+    const st = STR.settings;
+    if ($('del_name').value.trim() !== S.family.name || !confirm(st.confirmDeleteFamily)) return;
+    const r = await post('family/delete', { confirm: $('del_name').value }).catch(() => null);
+    const j = r ? await r.json().catch(() => ({})) : {};
+    if (r?.ok && j.deleted) {
+      S = null;
+      iss = null;
+      ops = null;
+      ed = null;
+      delTxt = '';
+      tab = 'today';
+      for (const k of Object.keys(op)) delete op[k];
+      notice = STR.login.familyDeleted;
+      login();
+    } else alert(r ? j.error || STR.login.networkError : STR.login.networkError);
+  }
+
+  // ---- Operator numbers ----
+
+  const opsHtml = () => {
+    const o = STR.operator;
+    if (opsErr) return `<p class=err>${o.failed}</p>`;
+    if (!ops) return `<p><small>${o.loading}</small></p>`;
+    const row = (k, v) => `<div class=row><div>${k}</div><div><b>${v}</b></div></div>`;
+    return `<div class=card>${[
+      [o.families, ops.families],
+      [o.unclaimedFamilies, ops.unclaimedFamilies],
+      [o.parents, ops.parents],
+      [o.children, ops.children],
+      [o.devices, ops.devices],
+      [o.activeDevices30d, ops.activeDevices30d],
+      [o.entries, ops.entries],
+      [o.dbSize, o.mb((ops.dbBytes / 1048576).toFixed(1))],
+      [o.version, esc(ops.version)],
+      [o.uptime, o.duration(ops.uptimeSeconds)],
+    ]
+      .map(([k, v]) => row(k, v))
+      .join('')}</div>`;
+  };
+
+  // Load the numbers and show them in #ops-body (not a full render: keeps sections open).
+  async function loadOps() {
+    const r = await fetch('/api/operator').catch(() => null);
+    const j = r?.ok ? await r.json().catch(() => null) : null;
+    ops = j;
+    opsErr = !j;
+    if ($('ops-body')) $('ops-body').innerHTML = opsHtml();
   }
 
   // ---- Setup ----
@@ -144,6 +221,18 @@
   function renderSetup() {
     screen = 'out';
     const st = STR.setup;
+    if (S.operator && !S.canCreate) {
+      const o = STR.operator;
+      $('app').innerHTML =
+        `<main><h2 class=center>${o.title}</h2><p class=center><small>${o.help}</small></p><div id=ops-body>${opsHtml()}</div><p class=center><button class=b data-action=ops-refresh>${o.refresh}</button> <button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
+      loadOps();
+      return;
+    }
+    if (!S.canCreate) {
+      $('app').innerHTML =
+        `<main class=center><h2>${esc(cfg.appName)}</h2><p>${st.private}</p><p><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
+      return;
+    }
     let tz = '';
     try {
       tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
@@ -151,7 +240,7 @@
     const f = (id, label, v, max) =>
       `<p><label for=${id}>${label}</label><br><input id=${id} maxlength=${max} value="${esc(v)}"></p>`;
     $('app').innerHTML =
-      `<main><h2 class=center>${st.title}</h2><div class=card><p class=p0>${S.me?.name ? st.hello(esc(S.me.name)) : ''}</p>${f('s_family', st.familyName, '', 60)}${f('s_child', st.childName, '', 40)}${f('s_tz', st.timeZone, tz, 60)}<p><label for=s_week>${st.weekStart}</label><br><select id=s_week><option value=1>${st.monday}</option><option value=0>${st.sunday}</option></select></p><p><label class=chk><input id=s_starter type=checkbox checked> ${st.starter}</label></p><button class=b data-action=do-setup>${st.create}</button></div><p class=center><button class="b g" data-action=logout>${st.signOut}</button></p></main>`;
+      `<main><h2 class=center>${st.title}</h2><div class=card><p class=p0>${S.me?.name ? st.hello(esc(S.me.name)) : ''}</p>${f('s_family', st.familyName, '', 60)}${f('s_child', st.childName, '', 40)}${f('s_tz', st.timeZone, tz, 60)}<p><label for=s_week>${st.weekStart}</label><br><select id=s_week><option value=1>${st.monday}</option><option value=0>${st.sunday}</option></select></p><p><label class=chk><input id=s_starter type=checkbox checked> ${st.starter}</label></p><button class=b data-action=do-setup>${st.create}</button></div><p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
   }
 
   function doSetup() {
@@ -303,6 +392,11 @@
       api('state');
     },
     'do-setup': () => doSetup(),
+    'del-family': () => delFamily(),
+    'ops-refresh': () => {
+      if ($('ops-body')) $('ops-body').innerHTML = `<p><small>${STR.operator.loading}</small></p>`;
+      loadOps();
+    },
     logout: () => logout(),
     child: (d) => {
       chSel = +d.id;
@@ -525,6 +619,13 @@
     return `<div class=card><h3 class=edit-title>${ed.id ? st.formEdit : st.formAdd} ${r ? st.reward : k}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
   }
 
+  // Owner only: export and delete, at the bottom of the Family section.
+  function ownerTools() {
+    const st = STR.settings;
+    const ok = delTxt.trim() === S.family.name;
+    return `<p class=p0><a class="b lnk" href=/api/export download>${st.exportData}</a></p><div class="card danger"><h3 class=edit-title>${st.deleteTitle}</h3><p><small>${st.deleteWarning}</small></p><p><label for=del_name>${st.deleteType}</label><br><input id=del_name autocomplete=off autocapitalize=off spellcheck=false value="${esc(delTxt)}"></p><button class="b r" id=del_btn data-action=del-family ${ok ? '' : 'disabled'}>${st.deleteButton}</button></div>`;
+  }
+
   function viewSettings() {
     if (ed) return viewEdit();
     const st = STR.settings;
@@ -533,7 +634,7 @@
       'fam',
       st.family,
       esc(fam.name),
-      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p><p><label for=f_week>${st.weekStart}</label><br><select id=f_week><option value=1 ${fam.weekStart ? 'selected' : ''}>${st.monday}</option><option value=0 ${fam.weekStart ? '' : 'selected'}>${st.sunday}</option></select></p><button class=b data-action=save-family>${st.save}</button></div>`,
+      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p><p><label for=f_week>${st.weekStart}</label><br><select id=f_week><option value=1 ${fam.weekStart ? 'selected' : ''}>${st.monday}</option><option value=0 ${fam.weekStart ? '' : 'selected'}>${st.sunday}</option></select></p><button class=b data-action=save-family>${st.save}</button></div>${S.me.owner ? ownerTools() : ''}`,
     );
     let c = '';
     for (const k of S.children) {
@@ -598,7 +699,14 @@
         g += `<p class=p0><button class=b data-action=pair-dev data-id=${k.id}>${st.addDevice(esc(k.name))}</button></p>`;
     }
     h += fold('dev', st.devices, D.length, g);
-    return `${h}<p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>`;
+    if (S.operator)
+      h += fold(
+        'ops',
+        STR.operator.title,
+        '',
+        `<small class=hint>${STR.operator.help}</small><div id=ops-body>${opsHtml()}</div><p class=p0><button class=b data-action=ops-refresh>${STR.operator.refresh}</button></p>`,
+      );
+    return `${h}<p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}`;
   }
 
   // Box showing a freshly issued link (and code); the pairing one counts down.
@@ -673,10 +781,18 @@
   $('app').addEventListener(
     'toggle',
     (e) => {
-      if (e.target.matches('details.fold')) op[e.target.dataset.key] = e.target.open;
+      if (!e.target.matches('details.fold')) return;
+      op[e.target.dataset.key] = e.target.open;
+      if (e.target.dataset.key === 'ops' && e.target.open) loadOps();
     },
     true,
   );
+  // Enable the Delete button only while the typed text is the family name.
+  $('app').addEventListener('input', (e) => {
+    if (e.target.id !== 'del_name') return;
+    delTxt = e.target.value;
+    $('del_btn').disabled = delTxt.trim() !== S.family.name;
+  });
 
   async function boot() {
     try {
@@ -711,13 +827,18 @@
       !ed &&
       !document.activeElement.matches('input, select')
     ) {
-      const w = wkSel;
-      const c = chSel;
-      fetch(`/api/state${wq()}`)
-        .then((r) => (r.ok ? r.json() : 0))
-        .then((j) => {
-          if (j && screen === 'app' && w === wkSel && c === chSel) {
+      const key = wq();
+      const g = gen;
+      const headers = etag && etagKey === key ? { 'If-None-Match': etag } : {};
+      fetch(`/api/state${key}`, { headers })
+        .then(async (r) => {
+          // 304: nothing changed. Any other failure (429, 5xx, signed out): skip silently.
+          if (r.status === 304 || !r.ok) return;
+          const j = await r.json();
+          if (screen === 'app' && g === gen && key === wq()) {
             S = j;
+            etag = r.headers.get('ETag');
+            etagKey = key;
             render();
           }
         })

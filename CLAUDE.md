@@ -35,13 +35,16 @@ scripts/backup.sh                               # consistent backup of data/litt
 server/          index.js (wiring), config.js (env, startup check), db.js (migrations, starter list),
                  repo.js (family-scoped data layer: all SQL), auth.js (OAuth sign-in), fake-sso.js (dev/test only),
                  sessions.js, allowlist.js, ratelimit.js, routes.js, state.js, scoring.js (pure rules),
-                 http.js (body limit, write guard), static.js, messages.js (user-facing strings), clock.js
+                 http.js (body limit, write guard), web.js (trusted proxies, HTTPS redirect, security headers),
+                 static.js, messages.js (user-facing strings), clock.js
 public/          index.html (shell), app.js, strings.js (user-facing strings), style.css, manifest.json
 test/            *.test.js: real server on a temp database, signed in through the fake provider
                  (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
+                 edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh
+deploy/          caddy/ (dedicated host, automatic TLS) and nginx/ (behind an existing nginx)
 docs/            design.md, build-plan.md, admin-guide.md
 ```
 

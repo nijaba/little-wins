@@ -2,7 +2,7 @@
 
 How to deploy, update, back up and restore a self-hosted Little Wins.
 
-> **Before you put it on the internet.** HTTPS and the remaining internet hardening (security headers, trusted proxies, rate limits for all routes, container hardening, and Caddy and nginx examples) arrive in phase 4 of docs/build-plan.md. Until then, put Little Wins behind a reverse proxy with TLS, and prefer a private network.
+> **Internet-facing.** Once phase 4 of docs/build-plan.md is complete, Little Wins is meant to face the internet, behind HTTPS. HTTPS is required everywhere except localhost. A private network (Tailscale, a VPN or your LAN) is still a fine extra layer, but you no longer need it. Ready-made setups are in `deploy/`: [Caddy on a dedicated host](#option-a-caddy-on-a-dedicated-host) and [behind an existing nginx](#option-b-behind-an-existing-nginx).
 
 ## Where things live
 
@@ -11,16 +11,16 @@ How to deploy, update, back up and restore a self-hosted Little Wins.
 | Source code | `https://github.com/<owner>/little-wins` (branch `main`) |
 | Server | Any Linux host with Docker Compose 2.24 or newer, reachable as `<user>@<server>` |
 | App folder (git checkout) | `~/little-wins` |
-| Database | `~/little-wins/data/little-wins.db` on the host, `/data/little-wins.db` in the container (owned by root, created by Docker) |
+| Database | `~/little-wins/data/little-wins.db` on the host, `/data/little-wins.db` in the container (owned by uid 10001, the container user; see [Data folder ownership](#data-folder-ownership)) |
 | Settings and secrets | `~/little-wins/.env` (**not in git**), copied from `.env.example` |
 | Port or other compose overrides | `~/little-wins/docker-compose.override.yml` (**not in git**, optional) |
 | Backups | Nightly: `~/little-wins-backup/daily/` on the server. Manual: the same folder. Optional off-server copy: see [Pulling backups to another machine](#pulling-backups-to-another-machine-optional) |
 
-Request path: browser or phone, then your reverse proxy (or private network), then `127.0.0.1:<port>` on the server, then container port 3000.
+Request path: browser or phone, then your reverse proxy (Caddy or nginx, which provides HTTPS), then the app on container port 3000 (on `127.0.0.1:<port>` of the host with nginx; on the compose network with Caddy).
 
 ### What is in git and what is not
 
-- **In git:** code (`server/`, `public/`), `Dockerfile`, `scripts/`, `test/`, `docker-compose.yml` (no secrets, port 3000) and `.env.example` (placeholders only).
+- **In git:** code (`server/`, `public/`), `Dockerfile`, `scripts/`, `test/`, `deploy/` (Caddy and nginx setups), `docker-compose.yml` (no secrets, port 3000) and `.env.example` (placeholders only).
 - **Not in git** (listed in `.gitignore`): `data/` and `*.db`, `.env`, `docker-compose.override.yml`.
 
 `docker-compose.yml` reads your settings from `.env` (`env_file: .env`), so `git pull` stays clean. Docker Compose also merges `docker-compose.override.yml` on top of `docker-compose.yml` automatically, and the override wins. Use the override file only for things that are not application settings, such as the published port.
@@ -39,6 +39,11 @@ All of these are environment variables, normally set in `.env`.
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub sign-in. Set both or neither. | Off |
 | `SIGNUP_MODE` | Who may create a family: `closed` (only people on `PARENT_ALLOWLIST`), `invite` or `open` (anyone who signs in). `invite` is meant for hosting, where an operator issues family invites. Those do not exist yet, so for now `invite` behaves like `closed`. | `closed` |
 | `PARENT_ALLOWLIST` | Comma-separated list of who may create a family (or claim a migrated one) when sign-up is not `open`. Entries: `*`, `google:you@example.com`, `github:<login>`, `google-domain:example.com`. See below. | Empty |
+| `FORWARDED_ALLOW_IPS` | Comma-separated proxy addresses whose `X-Forwarded-For` and `X-Forwarded-Proto` the app trusts. Exact IPs, or `*` for any peer (only safe when the app's port is reachable by the proxy alone). Outside localhost the app redirects plain HTTP to `APP_BASE_URL`, and it learns the original scheme from `X-Forwarded-Proto`, so behind a proxy this must be set. See [FORWARDED_ALLOW_IPS](#forwarded_allow_ips). | Empty (forwarded headers ignored) |
+| `SITE_HOST` | Caddy setup only: the host name Caddy serves, the host part of `APP_BASE_URL`. | None |
+| `OPERATOR_ALLOWLIST` | Who sees the operator page. Same entries as `PARENT_ALLOWLIST`. For hosting. | Empty |
+| `PRIVACY_URL`, `TERMS_URL` | Links shown on the sign-in page and in Settings. For hosting. | None |
+| `LIMIT_CHILDREN`, `LIMIT_PARENTS`, `LIMIT_ITEMS`, `LIMIT_REWARDS`, `LIMIT_DEVICES`, `LIMIT_ENTRIES_PER_DAY` | Per-family limits. | `SIGNUP_MODE=closed`: 20 / 10 / 500 / 200 / 50 / 2000. `open`: 8 / 6 / 200 / 100 / 30 / 500 |
 | `DATABASE_PATH` | SQLite file inside the container. `docker-compose.yml` sets `/data/little-wins.db`. The older name `DB` still works if `DATABASE_PATH` is not set. | `/data/little-wins.db` |
 | `PORT` | Port the app listens on inside the container. Leave it at 3000 with Docker and change the published port instead. | `3000` |
 | `TZ` | Time zone of the container. Each family has its own time zone, so this only places data migrated from an old single-family install. | `UTC` |
@@ -124,6 +129,30 @@ Only the owner can do either, under **Settings → Parents**, after a confirmati
 
 You cannot remove or hand over to yourself.
 
+### Exporting and deleting a family
+
+Only the owner sees these, at the bottom of **Settings → Family**.
+
+- **Download all our data** saves one JSON file with everything the family has: children, history, behaviors, rewards and parents (no session secrets).
+- **Delete this family** removes the children, history, behaviors, rewards and devices for everyone in the family, and signs everybody out. It cannot be undone, and a backup of the whole database is the only way back. The owner types the family name exactly, then confirms once more. Download the data first.
+
+## Operator page
+
+For hosting: the people listed in `OPERATOR_ALLOWLIST` (same entries as `PARENT_ALLOWLIST`, e.g. `github:some-login`) see an **Operator** section at the bottom of Settings, which loads when it is opened. An operator who has no family of their own sees the Operator screen right after signing in, with a Refresh and a Sign out button.
+
+It shows counts only: families, unclaimed families (no parent yet), parents, children, devices, devices active in the last 30 days, entries, database size in MB, version and uptime. It never shows names, history or any other family content, and an operator cannot open another family. Anyone else who asks for it gets a refusal.
+
+## Limits
+
+Each family has limits on children, parents, behaviors/penalties/challenges (items), rewards, devices, and entries recorded per day. Set them with `LIMIT_CHILDREN`, `LIMIT_PARENTS`, `LIMIT_ITEMS`, `LIMIT_REWARDS`, `LIMIT_DEVICES` and `LIMIT_ENTRIES_PER_DAY`. Without them the defaults depend on `SIGNUP_MODE`:
+
+| | Children | Parents | Items | Rewards | Devices | Entries per day |
+|---|---|---|---|---|---|---|
+| `closed` (self-hosted) | 20 | 10 | 500 | 200 | 50 | 2000 |
+| `open` or `invite` (hosted) | 8 | 6 | 200 | 100 | 30 | 500 |
+
+What users see: when a limit is reached, adding a child, behavior, reward or device (or recording an entry) fails with "This family has reached its limit for ...". Nothing is half-saved and the form stays open. Remove something, or raise the limit and restart. Too many requests from one place get a "Too many tries" message with a wait time. The page retries by itself, without a message.
+
 ## Updating the server (the usual task)
 
 1. Make changes on your machine, run the tests (`npm test`, see [Testing](#testing)), then commit and push to `main`.
@@ -139,7 +168,7 @@ ssh <user>@<server> 'cd ~/little-wins && mkdir -p ~/little-wins-backup && cp dat
 ssh <user>@<server> 'cd ~/little-wins && docker compose ps && docker compose logs --tail 5'
 ```
 
-The container should show `Up` with your port mapped to `3000/tcp`, and the log should end with `up`. Then open the app in a browser.
+The container should show `Up (healthy)` (the image checks `/healthz` every 30 seconds; the first check comes about 10 seconds after start), and the log should end with `up`. Then open the app in a browser. With the Caddy or nginx setup, add `-f deploy/caddy/docker-compose.yml --env-file .env` (or the nginx file) after `docker compose`, the same as when you started it.
 
 The data is safe through updates: `data/` is only mounted into the container, never part of the image or of git. The app only ever *adds* columns or tables at startup, so new code works with an existing database. Devices stay signed in: sessions are stored in the database. (The one exception was the move from PINs to sign-in: that update drops the old PIN sessions.)
 
@@ -208,10 +237,10 @@ ssh <user>@<server> 'cd ~/little-wins && scripts/backup.sh'
 
 ### Restore
 
-Stop the app first. `data/` is owned by root, so this needs `sudo`:
+Stop the app first. `data/` is owned by uid 10001, so this needs `sudo`, and the restored file must keep that owner:
 
 ```bash
-ssh -t <user>@<server> 'cd ~/little-wins && docker compose down && sudo cp ~/little-wins-backup/daily/little-wins-<YYYY-MM-DD>.db data/little-wins.db && docker compose up -d'
+ssh -t <user>@<server> 'cd ~/little-wins && docker compose down && sudo cp ~/little-wins-backup/daily/little-wins-<YYYY-MM-DD>.db data/little-wins.db && sudo chown 10001:10001 data/little-wins.db && docker compose up -d'
 ```
 
 Anything recorded after the backup was taken is lost. Devices that signed in after it will have to sign in again, and children's devices paired after it need a new code, because sessions live in the database.
@@ -271,7 +300,7 @@ This protects you from running with sample values when `.env` is missing or was 
 
 ## Fresh install on a new server
 
-Requirements: Docker with Compose 2.24 or newer, and git. Put it behind a reverse proxy you control that terminates TLS, and prefer a private network such as Tailscale (see step 7).
+Requirements: Docker with Compose 2.24 or newer, and git. It needs HTTPS at your public address, which step 7 sets up with Caddy or nginx.
 
 **1. Deploy key** (only if the repository is private; for a public clone over HTTPS you can skip steps 1 to 3 and use `git clone https://github.com/<owner>/little-wins.git ~/little-wins`). Create a key so the server can read the repository:
 
@@ -313,40 +342,76 @@ cd ~/little-wins && cp .env.example .env && chmod 600 .env
 
 Edit `.env`: set `APP_BASE_URL`, paste a new `SESSION_SECRET` (from `openssl rand -hex 32`), the client ID and secret of each provider you registered, and `PARENT_ALLOWLIST` with your own account, for example `google:you@example.com`. Leave `SIGNUP_MODE=closed` for one family. Remove or comment out any provider you did not register.
 
-The default port is `127.0.0.1:3000`. To use another one (3001 in this example), create the override file. The service name under `services:` must match the one in `docker-compose.yml`, and `!override` makes the override replace the base `ports` list instead of adding to it:
+Behind nginx you can change the published port with `APP_PORT` in `.env` (see step 7). With the base `docker-compose.yml` alone, use a `docker-compose.override.yml` with `ports: !override ["127.0.0.1:3001:3000"]` under the `little-wins` service.
+
+**Make the data folder writable** by the container user (uid 10001). The app runs as that user, not root, and the container's root filesystem is read-only, so `data/` is the only place it can write:
 
 ```bash
-cat > ~/little-wins/docker-compose.override.yml <<EOF
-services:
-  little-wins:
-    ports: !override ["127.0.0.1:3001:3000"]
-EOF
+cd ~/little-wins && mkdir -p data && sudo chown -R 10001:10001 data
 ```
 
-When moving from an existing server, copy its `data/little-wins.db` into `~/little-wins/data/` before starting. If it comes from a version that used PINs, it will be migrated on first start (see [First start](#first-start)).
+When moving from an existing server, copy its `data/little-wins.db` into `~/little-wins/data/` before starting, then run the `chown` above again so the file is owned by 10001. If it comes from a version that used PINs, it will be migrated on first start (see [First start](#first-start)).
 
-**6. Check the config, then start:**
+**6. Choose how to publish it** (step 7), then check the config. The commands below use the base `docker-compose.yml`; with Caddy or nginx, add `-f deploy/<caddy|nginx>/docker-compose.yml --env-file .env` after `docker compose` and drop the `published:` check for Caddy.
 
 ```bash
 cd ~/little-wins && docker compose config | grep -E 'APP_BASE_URL|SIGNUP_MODE|PARENT_ALLOWLIST|published'
 ```
 
-You should see your values and exactly one `published:` line with your port. Don't paste the full `docker compose config` output anywhere: it includes your secrets.
+You should see your values. Don't paste the full `docker compose config` output anywhere: it includes your secrets.
+
+**7. Publish it.** HTTPS at `APP_BASE_URL` is required; the app listens in plain HTTP and refuses to run elsewhere than localhost on a non-`https://` address. Pick one option.
+
+#### Option A: Caddy on a dedicated host
+
+For a host where ports 80 and 443 are free. Caddy gets and renews the certificate itself.
+
+1. Point a DNS record for your domain at the host and open ports 80, 443 and 443/udp.
+2. In `.env`, set `APP_BASE_URL=https://kids.example.com` and `SITE_HOST=kids.example.com` (the same name).
+3. Start it:
 
 ```bash
-cd ~/little-wins && docker compose up -d --build
+cd ~/little-wins && docker compose -f deploy/caddy/docker-compose.yml --env-file .env up -d --build
 ```
 
-**7. Publish it.** The app listens only on `127.0.0.1:<port>` and speaks plain HTTP, so it needs something in front of it that provides HTTPS at `APP_BASE_URL`. Two options:
+The app has no published port: only Caddy reaches it, over the compose network. That is why `deploy/caddy/docker-compose.yml` sets `FORWARDED_ALLOW_IPS: "*"` for it, and why you must not add `ports:` to the app service. Files: `deploy/caddy/` (see its README).
 
-- **Tailscale:** with MagicDNS and HTTPS enabled, expose the port on your tailnet only:
+#### Option B: behind an existing nginx
 
-  ```bash
-  sudo tailscale serve --bg http://127.0.0.1:3001
-  ```
+For a host that already runs nginx and certbot. The app is published on `127.0.0.1:${APP_PORT:-3000}` only.
 
-  The address is then `https://<server>.<your-tailnet>.ts.net`; use it as `APP_BASE_URL` and in the provider callbacks.
-- **Reverse proxy** (Caddy, nginx and so on) at `https://<your-domain>`, forwarding to `http://127.0.0.1:3001`. Phase 4 adds ready-made examples and the proxy-related settings; until then, prefer restricting it to your VPN or LAN.
+1. Start it (set `APP_PORT` in `.env` to use another port):
+
+```bash
+cd ~/little-wins && docker compose -f deploy/nginx/docker-compose.yml --env-file .env up -d --build
+```
+
+2. Install the server block and add TLS:
+
+```bash
+sudo cp deploy/nginx/little-wins.conf.example /etc/nginx/sites-available/little-wins.conf
+sudo nano /etc/nginx/sites-available/little-wins.conf
+sudo ln -s /etc/nginx/sites-available/little-wins.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d kids.example.com
+```
+
+3. Set `FORWARDED_ALLOW_IPS` in `.env` (next section), then recreate the container.
+
+Files: `deploy/nginx/` (see its README).
+
+#### FORWARDED_ALLOW_IPS
+
+The app trusts `X-Forwarded-For` and `X-Forwarded-Proto` only from the addresses in `FORWARDED_ALLOW_IPS`. By default it trusts none, so it would see every request as plain HTTP from the proxy and keep redirecting. Set it to the proxy's address as the app sees it:
+
+- **Caddy:** already set to `*` in the compose file. Nothing to do.
+- **nginx:** with Docker's port publishing the app sees the Docker network gateway as the peer, not 127.0.0.1. Find it with `docker network inspect nginx_default --format '{{(index .IPAM.Config 0).Gateway}}'` (usually `172.17.0.1` or `172.18.0.1`), or use `*`, which is safe here because the port is bound to `127.0.0.1` only.
+
+Never use `*` if the app's port is reachable by anyone other than your proxy.
+
+#### Health check
+
+The image checks `GET /healthz` every 30 seconds. `docker compose ps` shows `Up (healthy)` once it passes (about 10 seconds after start); `unhealthy` means the app is not answering, so read `docker compose logs --tail 50`.
 
 **8. Nightly backups:** add the cron line from [Automatic backups](#automatic-backups), and optionally set up [pulling backups to another machine](#pulling-backups-to-another-machine-optional).
 
@@ -356,7 +421,9 @@ cd ~/little-wins && docker compose up -d --build
 
 | Symptom | Check / fix |
 |---|---|
-| Phones can't reach the app | `docker compose ps` (is it `Up`?), then your reverse proxy or private network (for Tailscale, `tailscale serve status` should proxy to `127.0.0.1:<port>`). |
+| Phones can't reach the app | `docker compose ps` (is it `Up (healthy)`?), then your reverse proxy (Caddy: `docker compose -f deploy/caddy/docker-compose.yml logs caddy`; nginx: `sudo nginx -t` and its error log), DNS and the firewall. |
+| Browser says too many redirects, or the app keeps redirecting to `APP_BASE_URL` | `FORWARDED_ALLOW_IPS` doesn't include the proxy's address, or the proxy doesn't send `X-Forwarded-Proto`. See [FORWARDED_ALLOW_IPS](#forwarded_allow_ips). |
+| Container restarts or log shows `EACCES` / "unable to open database file" | `data/` isn't writable by uid 10001. Run `sudo chown -R 10001:10001 data` and restart. This is needed on an existing install whose `data/` was created by root. |
 | Container keeps restarting; log says "Refusing to start" | Read the lines under it: each names the variable (`APP_BASE_URL`, `SESSION_SECRET`, a provider's client ID and secret, `SIGNUP_MODE`, `PARENT_ALLOWLIST`, `LITTLE_WINS_FAKE_SSO`). See [The startup check](#the-startup-check). Usually `.env` is missing or still has the placeholders. Fix it, then `docker compose up -d`. |
 | Sign-in fails at Google or GitHub with "redirect_uri_mismatch" or a similar error | The callback registered with the provider doesn't match `<APP_BASE_URL>/auth/<provider>/callback` exactly (scheme, host, port, path, no trailing slash). Fix it in the provider's console, or fix `APP_BASE_URL`. |
 | Sign-in says it took too long or started in another browser | The sign-in must finish in the same browser within 10 minutes. Try again from the start. |
@@ -366,7 +433,7 @@ cd ~/little-wins && docker compose up -d --build
 | "This invite link doesn't work" | It expired (7 days) or was already used. Make a new one in Settings → Parents. |
 | "That code doesn't work" on a child's phone | The code expired (10 minutes) or was used. Make a new one in Settings → Devices. |
 | "Too many tries" | Sign-in and code entry are limited to 10 requests a minute per client. Wait a minute. |
-| App listens on 3000 instead of your port | The override file is missing or wasn't picked up. Run `docker compose config \| grep published`. |
+| App listens on 3000 instead of your port | The override file is missing or wasn't picked up (or, with nginx, `APP_PORT` isn't in `.env`). Run `docker compose config \| grep published`. |
 | Everyone logged out | The database was replaced or restored from a backup older than their sign-ins (sessions live in `little-wins.db`), or you migrated an old PIN-based database. Parents sign in again; children's devices need new codes. |
 | A phone is lost | Settings → Devices → Log out on that device. |
 | Days or weeks change at the wrong hour | Check the family's time zone and week start in Settings. (The container's `TZ` doesn't matter for families that were set up after sign-in arrived.) |

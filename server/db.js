@@ -103,6 +103,13 @@ const migrations = [
       CREATE INDEX pairings_family ON pairings(family_id);
     `);
   },
+
+  // 3: a version per family, bumped on every change, so an unchanged state can answer
+  // 304 Not Modified; and the Google Workspace domain, so allowlists can be checked later.
+  (db) => {
+    addColumn(db, 'families', 'version', 'INT NOT NULL DEFAULT 0');
+    addColumn(db, 'users', 'domain', 'TEXT');
+  },
 ];
 
 function migrate(db) {

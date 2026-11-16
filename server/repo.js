@@ -82,14 +82,15 @@ function createRepo(db) {
   function upsertUser(identity) {
     const t = now();
     db.prepare(
-      `INSERT INTO users(provider,subject,email,login,name,created,last_seen) VALUES(?,?,?,?,?,?,?)
+      `INSERT INTO users(provider,subject,email,login,domain,name,created,last_seen) VALUES(?,?,?,?,?,?,?,?)
        ON CONFLICT(provider,subject) DO UPDATE SET email=excluded.email, login=excluded.login,
-       name=excluded.name, last_seen=excluded.last_seen`,
+       domain=excluded.domain, name=excluded.name, last_seen=excluded.last_seen`,
     ).run(
       identity.provider,
       identity.subject,
       identity.email ?? null,
       identity.login ?? null,
+      identity.domain ?? null,
       identity.name,
       t,
       t,
@@ -100,6 +101,10 @@ function createRepo(db) {
   }
 
   const user = (userId) => db.prepare('SELECT id, name FROM users WHERE id=?').get(userId) ?? null;
+
+  /** A user as an identity for allowlist checks: { provider, email, login, domain }. */
+  const identityOf = (userId) =>
+    db.prepare('SELECT provider, email, login, domain FROM users WHERE id=?').get(userId) ?? null;
 
   const membershipOf = (userId) =>
     db.prepare('SELECT family_id, role FROM memberships WHERE user_id=?').get(userId) ?? null;
@@ -365,8 +370,12 @@ function createRepo(db) {
     return { code, expires };
   }
 
-  /** Uses a code once: returns { familyId, childId } or null if unknown, used or expired. */
-  function redeemPairing(code) {
+  /**
+   * Uses a code once: returns { familyId, childId }, or null if unknown, used or expired.
+   * `accept(familyId)` may refuse (e.g. the family is at its device limit): then the code is
+   * left unused and { familyId, refused: true } is returned.
+   */
+  function redeemPairing(code, accept = () => true) {
     const normalized = normalizeCode(code);
     if (normalized.length !== 10) return null;
     return tx(() => {
@@ -374,13 +383,112 @@ function createRepo(db) {
         .prepare('SELECT * FROM pairings WHERE code_hash=? AND used_at IS NULL AND expires>?')
         .get(sha(normalized), now());
       if (!p) return null;
+      if (!accept(p.family_id)) return { familyId: p.family_id, refused: true };
       db.prepare('UPDATE pairings SET used_at=? WHERE id=?').run(now(), p.id);
       return { familyId: p.family_id, childId: p.child_id };
     });
   }
 
+  // --- Change tracking, limits, export, deletion, operator counts ------------------------------
+  /** Marks a family as changed (its state's ETag changes). */
+  const bump = (fid) => {
+    if (fid != null) db.prepare('UPDATE families SET version=version+1 WHERE id=?').run(fid);
+  };
+
+  /** How many of something a family has, for the per-family limits. */
+  function count(fid, what, day) {
+    const sql = {
+      children: 'SELECT COUNT(*) n FROM children WHERE family_id=?',
+      parents: 'SELECT COUNT(*) n FROM memberships WHERE family_id=?',
+      items: 'SELECT COUNT(*) n FROM items WHERE family_id=? AND active=1',
+      rewards: 'SELECT COUNT(*) n FROM rewards WHERE family_id=?',
+      devices: 'SELECT COUNT(*) n FROM sessions WHERE family_id=?',
+      entriesPerDay: 'SELECT COUNT(*) n FROM entries WHERE family_id=? AND day=?',
+    }[what];
+    return db.prepare(sql).get(...(what === 'entriesPerDay' ? [fid, day] : [fid])).n;
+  }
+
+  /** Everything a family has, for the owner to download. No tokens or hashes. */
+  function exportFamily(fid) {
+    const f = family(fid);
+    return {
+      format: 'little-wins-export',
+      version: 1,
+      exported: now(),
+      family: { name: f.name, timezone: f.timezone, weekStart: f.week_start, created: f.created },
+      parents: parents(fid).map((p) => ({
+        name: p.name,
+        provider: p.provider,
+        account: p.label,
+        role: p.role,
+      })),
+      children: db
+        .prepare('SELECT id, name, created FROM children WHERE family_id=? ORDER BY sort, id')
+        .all(fid),
+      items: db
+        .prepare(
+          'SELECT id, kind, name, note, pmin, pmax, active FROM items WHERE family_id=? ORDER BY sort, id',
+        )
+        .all(fid),
+      rewards: db
+        .prepare('SELECT id, name, stars, points FROM rewards WHERE family_id=? ORDER BY sort, id')
+        .all(fid),
+      entries: db
+        .prepare(
+          `SELECT id, child_id, item_id, kind, points, note, day, ts, who, undone FROM entries
+           WHERE family_id=? ORDER BY ts, id`,
+        )
+        .all(fid),
+    };
+  }
+
+  /**
+   * Deletes a family and everything in it (rows cascade). Parents who belong to no other
+   * family are deleted too, so no account details are kept for them.
+   */
+  function deleteFamily(fid) {
+    return tx(() => {
+      const userIds = db
+        .prepare('SELECT user_id FROM memberships WHERE family_id=?')
+        .all(fid)
+        .map((r) => r.user_id);
+      db.prepare('DELETE FROM families WHERE id=?').run(fid);
+      const drop = db.prepare(
+        'DELETE FROM users WHERE id=? AND NOT EXISTS (SELECT 1 FROM memberships WHERE user_id=?)',
+      );
+      for (const id of userIds) drop.run(id, id);
+      return true;
+    });
+  }
+
+  /** Aggregate numbers for the operator page. Never names or content. */
+  function operatorStats() {
+    const n = (sql, ...args) => db.prepare(sql).get(...args).n;
+    const monthAgo = new Date(Date.now() - 30 * 864e5).toISOString();
+    return {
+      families: n('SELECT COUNT(*) n FROM families'),
+      unclaimedFamilies: n(
+        'SELECT COUNT(*) n FROM families f WHERE NOT EXISTS (SELECT 1 FROM memberships m WHERE m.family_id=f.id)',
+      ),
+      parents: n('SELECT COUNT(*) n FROM memberships'),
+      children: n('SELECT COUNT(*) n FROM children'),
+      devices: n('SELECT COUNT(*) n FROM sessions'),
+      activeDevices30d: n('SELECT COUNT(*) n FROM sessions WHERE last_seen>?', monthAgo),
+      entries: n('SELECT COUNT(*) n FROM entries'),
+      dbBytes: db
+        .prepare('SELECT page_count * page_size AS n FROM pragma_page_count(), pragma_page_size()')
+        .get().n,
+    };
+  }
+
   return {
     tx,
+    bump,
+    count,
+    exportFamily,
+    deleteFamily,
+    operatorStats,
+    identityOf,
     family,
     updateFamily,
     createFamily,

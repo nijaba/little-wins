@@ -1,0 +1,15 @@
+# Little Wins for a host that already runs nginx (with certbot). The app is published on
+# 127.0.0.1 only, and nginx forwards to it. Run from the repository root:
+#   docker compose -f deploy/nginx/docker-compose.yml --env-file .env up -d --build
+# The host ./data folder must be writable by uid 10001: sudo chown -R 10001:10001 data
+services:
+  little-wins:
+    build: ../..
+    restart: unless-stopped
+    env_file: ../../.env
+    ports: ["127.0.0.1:${APP_PORT:-3000}:3000"]
+    volumes: ["../../data:/data"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]

@@ -1,0 +1,22 @@
+# Copy to /etc/nginx/sites-available/little-wins.conf (or conf.d/), replace the host name,
+# enable it and reload nginx. Start with HTTP only; certbot then adds the TLS part:
+#   sudo certbot --nginx -d kids.example.com
+# The app redirects plain HTTP to APP_BASE_URL itself, so keep X-Forwarded-Proto below.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name kids.example.com;
+
+    client_max_body_size 64k;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;   # match APP_PORT if you changed it
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+    }
+}
