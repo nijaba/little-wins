@@ -114,7 +114,7 @@ function secretsOf(srv, F) {
   ]);
 }
 
-test('export: the owner downloads the family as an attachment', async () => {
+test('EX-01 export: the owner downloads the family as an attachment', async () => {
   const srv = await startServer({ signup: 'open' });
   try {
     const A = await build(srv, 'Alpha');
@@ -170,7 +170,7 @@ test('export: the owner downloads the family as an attachment', async () => {
   }
 });
 
-test('export: only the owner (a co-parent or a child device is refused)', async () => {
+test('EX-02 export: only the owner (a co-parent or a child device is refused)', async () => {
   const srv = await startServer({ signup: 'open' });
   try {
     const A = await build(srv, 'Alpha');
@@ -192,7 +192,7 @@ test('export: only the owner (a co-parent or a child device is refused)', async 
   }
 });
 
-test('export: no hashes, tokens or account subjects, and nothing from another family', async () => {
+test('EX-03 export: no hashes, tokens or account subjects, and nothing from another family', async () => {
   const srv = await startServer({ signup: 'open' });
   try {
     const A = await build(srv, 'Alpha');
@@ -223,7 +223,7 @@ test('export: no hashes, tokens or account subjects, and nothing from another fa
 });
 
 // --- Family deletion -----------------------------------------------------------------------
-test('delete: only the owner may, and the confirmation must match the family name', async () => {
+test('EX-04 delete: only the owner may, and the confirmation must match the family name', async () => {
   const srv = await startServer({ signup: 'open' });
   try {
     const A = await build(srv, 'Alpha');
@@ -262,7 +262,7 @@ test('delete: only the owner may, and the confirmation must match the family nam
   }
 });
 
-test('delete: removes every row of the family and nothing else', async () => {
+test('EX-05 delete: removes every row of the family and nothing else', async () => {
   const srv = await startServer({ signup: 'open' });
   try {
     const A = await build(srv, 'Alpha');
@@ -320,7 +320,7 @@ test('delete: removes every row of the family and nothing else', async () => {
   }
 });
 
-test('delete: every session of the family stops working, and codes and invites are dead', async () => {
+test('EX-06 delete: every session of the family stops working, and codes and invites are dead', async () => {
   const srv = await startServer({ signup: 'open' });
   try {
     const A = await build(srv, 'Alpha');
@@ -359,7 +359,7 @@ test('delete: every session of the family stops working, and codes and invites a
   }
 });
 
-test('delete: the owner can sign in again and set up a new family (when allowed)', async () => {
+test('EX-07 delete: the owner can sign in again and set up a new family (when allowed)', async () => {
   const srv = await startServer({ signup: 'open' });
   try {
     const A = await build(srv, 'Alpha');
@@ -389,7 +389,7 @@ test('delete: the owner can sign in again and set up a new family (when allowed)
   }
 });
 
-test('delete: in a closed instance a deleted owner only gets setup if still allowlisted', async () => {
+test('EX-08 delete: in a closed instance a deleted owner only gets setup if still allowlisted', async () => {
   const srv = await startServer({ allowlist: 'google:keep@example.test' });
   try {
     const who = { sub: 'keep-1', email: 'keep@example.test', name: 'Keeper' };

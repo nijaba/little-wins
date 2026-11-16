@@ -20,6 +20,10 @@ process.on('exit', () => {
   for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
 });
 
+/** Lets c8 measure server processes: the children get their own coverage folder variable. */
+const coverageEnv = () =>
+  process.env.NODE_V8_COVERAGE ? { NODE_V8_COVERAGE: process.env.NODE_V8_COVERAGE } : {};
+
 const freePort = () =>
   new Promise((resolve) => {
     const s = net.createServer().listen(0, () => {
@@ -43,7 +47,7 @@ function launch(env) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['server/index.js'], {
       cwd: ROOT,
-      env: { PATH: process.env.PATH, ...env },
+      env: { PATH: process.env.PATH, ...coverageEnv(), ...env },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     live.add(child);
@@ -67,8 +71,12 @@ function launch(env) {
 const stopChild = (child) =>
   new Promise((resolve) => {
     if (!child || child.exitCode !== null || child.signalCode) return resolve();
-    child.once('exit', () => resolve());
-    child.kill();
+    const timer = setTimeout(() => child.kill('SIGKILL'), 7000);
+    child.once('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    child.kill('SIGTERM');
   });
 
 // --- Cookie jar and HTTP -------------------------------------------------------------------
@@ -334,6 +342,7 @@ const item = (S, kind, name) =>
 module.exports = {
   ROOT,
   SECRET,
+  coverageEnv,
   SESSION,
   jar,
   signIn,

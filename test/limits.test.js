@@ -3,7 +3,16 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
-const { ROOT, jar, startServer, startFails, tmpDir, removeDir, item } = require('./helpers');
+const {
+  ROOT,
+  coverageEnv,
+  jar,
+  startServer,
+  startFails,
+  tmpDir,
+  removeDir,
+  item,
+} = require('./helpers');
 
 const LIMIT_MESSAGE = /has reached its limit for/;
 
@@ -17,7 +26,7 @@ async function withServer(opts, fn) {
   }
 }
 
-test('children: the next add is 409, renaming still works, deleting frees a place', async () => {
+test('LM-01 children: the next add is 409, renaming still works, deleting frees a place', async () => {
   await withServer({ env: { LIMIT_CHILDREN: '2' } }, async (srv) => {
     const f = await srv.newFamily({ child: 'One' });
     const post = (p, b) => srv.api(f.jar, p, b);
@@ -39,7 +48,7 @@ test('children: the next add is 409, renaming still works, deleting frees a plac
   });
 });
 
-test('items: the next add is 409, editing, moving and deleting still work', async () => {
+test('LM-02 items: the next add is 409, editing, moving and deleting still work', async () => {
   await withServer({ env: { LIMIT_ITEMS: '2' } }, async (srv) => {
     const f = await srv.newFamily({ starter: false });
     const post = (p, b) => srv.api(f.jar, p, b);
@@ -70,7 +79,7 @@ test('items: the next add is 409, editing, moving and deleting still work', asyn
   });
 });
 
-test('rewards: the next add is 409, editing still works', async () => {
+test('LM-03 rewards: the next add is 409, editing still works', async () => {
   await withServer({ env: { LIMIT_REWARDS: '1' } }, async (srv) => {
     const f = await srv.newFamily({ starter: false });
     const post = (p, b) => srv.api(f.jar, p, b);
@@ -92,7 +101,7 @@ test('rewards: the next add is 409, editing still works', async () => {
   });
 });
 
-test('parents: a full family cannot be joined by invite, and the invite stays unused', async () => {
+test('LM-04 parents: a full family cannot be joined by invite, and the invite stays unused', async () => {
   for (const signup of [undefined, 'open']) {
     await withServer(
       { signup, allowlist: 'google:owner@example.test', env: { LIMIT_PARENTS: '1' } },
@@ -139,7 +148,7 @@ test('parents: a full family cannot be joined by invite, and the invite stays un
   }
 });
 
-test('parents: below the limit an invite still works', async () => {
+test('LM-05 parents: below the limit an invite still works', async () => {
   await withServer(
     { allowlist: 'google:parent1@example.test', env: { LIMIT_PARENTS: '2' } },
     async (srv) => {
@@ -164,7 +173,7 @@ test('parents: below the limit an invite still works', async () => {
   );
 });
 
-test('devices: pairing and redeeming stop at the limit; revoking a device frees a place', async () => {
+test('LM-06 devices: pairing and redeeming stop at the limit; revoking a device frees a place', async () => {
   await withServer({ env: { LIMIT_DEVICES: '2' } }, async (srv) => {
     const f = await srv.newFamily(); // the parent's own session is one device
     const post = (p, b) => srv.api(f.jar, p, b);
@@ -198,7 +207,7 @@ test('devices: pairing and redeeming stop at the limit; revoking a device frees 
 });
 
 // A code refused because the family is at its device limit is not used up.
-test('devices: a code refused for the limit is still good once a place is free', async () => {
+test('LM-07 devices: a code refused for the limit is still good once a place is free', async () => {
   await withServer({ env: { LIMIT_DEVICES: '2' } }, async (srv) => {
     const f = await srv.newFamily();
     const code = async () =>
@@ -214,7 +223,7 @@ test('devices: a code refused for the limit is still good once a place is free',
   });
 });
 
-test('entries per day: add, warn and mark stop at the limit; edits and reads still work', async () => {
+test('LM-08 entries per day: add, warn and mark stop at the limit; edits and reads still work', async () => {
   await withServer({ env: { LIMIT_ENTRIES_PER_DAY: '3' } }, async (srv) => {
     const f = await srv.newFamily();
     const post = (p, b) => srv.api(f.jar, p, b);
@@ -268,7 +277,7 @@ test('entries per day: add, warn and mark stop at the limit; edits and reads sti
   });
 });
 
-test('the limit is per family: another family has its own budget', async () => {
+test('LM-09 the limit is per family: another family has its own budget', async () => {
   await withServer({ signup: 'open', env: { LIMIT_CHILDREN: '2' } }, async (srv) => {
     const a = await srv.newFamily();
     const b = await srv.newFamily();
@@ -286,7 +295,12 @@ function limitsFor(env) {
     ['-e', "console.log(JSON.stringify(require('./server/config').limits))"],
     {
       cwd: ROOT,
-      env: { PATH: process.env.PATH, APP_BASE_URL: 'http://localhost:3999', ...env },
+      env: {
+        PATH: process.env.PATH,
+        ...coverageEnv(),
+        APP_BASE_URL: 'http://localhost:3999',
+        ...env,
+      },
       encoding: 'utf8',
     },
   );
@@ -294,7 +308,7 @@ function limitsFor(env) {
   return JSON.parse(r.stdout);
 }
 
-test('limits default to generous numbers when closed, tighter ones when sign-up is open or invite', () => {
+test('LM-10 limits default to generous numbers when closed, tighter ones when sign-up is open or invite', () => {
   const closed = limitsFor({});
   const open = limitsFor({ SIGNUP_MODE: 'open' });
   const invite = limitsFor({ SIGNUP_MODE: 'invite' });
@@ -314,7 +328,7 @@ test('limits default to generous numbers when closed, tighter ones when sign-up 
   assert.deepEqual(invite, open, 'invite sign-up is hosted too, so it gets the hosted defaults');
 });
 
-test('LIMIT_* variables override the defaults one at a time', () => {
+test('LM-11 LIMIT_* variables override the defaults one at a time', () => {
   const base = limitsFor({ SIGNUP_MODE: 'open' });
   const over = limitsFor({ SIGNUP_MODE: 'open', LIMIT_CHILDREN: '3', LIMIT_ENTRIES_PER_DAY: '77' });
   assert.equal(over.children, 3);
@@ -323,7 +337,7 @@ test('LIMIT_* variables override the defaults one at a time', () => {
   assert.equal(over.devices, base.devices);
 });
 
-test('open sign-up applies the hosted defaults to a real family', async () => {
+test('LM-12 open sign-up applies the hosted defaults to a real family', async () => {
   const hosted = limitsFor({ SIGNUP_MODE: 'open' });
   await withServer({ signup: 'open' }, async (srv) => {
     const f = await srv.newFamily({ starter: false });
@@ -338,7 +352,7 @@ test('open sign-up applies the hosted defaults to a real family', async () => {
   });
 });
 
-test('a bad LIMIT_* value refuses to start', async () => {
+test('SV-07 a bad LIMIT_* value refuses to start', async () => {
   const dir = tmpDir('limits');
   const base = {
     PORT: '0',

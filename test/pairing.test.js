@@ -20,7 +20,7 @@ const create = async (childId = F.childId) => {
 };
 const redeem = (code, j = jar(), headers) => srv.api(j, '/api/pair', { code }, { headers });
 
-test('a pairing code looks like XXXX-XXXX-XX, comes with a link and lasts about ten minutes', async () => {
+test('PA-02 a pairing code looks like XXXX-XXXX-XX, comes with a link and lasts about ten minutes', async () => {
   const issued = await create();
   assert.match(issued.code, /^[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{2}$/);
   assert.equal(issued.link, `${srv.base}/#pair=${issued.code.replaceAll('-', '')}`);
@@ -30,7 +30,7 @@ test('a pairing code looks like XXXX-XXXX-XX, comes with a link and lasts about 
   assert.ok(stored.every((r) => r.code_hash.length === 64 && !issued.link.includes(r.code_hash)));
 });
 
-test('a code pairs a device once, to the right child, and the device gets a session', async () => {
+test('PA-03 a code pairs a device once, to the right child, and the device gets a session', async () => {
   const issued = await create();
   const j = jar();
   const r = await redeem(issued.code, j);
@@ -44,7 +44,7 @@ test('a code pairs a device once, to the right child, and the device gets a sess
   assert.match(again.json.error, /code doesn't work/);
 });
 
-test('case, dashes and spaces in a typed code do not matter, and the link form works', async () => {
+test('PA-04 case, dashes and spaces in a typed code do not matter, and the link form works', async () => {
   const a = await create();
   assert.equal((await redeem(a.code.toLowerCase())).status, 200);
   const b = await create();
@@ -53,30 +53,30 @@ test('case, dashes and spaces in a typed code do not matter, and the link form w
   assert.equal((await redeem(c.link.split('#pair=')[1])).status, 200);
 });
 
-test('wrong, short, empty and non-text codes are refused', async () => {
+test('PA-05 wrong, short, empty and non-text codes are refused', async () => {
   for (const code of ['ABCD-EFGH-JK', 'x', '', null, 12345, {}, 'A'.repeat(200)])
     assert.equal((await redeem(code)).status, 400, JSON.stringify(code));
 });
 
-test('an expired code is refused', async () => {
+test('PA-06 an expired code is refused', async () => {
   const issued = await create();
   srv.sql((db) => db.prepare('UPDATE pairings SET expires=?').run('2000-01-01T00:00:00.000Z'));
   assert.equal((await redeem(issued.code)).status, 400);
 });
 
-test('a code for a child who was deleted is refused', async () => {
+test('PA-07 a code for a child who was deleted is refused', async () => {
   const added = await srv.api(F.jar, '/api/child/save', { name: 'Temp' });
   const issued = await create(added.json.childId);
   assert.equal((await srv.api(F.jar, '/api/child/delete', { id: added.json.childId })).status, 200);
   assert.equal((await redeem(issued.code)).status, 400);
 });
 
-test('a parent cannot make a code for a child outside the family or one that does not exist', async () => {
+test('PA-08 a parent cannot make a code for a child outside the family or one that does not exist', async () => {
   assert.equal((await srv.api(F.jar, '/api/pairing/create', { child_id: 999999 })).status, 404);
   assert.equal((await srv.api(F.jar, '/api/pairing/create', {})).status, 404);
 });
 
-test("a device's label comes from its user agent", async () => {
+test("PA-09 a device's label comes from its user agent", async () => {
   const issued = await create();
   const j = jar();
   await redeem(issued.code, j, { 'User-Agent': 'Mozilla/5.0 (Linux; Android 14)' });
@@ -84,7 +84,7 @@ test("a device's label comes from its user agent", async () => {
   assert.ok(devices.some((d) => d.kind === 'child' && d.device === 'Android' && d.who === 'Pia'));
 });
 
-test('a child session cannot write anything: every parent route is 403', async () => {
+test('PA-10 a child session cannot write anything: every parent route is 403', async () => {
   const dev = await srv.pairChild(F.jar, F.childId);
   const S = (await srv.api(dev.jar, '/api/state')).json;
   const body = {
@@ -106,7 +106,7 @@ test('a child session cannot write anything: every parent route is 403', async (
   assert.equal((await srv.api(dev.jar, '/api/state')).status, 200, 'the device keeps working');
 });
 
-test('a parent can log a child device out, and it takes effect at once', async () => {
+test('PA-11 a parent can log a child device out, and it takes effect at once', async () => {
   const dev = await srv.pairChild(F.jar, F.childId);
   const { devices } = (await srv.api(F.jar, '/api/state')).json;
   const id = devices
@@ -117,7 +117,7 @@ test('a parent can log a child device out, and it takes effect at once', async (
   assert.equal((await srv.api(dev.jar, '/api/state')).status, 401);
 });
 
-test('the 11th attempt within a minute is a 429 with Retry-After, even for a good code', async () => {
+test('PA-12 the 11th attempt within a minute is a 429 with Retry-After, even for a good code', async () => {
   const limited = await startServer({ signup: 'open' });
   try {
     const f = await limited.newFamily({});
@@ -138,7 +138,7 @@ test('the 11th attempt within a minute is a 429 with Retry-After, even for a goo
   }
 });
 
-test('the invite lookup is rate limited the same way', async () => {
+test('PA-13 the invite lookup is rate limited the same way', async () => {
   const limited = await startServer({ signup: 'open' });
   try {
     for (let i = 0; i < 10; i++)

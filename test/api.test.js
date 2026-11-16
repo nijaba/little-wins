@@ -21,7 +21,7 @@ before(async () => {
 });
 after(() => srv.close());
 
-test('the page and every file in public/ are served with nosniff', async () => {
+test('ED-01 the page and every file in public/ are served with nosniff', async () => {
   const r = await fetch(`${srv.base}/`);
   assert.equal(r.status, 200);
   assert.match(await r.text(), /Little Wins/);
@@ -33,7 +33,7 @@ test('the page and every file in public/ are served with nosniff', async () => {
   }
 });
 
-test('the page carries a strict content security policy', async () => {
+test('ED-02 the page carries a strict content security policy', async () => {
   const r = await fetch(`${srv.base}/`);
   const csp = r.headers.get('content-security-policy');
   assert.match(csp, /default-src 'self'/);
@@ -45,7 +45,7 @@ test('the page carries a strict content security policy', async () => {
   assert.equal(api.headers.get('x-content-type-options'), 'nosniff', 'API replies too');
 });
 
-test('a query string still serves the page and paths outside public/ are 404', async () => {
+test('ED-03 a query string still serves the page and paths outside public/ are 404', async () => {
   assert.equal(await rawStatus(srv, '/?from=home-screen'), 200);
   for (const f of ['package.json', 'server/index.js', 'server/config.js']) {
     assert.ok(
@@ -66,7 +66,7 @@ test('a query string still serves the page and paths outside public/ are 404', a
     assert.equal(await rawStatus(srv, p), 404, p);
 });
 
-test('a new family with the starter list starts empty-handed', async () => {
+test('SU-01 a new family with the starter list starts empty-handed', async () => {
   const S = await state();
   assert.equal(S.role, 'parent');
   assert.equal(S.balance, 0);
@@ -75,7 +75,7 @@ test('a new family with the starter list starts empty-handed', async () => {
   assert.equal(S.family.name, 'Api Family');
 });
 
-test('without a session the API answers 401, and forged session cookies do too', async () => {
+test('SI-01 without a session the API answers 401, and forged session cookies do too', async () => {
   assert.equal((await srv.api(null, '/api/state')).status, 401);
   const tok = P.jar.c[SESSION];
   assert.match(tok, /^[\w-]{43}$/, 'the session is a random 256-bit token');
@@ -89,7 +89,7 @@ test('without a session the API answers 401, and forged session cookies do too',
     assert.equal((await srv.api({ header: c }, '/api/state')).status, 401, c);
 });
 
-test('session tokens are stored hashed, not as-is', async () => {
+test('SI-02 session tokens are stored hashed, not as-is', async () => {
   const tok = P.jar.c[SESSION];
   const rows = srv.sql((db) =>
     db
@@ -102,7 +102,7 @@ test('session tokens are stored hashed, not as-is', async () => {
   assert.ok(rows.includes(crypto.createHash('sha256').update(tok).digest('hex')));
 });
 
-test('points: fixed ignores the amount, ranged is clamped, the penalty floors at 0, undo restores', async () => {
+test('PT-01 points: fixed ignores the amount, ranged is clamped, the penalty floors at 0, undo restores', async () => {
   let S = await state();
   const fixed = item(S, 'target', 'Reading 20 min'); // 5
   const ranged = item(S, 'target', 'Help with a family chore'); // 5-15
@@ -132,7 +132,7 @@ test('points: fixed ignores the amount, ranged is clamped, the penalty floors at
   assert.equal(S.balance, 42);
 });
 
-test('a penalty on an empty balance costs nothing later', async () => {
+test('PT-02 a penalty on an empty balance costs nothing later', async () => {
   const f = await srv.newFamily({ child: 'Pen' });
   let S = f.state;
   const pen = item(S, 'penalty');
@@ -144,7 +144,7 @@ test('a penalty on an empty balance costs nothing later', async () => {
   assert.equal(S.balance, 5);
 });
 
-test('notes are kept for parents and trimmed, and the child never sees them', async () => {
+test('PT-03 notes are kept for parents and trimmed, and the child never sees them', async () => {
   const f = await srv.newFamily({ child: 'Note' });
   const t = item(f.state, 'target', 'Reading 20 min');
   await srv.api(f.jar, '/api/add', { child_id: f.childId, item_id: t.id, note: '  secret  ' });
@@ -154,7 +154,7 @@ test('notes are kept for parents and trimmed, and the child never sees them', as
   assert.ok(h.length > 0 && h.every((e) => e.note === '' && e.points > 0));
 });
 
-test('the child sees positive history only, no penalties and no warnings', async () => {
+test('PT-04 the child sees positive history only, no penalties and no warnings', async () => {
   const S = await state();
   const t = item(S, 'target', 'Homework');
   await post('/api/warn', { child_id: P.childId, item_id: t.id });
@@ -171,7 +171,7 @@ test('the child sees positive history only, no penalties and no warnings', async
     assert.equal(key in K, false, `the child does not get ${key}`);
 });
 
-test('warnings count per target per day; challenges cannot get points or warnings', async () => {
+test('PT-05 warnings count per target per day; challenges cannot get points or warnings', async () => {
   const f = await srv.newFamily({ child: 'Warn' });
   const t = item(f.state, 'target');
   const ch = item(f.state, 'challenge');
@@ -191,14 +191,14 @@ test('warnings count per target per day; challenges cannot get points or warning
   assert.equal((await srv.api(f.jar, '/api/mark', { ...body(t.id), mark: 'ok' })).status, 400);
 });
 
-test('adding without a child or with an unknown item answers 404', async () => {
+test('PT-06 adding without a child or with an unknown item answers 404', async () => {
   const t = item(await state(), 'target');
   assert.equal((await post('/api/add', { item_id: t.id })).status, 404, 'no child');
   assert.equal((await post('/api/add', { child_id: P.childId, item_id: 999999 })).status, 404);
   assert.equal((await post('/api/undo', { id: 999999 })).status, 404);
 });
 
-test('weekly challenges: marks replace each other, bad days and the star rule', async () => {
+test('WK-01 weekly challenges: marks replace each other, bad days and the star rule', async () => {
   let S = await state();
   const ch = item(S, 'challenge');
   const k = S.week.days.indexOf(S.today);
@@ -242,7 +242,7 @@ test('weekly challenges: marks replace each other, bad days and the star rule', 
   assert.equal(S.stars, stars0, 'a bad day loses the star');
 });
 
-test('past weeks: browse, clamp, and fix marks on past days', async () => {
+test('WK-02 past weeks: browse, clamp, and fix marks on past days', async () => {
   const W = async (week, j = P.jar) =>
     (await srv.api(j, `/api/state?week=${encodeURIComponent(week)}`)).json;
   let S = await state();
@@ -289,7 +289,7 @@ test('past weeks: browse, clamp, and fix marks on past days', async () => {
   assert.deepEqual([S.week.start, S.week.prev, S.week.next], [old, null, shift(old, 7)]);
 });
 
-test('settings: add, edit, reorder and remove items and rewards', async () => {
+test('ST-01 settings: add, edit, reorder and remove items and rewards', async () => {
   let S = (
     await post('/api/item/save', {
       kind: 'target',
@@ -356,7 +356,7 @@ test('settings: add, edit, reorder and remove items and rewards', async () => {
   );
 });
 
-test('a removed item keeps its name in the history', async () => {
+test('ST-02 a removed item keeps its name in the history', async () => {
   const f = await srv.newFamily({ child: 'Hist' });
   const t = (
     await srv.api(f.jar, '/api/item/save', { kind: 'target', name: 'Gone soon', pmin: 3, pmax: 3 })
@@ -372,7 +372,7 @@ test('a removed item keeps its name in the history', async () => {
   );
 });
 
-test('the family name, time zone and week start are parent settings', async () => {
+test('ST-03 the family name, time zone and week start are parent settings', async () => {
   const f = await srv.newFamily({ name: 'Old name' });
   let r = await srv.api(f.jar, '/api/family/save', {
     name: '  New name  ',
@@ -398,7 +398,7 @@ test('the family name, time zone and week start are parent settings', async () =
   );
 });
 
-test('devices: listed for parents only, and can be logged out', async () => {
+test('PA-01 devices: listed for parents only, and can be logged out', async () => {
   const f = await srv.newFamily({ child: 'Dev' });
   const ios = { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)' };
   const child1 = await srv.pairChild(f.jar, f.childId, { headers: ios });
@@ -442,7 +442,7 @@ test('devices: listed for parents only, and can be logged out', async () => {
   assert.equal((await srv.api(f.jar, '/api/session/revoke', { id: 999999 })).status, 404);
 });
 
-test('logging out ends only that session', async () => {
+test('SI-03 logging out ends only that session', async () => {
   const f = await srv.newFamily({ child: 'Out' });
   const dev = await srv.pairChild(f.jar, f.childId);
   const r = await srv.api(dev.jar, '/api/logout', {});
@@ -452,7 +452,7 @@ test('logging out ends only that session', async () => {
   assert.equal((await srv.api(f.jar, '/api/state')).status, 200);
 });
 
-test('request bodies over 10 KB are refused with 413 and the server carries on', async () => {
+test('ED-04 request bodies over 10 KB are refused with 413 and the server carries on', async () => {
   const big = JSON.stringify({ kind: 'target', name: 'x', note: 'y'.repeat(20000) });
   assert.equal((await post('/api/item/save', big)).status, 413);
   assert.equal((await srv.api(null, '/api/pair', big)).status, 413, 'also before sign-in');
@@ -464,7 +464,7 @@ test('request bodies over 10 KB are refused with 413 and the server carries on',
   );
 });
 
-test('bad JSON and unknown routes do not crash the server', async () => {
+test('ED-05 bad JSON and unknown routes do not crash the server', async () => {
   assert.equal(
     (await post('/api/item/save', '{not json')).status,
     400,
@@ -475,7 +475,7 @@ test('bad JSON and unknown routes do not crash the server', async () => {
   assert.equal((await state()).role, 'parent');
 });
 
-test('writes must be JSON from this site: type, Origin and Sec-Fetch-Site are checked', async () => {
+test('ED-06 writes must be JSON from this site: type, Origin and Sec-Fetch-Site are checked', async () => {
   const body = { family_id: 1, name: 'Guard', timezone: 'UTC' };
   const t = item(await state(), 'target');
   const url = '/api/item/delete';
@@ -519,7 +519,7 @@ test('writes must be JSON from this site: type, Origin and Sec-Fetch-Site are ch
   );
 });
 
-test('a write route answers 404 to GET and 405 to other methods', async () => {
+test('ED-07 a write route answers 404 to GET and 405 to other methods', async () => {
   assert.equal((await srv.api(P.jar, '/api/item/save')).status, 404);
   assert.equal((await srv.api(P.jar, '/api/undo')).status, 404);
   for (const method of ['PUT', 'DELETE', 'PATCH']) {
@@ -531,7 +531,7 @@ test('a write route answers 404 to GET and 405 to other methods', async () => {
   assert.deepEqual((await r.json()).providers.sort(), ['github', 'google']);
 });
 
-test('data survives a restart and sessions stay valid', async () => {
+test('SV-01 data survives a restart and sessions stay valid', async () => {
   const before = await state();
   const kidBefore = await state(kid);
   await srv.restart();

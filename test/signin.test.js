@@ -16,26 +16,26 @@ describe('allowlist', () => {
   });
   after(() => srv.close());
 
-  test('a Google email on the allowlist may sign in and set up a family', async () => {
+  test('SI-04 a Google email on the allowlist may sign in and set up a family', async () => {
     const j = jar();
     const r = await srv.signIn(j, 'google', 'alice');
     assert.ok(r.ok, r.body);
     assert.deepEqual((await srv.api(j, '/api/state')).json.setup, true);
   });
 
-  test('a GitHub login on the allowlist matches without regard to case', async () => {
+  test('SI-05 a GitHub login on the allowlist matches without regard to case', async () => {
     const j = jar();
     assert.ok((await srv.signIn(j, 'github', 'carol')).ok);
   });
 
-  test('an email is compared in lower case', async () => {
+  test('SI-06 an email is compared in lower case', async () => {
     const j = jar();
     assert.ok(
       (await srv.signIn(j, 'google', { sub: 'g-case', email: 'ALICE@EXAMPLE.COM', name: 'x' })).ok,
     );
   });
 
-  test('a Google Workspace domain matches on the hd claim only', async () => {
+  test('SI-07 a Google Workspace domain matches on the hd claim only', async () => {
     const ok = jar();
     const r = await srv.signIn(ok, 'google', {
       sub: 'g-hd1',
@@ -66,7 +66,7 @@ describe('allowlist', () => {
     );
   });
 
-  test('a parent who is not on the list gets the private-instance page and no session', async () => {
+  test('SI-08 a parent who is not on the list gets the private-instance page and no session', async () => {
     for (const [provider, who] of [
       ['google', 'bob'],
       ['github', 'dan'],
@@ -80,7 +80,7 @@ describe('allowlist', () => {
     }
   });
 
-  test('the allowlist never matches on the display name', async () => {
+  test('SI-09 the allowlist never matches on the display name', async () => {
     const j = jar();
     const r = await srv.signIn(j, 'google', {
       sub: 'g-fake',
@@ -90,7 +90,7 @@ describe('allowlist', () => {
     assert.equal(r.status, 403);
   });
 
-  test('an entry for one provider does not admit the other', async () => {
+  test('SI-10 an entry for one provider does not admit the other', async () => {
     const j = jar();
     const r = await srv.signIn(j, 'github', { sub: '9', login: 'alice@example.com', name: 'x' });
     assert.equal(r.status, 403, 'a GitHub login is not a Google email');
@@ -110,13 +110,13 @@ describe('the sign-in state cookie', () => {
       headers: { cookie: j.header },
     });
 
-  test('a callback without the state cookie is a 400 page', async () => {
+  test('SI-11 a callback without the state cookie is a 400 page', async () => {
     const r = await callback(jar(), 'code=abc&state=abc');
     assert.equal(r.status, 400);
     assert.match(await r.text(), /took too long or started in another browser/);
   });
 
-  test('a tampered state cookie is refused', async () => {
+  test('SI-12 a tampered state cookie is refused', async () => {
     const j = jar();
     const start = await fetch(`${srv.base}/auth/google/login`, { redirect: 'manual' });
     const cookie = start.headers.get('set-cookie').split(';')[0];
@@ -135,7 +135,7 @@ describe('the sign-in state cookie', () => {
     noSession(j);
   });
 
-  test('a state parameter that does not match the cookie is refused', async () => {
+  test('SI-13 a state parameter that does not match the cookie is refused', async () => {
     const j = jar();
     const start = await fetch(`${srv.base}/auth/google/login`, {
       redirect: 'manual',
@@ -147,7 +147,7 @@ describe('the sign-in state cookie', () => {
     assert.equal((await callback(j, 'code=abc')).status, 400, 'a missing state parameter too');
   });
 
-  test('a state cookie older than ten minutes is refused, a fresh one is accepted', async () => {
+  test('SI-14 a state cookie older than ten minutes is refused, a fresh one is accepted', async () => {
     const old = craftState(
       { p: 'google', s: 'st', v: 'verifier', i: null },
       Date.now() - 11 * 60e3,
@@ -161,19 +161,19 @@ describe('the sign-in state cookie', () => {
     assert.equal(r2.headers.get('location'), '/', 'a provider error just goes back to the app');
   });
 
-  test('a state cookie made for one provider cannot finish a sign-in at the other', async () => {
+  test('SI-15 a state cookie made for one provider cannot finish a sign-in at the other', async () => {
     const c = craftState({ p: 'google', s: 'st', v: 'v', i: null });
     const r = await callback({ header: `lw_oauth=${c}` }, 'code=abc&state=st', 'github');
     assert.equal(r.status, 400);
   });
 
-  test('the callback clears the state cookie after use', async () => {
+  test('SI-16 the callback clears the state cookie after use', async () => {
     const j = jar();
     assert.ok((await srv.signIn(j, 'google', 'alice')).ok);
     assert.equal(j.c.lw_oauth, undefined);
   });
 
-  test('an unverified Google email is refused', async () => {
+  test('SI-17 an unverified Google email is refused', async () => {
     const j = jar();
     const r = await srv.signIn(j, 'google', {
       sub: 'g-unv',
@@ -186,14 +186,14 @@ describe('the sign-in state cookie', () => {
     noSession(j);
   });
 
-  test('unknown providers are 404', async () => {
+  test('SI-18 unknown providers are 404', async () => {
     assert.equal(
       (await fetch(`${srv.base}/auth/twitter/login`, { redirect: 'manual' })).status,
       404,
     );
   });
 
-  test('the login page escapes nothing it was not given and refuses a forged token', async () => {
+  test('SI-19 the login page escapes nothing it was not given and refuses a forged token', async () => {
     // The provider rejects a code that was not issued for this verifier.
     const j = jar();
     const start = await fetch(`${srv.base}/auth/google/login`, { redirect: 'manual' });
@@ -206,7 +206,7 @@ describe('the sign-in state cookie', () => {
 });
 
 describe('sign-up modes', () => {
-  test('closed with an empty allowlist admits nobody', async () => {
+  test('SI-20 closed with an empty allowlist admits nobody', async () => {
     const srv = await startServer({ allowlist: '' });
     try {
       for (const who of ['alice', 'bob']) {
@@ -220,7 +220,7 @@ describe('sign-up modes', () => {
     }
   });
 
-  test('open sign-up lets anyone create a family, and a returning parent lands in theirs', async () => {
+  test('SI-21 open sign-up lets anyone create a family, and a returning parent lands in theirs', async () => {
     const srv = await startServer({ signup: 'open' });
     try {
       const a = jar();
@@ -243,7 +243,7 @@ describe('sign-up modes', () => {
     }
   });
 
-  test('invite mode is closed to family creation without the allowlist', async () => {
+  test('SI-22 invite mode is closed to family creation without the allowlist', async () => {
     const srv = await startServer({ signup: 'invite' });
     try {
       const j = jar();
@@ -253,7 +253,7 @@ describe('sign-up modes', () => {
     }
   });
 
-  test('changing display name or email does not change who a parent is', async () => {
+  test('SI-23 changing display name or email does not change who a parent is', async () => {
     const srv = await startServer({ allowlist: 'google:old@example.test' });
     try {
       const a = jar();
@@ -292,7 +292,7 @@ describe('sign-up modes', () => {
     }
   });
 
-  test('the same person on two providers is two accounts', async () => {
+  test('SI-24 the same person on two providers is two accounts', async () => {
     const srv = await startServer({ signup: 'open' });
     try {
       const g = await srv.newFamily({ name: 'G fam', provider: 'google' });
@@ -306,7 +306,7 @@ describe('sign-up modes', () => {
 });
 
 describe('sign-in rate limit', () => {
-  test('the 11th sign-in start within a minute is a 429 page', async () => {
+  test('SI-25 the 11th sign-in start within a minute is a 429 page', async () => {
     const srv = await startServer({ allowlist: '*' });
     try {
       for (let i = 0; i < 10; i++)

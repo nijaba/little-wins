@@ -29,7 +29,7 @@ const writeLimiter = createRateLimiter({ max: writes, windowMs });
 const auth = createAuth({ repo, sessions, limiter, clientIp });
 const handleApi = createRouter({ repo, sessions, limiter, clientIp });
 
-http
+const server = http
   .createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://x');
@@ -71,3 +71,18 @@ http
     }
   })
   .listen(config.port, () => console.log('up'));
+
+// Graceful shutdown (docker stop, Ctrl-C): stop taking requests, close the database, exit
+// normally (which also lets coverage tools write their data). Give up after 5 seconds.
+function shutdown() {
+  server.close(() => {
+    try {
+      db.close();
+    } catch {}
+    process.exit(0);
+  });
+  server.closeAllConnections?.();
+  setTimeout(() => process.exit(0), 5000).unref();
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

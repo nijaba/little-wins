@@ -39,7 +39,9 @@
   const wq = () => {
     const q = [];
     if (wkSel) q.push(`week=${wkSel}`);
-    if (chSel && S?.role === 'parent') q.push(`child=${chSel}`);
+    // Before the first state arrives we don't know the role yet: ask for the remembered child
+    // anyway (a child's device always gets its own child, whatever is asked).
+    if (chSel && S?.role !== 'child') q.push(`child=${chSel}`);
     return q.length ? `?${q.join('&')}` : '';
   };
 
@@ -146,8 +148,8 @@
     if (r?.ok) return api('state');
     const j = r ? await r.json().catch(() => ({})) : {};
     const msg = j.error || STR.login.codeFailed;
-    if ($('err')) $('err').textContent = msg;
-    else alert(msg);
+    if (!$('err')) login(); // opened from a #pair= link: show the sign-in screen first
+    $('err').textContent = msg;
     return false;
   }
 
@@ -216,6 +218,12 @@
     if ($('ops-body')) $('ops-body').innerHTML = opsHtml();
   }
 
+  // Week start as a pair of radio buttons in a fieldset (1 = Monday, 0 = Sunday).
+  const weekRadios = (name, st, value) =>
+    `<fieldset class=radios><legend>${st.weekStart}</legend><label><input type=radio name=${name} value=1${
+      value ? ' checked' : ''
+    }> ${st.monday}</label> <label><input type=radio name=${name} value=0${value ? '' : ' checked'}> ${st.sunday}</label></fieldset>`;
+
   // ---- Setup ----
 
   function renderSetup() {
@@ -240,7 +248,7 @@
     const f = (id, label, v, max) =>
       `<p><label for=${id}>${label}</label><br><input id=${id} maxlength=${max} value="${esc(v)}"></p>`;
     $('app').innerHTML =
-      `<main><h2 class=center>${st.title}</h2><div class=card><p class=p0>${S.me?.name ? st.hello(esc(S.me.name)) : ''}</p>${f('s_family', st.familyName, '', 60)}${f('s_child', st.childName, '', 40)}${f('s_tz', st.timeZone, tz, 60)}<p><label for=s_week>${st.weekStart}</label><br><select id=s_week><option value=1>${st.monday}</option><option value=0>${st.sunday}</option></select></p><p><label class=chk><input id=s_starter type=checkbox checked> ${st.starter}</label></p><button class=b data-action=do-setup>${st.create}</button></div><p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
+      `<main><h2 class=center>${st.title}</h2><div class=card><p class=p0>${S.me?.name ? st.hello(esc(S.me.name)) : ''}</p>${f('s_family', st.familyName, '', 60)}${f('s_child', st.childName, '', 40)}${f('s_tz', st.timeZone, tz, 60)}${weekRadios('s_week', st, 1)}<p><label class=chk><input id=s_starter type=checkbox checked> ${st.starter}</label></p><button class=b data-action=do-setup>${st.create}</button></div><p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
   }
 
   function doSetup() {
@@ -248,7 +256,7 @@
       family_name: $('s_family').value,
       child_name: $('s_child').value,
       timezone: $('s_tz').value,
-      week_start: +$('s_week').value,
+      week_start: +document.querySelector('input[name=s_week]:checked').value,
       starter: $('s_starter').checked,
     });
   }
@@ -406,7 +414,7 @@
       api('family/save', {
         name: $('f_fam').value,
         timezone: $('f_tz').value,
-        week_start: +$('f_week').value,
+        week_start: +document.querySelector('input[name=f_week]:checked').value,
       }),
     'del-child': (d) => {
       const c = S.children.find((x) => x.id === +d.id);
@@ -634,7 +642,7 @@
       'fam',
       st.family,
       esc(fam.name),
-      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p><p><label for=f_week>${st.weekStart}</label><br><select id=f_week><option value=1 ${fam.weekStart ? 'selected' : ''}>${st.monday}</option><option value=0 ${fam.weekStart ? '' : 'selected'}>${st.sunday}</option></select></p><button class=b data-action=save-family>${st.save}</button></div>${S.me.owner ? ownerTools() : ''}`,
+      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p>${weekRadios('f_week', st, fam.weekStart)}<button class=b data-action=save-family>${st.save}</button></div>${S.me.owner ? ownerTools() : ''}`,
     );
     let c = '';
     for (const k of S.children) {
@@ -761,7 +769,7 @@
     $('app').innerHTML = `${h}</main><div class=tabs>${Object.keys(T)
       .map(
         (k) =>
-          `<button class="${k === tab ? 'on' : ''}" data-action=tab data-tab=${k}><i aria-hidden=true>${T[k][0]}</i>${T[k][1]}</button>`,
+          `<button class="${k === tab ? 'on' : ''}"${k === tab ? ' aria-current=page' : ''} data-action=tab data-tab=${k}><i aria-hidden=true>${T[k][0]}</i>${T[k][1]}</button>`,
       )
       .join('')}</div>`;
     applyWidths();
@@ -807,7 +815,7 @@
     if (!m) return false;
     history.replaceState(null, '', location.pathname + location.search);
     if (m[1] === 'invite') showInvite(m[2]);
-    else if (!(await redeem(m[2]))) login();
+    else await redeem(m[2]);
     return true;
   }
 

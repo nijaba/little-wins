@@ -445,7 +445,7 @@ The `ExperimentalWarning: SQLite is an experimental feature` line in the logs is
 
 ## Testing
 
-From the project folder, with Node 22.5 or newer (the image uses Node 24):
+From the project folder, with Node 22.13 or newer (the image uses Node 24):
 
 ```bash
 npm test        # or: node --test

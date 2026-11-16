@@ -13,7 +13,7 @@ after(() => srv.close());
 const dayIn = (timeZone) => new Date().toLocaleDateString('en-CA', { timeZone });
 const dow = (day) => new Date(`${day}T12:00:00`).getDay();
 
-test("each family's today follows its own time zone", async () => {
+test("TZ-01 each family's today follows its own time zone", async () => {
   const east = await srv.newFamily({ tz: 'Pacific/Kiritimati' }); // UTC+14
   const west = await srv.newFamily({ tz: 'Etc/GMT+12' }); // UTC-12
   assert.equal(east.state.today, dayIn('Pacific/Kiritimati'));
@@ -23,7 +23,7 @@ test("each family's today follows its own time zone", async () => {
   assert.equal((await srv.api(kid.jar, '/api/state')).json.today, east.state.today, 'children too');
 });
 
-test('changing the time zone changes today', async () => {
+test('TZ-02 changing the time zone changes today', async () => {
   const f = await srv.newFamily({ tz: 'Etc/GMT+12' });
   const r = await srv.api(f.jar, '/api/family/save', {
     name: 'Moved',
@@ -32,7 +32,7 @@ test('changing the time zone changes today', async () => {
   assert.equal(r.json.today, dayIn('Pacific/Kiritimati'));
 });
 
-test('a week that starts on Sunday has Sunday first and labels starting with S', async () => {
+test('TZ-03 a week that starts on Sunday has Sunday first and labels starting with S', async () => {
   const sun = await srv.newFamily({ weekStart: 0 });
   const mon = await srv.newFamily({ weekStart: 1 });
   assert.equal(dow(sun.state.week.days[0]), 0);
@@ -43,7 +43,7 @@ test('a week that starts on Sunday has Sunday first and labels starting with S',
   assert.equal(sun.state.week.days[6], shift(sun.state.week.days[0], 6));
 });
 
-test('the week start can be changed in Settings and previous weeks follow it', async () => {
+test('TZ-04 the week start can be changed in Settings and previous weeks follow it', async () => {
   const f = await srv.newFamily({ weekStart: 1 });
   const r = await srv.api(f.jar, '/api/family/save', {
     name: 'Sundays',
@@ -55,7 +55,7 @@ test('the week start can be changed in Settings and previous weeks follow it', a
   assert.equal(r.json.week.prev, shift(r.json.week.start, -7));
 });
 
-test('marks on a day that is still in the future in the family time zone are refused', async () => {
+test('TZ-05 marks on a day that is still in the future in the family time zone are refused', async () => {
   const east = await srv.newFamily({ tz: 'Pacific/Kiritimati' });
   const west = await srv.newFamily({ tz: 'Etc/GMT+12' });
   const eastToday = east.state.today;
@@ -73,7 +73,7 @@ test('marks on a day that is still in the future in the family time zone are ref
   assert.equal((await mark(east, shift(eastToday, 1))).status, 400);
 });
 
-test('new entries are dated in the family time zone', async () => {
+test('TZ-06 new entries are dated in the family time zone', async () => {
   const f = await srv.newFamily({ tz: 'Pacific/Kiritimati' });
   const t = item(f.state, 'target');
   await srv.api(f.jar, '/api/add', { child_id: f.childId, item_id: t.id });

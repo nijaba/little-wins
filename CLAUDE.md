@@ -22,7 +22,10 @@ Decided by the owner. Ask before trading one away.
 ```bash
 npm install                                     # dev tools (Biome); no runtime dependencies
 npm test                                        # all tests (node --test)
-npm run lint                                    # Biome lint + format check; CI will run it
+npm run lint                                    # Biome lint + format check (CI runs it)
+npm run test:coverage                           # API tests with coverage of the server (c8, thresholds)
+npm run e2e:install && npm run test:e2e         # browser tests (Playwright, Chromium + WebKit)
+SKIP_IMAGE_TESTS=1 npm test                     # skip the Docker image test (it needs Docker)
 npm run format                                  # apply Biome formatting
 npm run dev                                     # local server on :3000 with fake sign-in; pick a test person
 docker compose up -d --build                    # container; real settings go in .env (see .env.example)
@@ -64,6 +67,6 @@ docs/            design.md, build-plan.md, admin-guide.md
 ## How to work here
 
 1. Read the matching part of `docs/design.md`. If the design is silent or wrong, ask; when the owner decides, update the design in the same change.
-2. Write or update tests with the change. Run `npm test` and `npm run lint` before saying the work is done.
+2. Write or update tests with the change, with an ID from `docs/test-plan.md` in the test name (add the row to the plan). Run `npm run lint`, `npm test` and, after page changes, `npm run test:e2e` before saying the work is done.
 3. Never test against real data: tests use a temporary database.
 4. The page runs under a strict Content Security Policy: no inline scripts, styles or event handlers. Use `data-action` attributes and the delegated listeners in `app.js`; set dynamic sizes through the DOM, not `style=` attributes.

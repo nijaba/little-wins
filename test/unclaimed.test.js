@@ -62,7 +62,7 @@ for (const [label, version, childName, expectedChild] of [
   ['the earliest database, without columns or settings', 0, null, 'Child'],
 ]) {
   describe(label, () => {
-    test('is migrated to one family with one child, its entries and no parents', async () => {
+    test('MG-01 is migrated to one family with one child, its entries and no parents', async () => {
       const dir = tmpDir('unclaimed');
       legacyDb(dir, { version, childName });
       const srv = await startServer({ dir, allowlist: 'google:alice@example.com' });
@@ -94,7 +94,7 @@ for (const [label, version, childName, expectedChild] of [
 }
 
 describe('claiming the migrated family', () => {
-  test('the first allowlisted parent becomes its owner with no setup step, the next gets their own', async () => {
+  test('MG-02 the first allowlisted parent becomes its owner with no setup step, the next gets their own', async () => {
     const dir = tmpDir('unclaimed');
     legacyDb(dir, { version: 1, childName: 'Sam' });
     const srv = await startServer({
@@ -135,7 +135,7 @@ describe('claiming the migrated family', () => {
     }
   });
 
-  test('with open sign-up a stranger gets their own setup, never the unclaimed family', async () => {
+  test('MG-03 with open sign-up a stranger gets their own setup, never the unclaimed family', async () => {
     const dir = tmpDir('unclaimed');
     legacyDb(dir, { version: 1, childName: 'Sam' });
     const srv = await startServer({ dir, signup: 'open', allowlist: 'google:alice@example.com' });
@@ -161,7 +161,7 @@ describe('claiming the migrated family', () => {
     }
   });
 
-  test('a parent who is not on the allowlist cannot claim it in closed mode either', async () => {
+  test('MG-04 a parent who is not on the allowlist cannot claim it in closed mode either', async () => {
     const dir = tmpDir('unclaimed');
     legacyDb(dir, { version: 1, childName: 'Sam' });
     const srv = await startServer({ dir, allowlist: 'google:alice@example.com' });

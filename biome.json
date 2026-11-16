@@ -6,6 +6,8 @@
       "public/**",
       "test/**",
       "scripts/**",
+      "playwright.config.js",
+      "e2e/**/*.js",
       "*.json",
       "!**/node_modules",
       "!package-lock.json"

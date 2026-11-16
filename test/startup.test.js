@@ -14,7 +14,7 @@ const GOOD = {
 };
 const LOCAL = { APP_BASE_URL: 'http://localhost:3999', LITTLE_WINS_FAKE_SSO: '1' };
 
-test('the server refuses unsafe or unreadable configuration and creates no database', async () => {
+test('SV-03 the server refuses unsafe or unreadable configuration and creates no database', async () => {
   const dir = tmpDir('startup');
   const db = path.join(dir, 'refused.db');
   const cases = [
@@ -97,7 +97,7 @@ test('the server refuses unsafe or unreadable configuration and creates no datab
   removeDir(dir);
 });
 
-test('a refusal lists every problem at once', async () => {
+test('SV-04 a refusal lists every problem at once', async () => {
   const r = await startFails({
     PORT: '0',
     DATABASE_PATH: path.join(tmpDir('startup'), 'x.db'),
@@ -109,7 +109,7 @@ test('a refusal lists every problem at once', async () => {
     assert.match(r.out, m);
 });
 
-test('a valid https configuration starts, and the config endpoint reports it', async () => {
+test('SV-05 a valid https configuration starts, and the config endpoint reports it', async () => {
   const srv = await startServer({
     env: hostedEnv({ SIGNUP_MODE: 'invite', FORWARDED_ALLOW_IPS: '127.0.0.1,::1' }),
   });
@@ -143,7 +143,7 @@ test('a valid https configuration starts, and the config endpoint reports it', a
   }
 });
 
-test('outside localhost, plain http is redirected to APP_BASE_URL and only /healthz answers', async () => {
+test('ED-17 outside localhost, plain http is redirected to APP_BASE_URL and only /healthz answers', async () => {
   const srv = await startServer({ env: hostedEnv() });
   try {
     for (const [p, hostile] of [
@@ -178,7 +178,7 @@ test('outside localhost, plain http is redirected to APP_BASE_URL and only /heal
   }
 });
 
-test('X-Forwarded-Proto: https from an untrusted peer does not lift the redirect', async () => {
+test('ED-18 X-Forwarded-Proto: https from an untrusted peer does not lift the redirect', async () => {
   for (const FORWARDED_ALLOW_IPS of [undefined, '10.1.2.3']) {
     const srv = await startServer({ env: hostedEnv({ FORWARDED_ALLOW_IPS }) });
     try {
@@ -190,7 +190,7 @@ test('X-Forwarded-Proto: https from an untrusted peer does not lift the redirect
   }
 });
 
-test('behind a trusted proxy that forwards https, the API answers normally', async () => {
+test('ED-19 behind a trusted proxy that forwards https, the API answers normally', async () => {
   for (const FORWARDED_ALLOW_IPS of ['127.0.0.1', '*']) {
     const srv = await startServer({ env: hostedEnv({ FORWARDED_ALLOW_IPS }) });
     try {
@@ -209,7 +209,7 @@ test('behind a trusted proxy that forwards https, the API answers normally', asy
   }
 });
 
-test('localhost development works with a random secret and the fake provider', async () => {
+test('SV-06 localhost development works with a random secret and the fake provider', async () => {
   const srv = await startServer({ env: { SESSION_SECRET: undefined } });
   try {
     assert.deepEqual((await srv.api(null, '/api/config')).json.providers.sort(), [

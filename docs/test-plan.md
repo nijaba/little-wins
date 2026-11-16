@@ -1,0 +1,372 @@
+# Little Wins test plan
+
+Every behavior in the [design](design.md) has at least one case here, grouped by area and run at the cheapest level that proves it. Every case has an ID; test names start with it, so `node --test --test-name-pattern=PT-03 test/*.test.js` runs one case. One test may carry several IDs.
+
+## Approach
+
+| Level | Covers | Tool |
+| --- | --- | --- |
+| Unit | Pure rules with no network (`server/scoring.js`, configuration) | `node --test` |
+| API | The real server on a temporary database, signed in through the fake provider | `node --test` |
+| E2E | Whole flows in real browsers at phone sizes | Playwright (Chromium and WebKit) |
+| Image | The built Docker image, run hardened | `node --test`, needs Docker |
+| Manual | What automation cannot judge: real sign-in providers, the home-screen icon | Checklist, before each release |
+
+Run `npm test` for Unit, API and Image (Image is skipped without Docker or with `SKIP_IMAGE_TESTS=1`), `npm run test:e2e` for E2E, and `npm run test:coverage` for a coverage report with thresholds on `server/`. `test/test-plan.test.js` checks that every Unit, API and Image ID below appears in a test name, and that every ID used in a test name is in this plan.
+
+## Test data and environments
+
+| Item | What it is | Used by |
+| --- | --- | --- |
+| Temporary database | A new SQLite file per test server, removed afterwards | Unit, API, E2E |
+| Fake sign-in provider | Local stand-in for Google and GitHub, only on localhost | API, E2E |
+| Test server | `node server/index.js` as a child process on a free port | API, E2E |
+| Hardened container | The image run with a read-only root, no capabilities, `/data` as a tmpfs | Image |
+| Real accounts | One Google and one GitHub test account | Manual |
+| Devices | A recent iPhone and Android phone | Manual |
+
+## SC: Scoring rules
+
+Pure rules in `server/scoring.js`: dates, weeks, balance, stars, history.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| SC-01 | Shift moves across months, years and leap days | Unit |
+| SC-02 | ValidDay accepts real dates only | Unit |
+| SC-03 | Monday finds the start of the week for every weekday | Unit |
+| SC-04 | Monday works across a year boundary | Unit |
+| SC-05 | Balance clamps at 0 in time order | Unit |
+| SC-06 | LatestMarks keeps the last mark per item and day | Unit |
+| SC-07 | WeekTotals counts perfect and bad days per item and week | Unit |
+| SC-08 | Stars: 2 perfect days and no bad day win a star | Unit |
+| SC-09 | Stars: weeks and items count separately | Unit |
+| SC-10 | TodayStatus counts warnings and reads marks for today only | Unit |
+| SC-11 | WeekRange: default, future and early weeks clamp | Unit |
+| SC-12 | WeekRange: with no entries you can still go back one week | Unit |
+| SC-13 | WeekRange: a recent first entry still allows one week back; invalid first day is ignored | Unit |
+| SC-14 | WeekMarks lists seven days and each challenge's marks | Unit |
+| SC-15 | History: parents see everything, the child only positive points without notes | Unit |
+| SC-16 | History keeps the last 60 entries | Unit |
+| SC-17 | StartOfWeek with a Sunday start finds the Sunday for every weekday | Unit |
+| SC-18 | StartOfWeek defaults to Monday and agrees with monday() | Unit |
+| SC-19 | DayLabels start with the first day of the week | Unit |
+| SC-20 | Stars: a Sunday-start week groups Sunday with the days after it | Unit |
+| SC-21 | WeekRange with a Sunday start begins on Sunday and clamps like Monday weeks | Unit |
+
+## PT: Points, penalties and warnings
+
+Recording and undoing entries.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| PT-01 | Points: fixed ignores the amount, ranged is clamped, the penalty floors at 0, undo restores | API |
+| PT-02 | A penalty on an empty balance costs nothing later | API |
+| PT-03 | Notes are kept for parents and trimmed, and the child never sees them | API |
+| PT-04 | The child sees positive history only, no penalties and no warnings | API |
+| PT-05 | Warnings count per target per day; challenges cannot get points or warnings | API |
+| PT-06 | Adding without a child or with an unknown item answers 404 | API |
+
+## WK: Weekly challenges and stars
+
+Marks, bad days, star rule and past weeks.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| WK-01 | Weekly challenges: marks replace each other, bad days and the star rule | API |
+| WK-02 | Past weeks: browse, clamp, and fix marks on past days | API |
+
+## ST: Settings
+
+Items, rewards, family name, time zone and week start.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| ST-01 | Settings: add, edit, reorder and remove items and rewards | API |
+| ST-02 | A removed item keeps its name in the history | API |
+| ST-03 | The family name, time zone and week start are parent settings | API |
+
+## SI: Sign-in and sessions
+
+Allowlist, OAuth state, sign-up modes, session handling.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| SI-01 | Without a session the API answers 401, and forged session cookies do too | API |
+| SI-02 | Session tokens are stored hashed, not as-is | API |
+| SI-03 | Logging out ends only that session | API |
+| SI-04 | A Google email on the allowlist may sign in and set up a family | API |
+| SI-05 | A GitHub login on the allowlist matches without regard to case | API |
+| SI-06 | An email is compared in lower case | API |
+| SI-07 | A Google Workspace domain matches on the hd claim only | API |
+| SI-08 | A parent who is not on the list gets the private-instance page and no session | API |
+| SI-09 | The allowlist never matches on the display name | API |
+| SI-10 | An entry for one provider does not admit the other | API |
+| SI-11 | A callback without the state cookie is a 400 page | API |
+| SI-12 | A tampered state cookie is refused | API |
+| SI-13 | A state parameter that does not match the cookie is refused | API |
+| SI-14 | A state cookie older than ten minutes is refused, a fresh one is accepted | API |
+| SI-15 | A state cookie made for one provider cannot finish a sign-in at the other | API |
+| SI-16 | The callback clears the state cookie after use | API |
+| SI-17 | An unverified Google email is refused | API |
+| SI-18 | Unknown providers are 404 | API |
+| SI-19 | The login page escapes nothing it was not given and refuses a forged token | API |
+| SI-20 | Closed with an empty allowlist admits nobody | API |
+| SI-21 | Open sign-up lets anyone create a family, and a returning parent lands in theirs | API |
+| SI-22 | Invite mode is closed to family creation without the allowlist | API |
+| SI-23 | Changing display name or email does not change who a parent is | API |
+| SI-24 | The same person on two providers is two accounts | API |
+| SI-25 | The 11th sign-in start within a minute is a 429 page | API |
+
+## SU: Family setup
+
+First-run setup for a signed-in parent.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| SU-01 | A new family with the starter list starts empty-handed | API |
+| SU-02 | A signed-in parent without a family sees the setup state | API |
+| SU-03 | Setup needs a family name, a child name and a known time zone | API |
+| SU-04 | Setup with the starter list creates it, and the first child | API |
+| SU-05 | Starter: false creates an empty family | API |
+| SU-06 | Names are trimmed and capped, and week_start 0 means Sunday | API |
+| SU-07 | A parent can only set up once | API |
+| SU-08 | A session still setting up can only do setup, state and logout | API |
+| SU-09 | Setup and state need a session | API |
+| SU-10 | A child device cannot run setup | API |
+
+## FA: Family, owner and invites
+
+Invites, co-parents, ownership.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| FA-01 | An invite link names the family and is stored hashed | API |
+| FA-02 | Unknown, short or missing invite tokens are 404 | API |
+| FA-03 | A parent joins through sign-in carrying the invite, even if not on the allowlist | API |
+| FA-04 | An invite works once | API |
+| FA-05 | An expired invite does not work | API |
+| FA-06 | A revoked invite does not work, and revoking twice is a 404 | API |
+| FA-07 | A parent who already has a family is not moved by an invite | API |
+| FA-08 | A child device cannot create or revoke invites | API |
+| FA-09 | Uses the family on its next request instead of staying in setup | API |
+| FA-10 | Only the owner can remove a parent or transfer ownership | API |
+| FA-11 | The owner cannot remove or hand ownership to themselves | API |
+| FA-12 | After a transfer the old owner is a parent and the new owner can remove them | API |
+| FA-13 | A removed parent's sessions stop working at once and they cannot get back in | API |
+| FA-14 | A parent session whose membership is gone stops working, even if the session row is left behind | API |
+| FA-15 | A removed parent can later set up a family of their own | API |
+
+## CH: Children
+
+Several children per family and what a child device sees.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| CH-01 | A parent adds a child, who is selected in the reply | API |
+| CH-02 | The child query parameter picks the child, and the first is the default | API |
+| CH-03 | Points, warnings, marks and stars are kept per child | API |
+| CH-04 | One child's entry can be undone without touching the other | API |
+| CH-05 | A child device always sees only its own child, even asking for a sibling | API |
+| CH-06 | A parent renames a child; an unknown child is a 404 | API |
+| CH-07 | Deleting a child removes their history, devices and codes, and not the others | API |
+| CH-08 | The last child cannot be deleted | API |
+| CH-09 | A child device cannot add, rename or delete children | API |
+
+## PA: Pairing and devices
+
+Pairing codes, child devices, device log-out.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| PA-01 | Devices: listed for parents only, and can be logged out | API |
+| PA-02 | A pairing code looks like XXXX-XXXX-XX, comes with a link and lasts about ten minutes | API |
+| PA-03 | A code pairs a device once, to the right child, and the device gets a session | API |
+| PA-04 | Case, dashes and spaces in a typed code do not matter, and the link form works | API |
+| PA-05 | Wrong, short, empty and non-text codes are refused | API |
+| PA-06 | An expired code is refused | API |
+| PA-07 | A code for a child who was deleted is refused | API |
+| PA-08 | A parent cannot make a code for a child outside the family or one that does not exist | API |
+| PA-09 | A device's label comes from its user agent | API |
+| PA-10 | A child session cannot write anything: every parent route is 403 | API |
+| PA-11 | A parent can log a child device out, and it takes effect at once | API |
+| PA-12 | The 11th attempt within a minute is a 429 with Retry-After, even for a good code | API |
+| PA-13 | The invite lookup is rate limited the same way | API |
+
+## TZ: Time zones and week start
+
+Each family has its own today.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| TZ-01 | Each family's today follows its own time zone | API |
+| TZ-02 | Changing the time zone changes today | API |
+| TZ-03 | A week that starts on Sunday has Sunday first and labels starting with S | API |
+| TZ-04 | The week start can be changed in Settings and previous weeks follow it | API |
+| TZ-05 | Marks on a day that is still in the future in the family time zone are refused | API |
+| TZ-06 | New entries are dated in the family time zone | API |
+
+## IS: Family isolation
+
+No route reaches another family.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| IS-01 | Every parent route, called by another family, cannot touch family A (one case per route) | API |
+| IS-02 | Every case in this file is for a route that still exists | API |
+| IS-03 | Family B never sees any of A's names, whatever it asks for | API |
+| IS-04 | A child device of B asking for A's child still sees only its own child | API |
+| IS-05 | Family A's data and its names survive all of the attacks | API |
+| IS-06 | B's own changes through those routes landed in B only | API |
+| IS-07 | A parent of A is a parent of A only: A2 cannot reach B either | API |
+| IS-08 | B's owner deleting with their own family name deletes B only, never A | API |
+
+## ED: Edge: headers, proxies, HTTPS, rate limits
+
+What a reverse proxy, a browser or an attacker sees.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| ED-01 | The page and every file in public/ are served with nosniff | API |
+| ED-02 | The page carries a strict content security policy | API |
+| ED-03 | A query string still serves the page and paths outside public/ are 404 | API |
+| ED-04 | Request bodies over 10 KB are refused with 413 and the server carries on | API |
+| ED-05 | Bad JSON and unknown routes do not crash the server | API |
+| ED-06 | Writes must be JSON from this site: type, Origin and Sec-Fetch-Site are checked | API |
+| ED-07 | A write route answers 404 to GET and 405 to other methods | API |
+| ED-08 | Every kind of response on localhost carries the security headers and no HSTS | API |
+| ED-09 | Outside localhost every response carries the headers plus HSTS, redirects included | API |
+| ED-10 | X-Forwarded-For from an untrusted peer is ignored: one budget for the peer | API |
+| ED-11 | From a trusted proxy each forwarded client has its own budget, using the LAST entry | API |
+| ED-12 | The forwarded address also governs sign-in attempts | API |
+| ED-13 | The 601st API read within a minute is refused with Retry-After | API |
+| ED-14 | The 121st API write within a minute is refused with Retry-After | API |
+| ED-15 | API budgets are per client behind a trusted proxy | API |
+| ED-16 | /api/config reports the privacy and terms links, null by default | API |
+| ED-17 | Outside localhost, plain http is redirected to APP_BASE_URL and only /healthz answers | API |
+| ED-18 | X-Forwarded-Proto: https from an untrusted peer does not lift the redirect | API |
+| ED-19 | Behind a trusted proxy that forwards https, the API answers normally | API |
+
+## LM: Limits
+
+Per-family caps and their configuration.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| LM-01 | Children: the next add is 409, renaming still works, deleting frees a place | API |
+| LM-02 | Items: the next add is 409, editing, moving and deleting still work | API |
+| LM-03 | Rewards: the next add is 409, editing still works | API |
+| LM-04 | Parents: a full family cannot be joined by invite, and the invite stays unused | API |
+| LM-05 | Parents: below the limit an invite still works | API |
+| LM-06 | Devices: pairing and redeeming stop at the limit; revoking a device frees a place | API |
+| LM-07 | Devices: a code refused for the limit is still good once a place is free | API |
+| LM-08 | Entries per day: add, warn and mark stop at the limit; edits and reads still work | API |
+| LM-09 | The limit is per family: another family has its own budget | API |
+| LM-10 | Limits default to generous numbers when closed, tighter ones when sign-up is open or invite | Unit |
+| LM-11 | LIMIT_* variables override the defaults one at a time | Unit |
+| LM-12 | Open sign-up applies the hosted defaults to a real family | API |
+
+## EX: Export and delete
+
+Owner-only family export and deletion.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| EX-01 | Export: the owner downloads the family as an attachment | API |
+| EX-02 | Export: only the owner (a co-parent or a child device is refused) | API |
+| EX-03 | Export: no hashes, tokens or account subjects, and nothing from another family | API |
+| EX-04 | Delete: only the owner may, and the confirmation must match the family name | API |
+| EX-05 | Delete: removes every row of the family and nothing else | API |
+| EX-06 | Delete: every session of the family stops working, and codes and invites are dead | API |
+| EX-07 | Delete: the owner can sign in again and set up a new family (when allowed) | API |
+| EX-08 | Delete: in a closed instance a deleted owner only gets setup if still allowlisted | API |
+
+## OP: Operator
+
+Operator page, allowlist and counts.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| OP-01 | A non-parent operator signs in to a closed instance and sees only the operator state | API |
+| OP-02 | Operator sign-in matches on account, not display name; strangers are still refused | API |
+| OP-03 | Operators can be listed by GitHub login or Google Workspace domain | API |
+| OP-04 | /api/operator returns counts and health, and no names or emails | API |
+| OP-05 | /api/operator: a normal parent, a child device and a visitor are refused | API |
+| OP-06 | A parent who is also an operator keeps their family and gains the operator page | API |
+| OP-07 | An operator in open or invite mode who has no family sees the operator flag next to setup | API |
+| OP-08 | /api/setup tells an operator so, and not an ordinary parent | API |
+
+## ET: ETag
+
+Conditional reads of `/api/state`.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| ET-01 | /api/state has an ETag; repeating with If-None-Match is a 304 with no body | API |
+| ET-02 | Any write in the family gives parents and children a new ETag | API |
+| ET-03 | A child device's ETag changes when a parent records points for that child | API |
+| ET-04 | A failed write does not change the ETag | API |
+| ET-05 | A pairing redemption, a device log-out and an invite join give parents a new ETag | API |
+| ET-06 | Revoking a device and removing a parent change the ETag | API |
+| ET-07 | Different ?week= and ?child= give different ETags | API |
+| ET-08 | ETags differ between sessions and between families | API |
+| ET-09 | The 304 needs a session: no cookie is a 401, whatever tag is sent | API |
+
+## SV: Startup, configuration and persistence
+
+Refusal to start on bad configuration; data surviving restarts.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| SV-01 | Data survives a restart and sessions stay valid | API |
+| SV-02 | An invalid PRIVACY_URL or TERMS_URL refuses to start | API |
+| SV-03 | The server refuses unsafe or unreadable configuration and creates no database | API |
+| SV-04 | A refusal lists every problem at once | API |
+| SV-05 | A valid https configuration starts, and the config endpoint reports it | API |
+| SV-06 | Localhost development works with a random secret and the fake provider | API |
+| SV-07 | A bad LIMIT_* value refuses to start | API |
+| SV-08 | An unreadable OPERATOR_ALLOWLIST entry refuses to start | API |
+
+## MG: Migrations
+
+Moving an older database to families.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| MG-01 | Is migrated to one family with one child, its entries and no parents | API |
+| MG-02 | The first allowlisted parent becomes its owner with no setup step, the next gets their own | API |
+| MG-03 | With open sign-up a stranger gets their own setup, never the unclaimed family | API |
+| MG-04 | A parent who is not on the allowlist cannot claim it in closed mode either | API |
+
+## IM: Docker image
+
+Skipped when Docker is missing or `SKIP_IMAGE_TESTS=1`.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| IM-01 | The container becomes `healthy` within 60 seconds | Image |
+| IM-02 | The process runs as uid 10001, not root | Image |
+| IM-03 | The root filesystem is read-only | Image |
+| IM-04 | `/healthz` answers 200 over plain HTTP | Image |
+| IM-05 | Plain HTTP with a foreign `Host` is redirected (308) to `APP_BASE_URL` | Image |
+| IM-06 | The page answers 200 behind `X-Forwarded-Proto: https` and carries the content security policy | Image |
+| IM-07 | An `http://` `APP_BASE_URL` makes the container exit non-zero with a message | Image |
+
+## E2E: browser tests
+
+Titles and steps are in [e2e/README.md](../e2e/README.md); each test name starts with its ID.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| E2E-01 … | see e2e/README.md | E2E |
+
+## MN: Manual checklist
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| MN-01 | Sign in with a real Google account on the deployed instance | Manual |
+| MN-02 | Sign in with a real GitHub account on the deployed instance | Manual |
+| MN-03 | Add to the home screen on iPhone: icon, name and full-screen launch are right | Manual |
+| MN-04 | Add to the home screen on Android: icon, name and full-screen launch are right | Manual |
+| MN-05 | Pair a real child phone with a code and with the link | Manual |
+| MN-06 | `scripts/backup.sh` makes a copy that restores and opens | Manual |
+| MN-07 | Behind Caddy or nginx with real TLS, plain HTTP redirects and the padlock is valid | Manual |

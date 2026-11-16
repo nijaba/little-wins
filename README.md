@@ -19,7 +19,7 @@ Parents record good behavior and day-by-day marks on a few weekly challenges. Ch
 
 ## Try it locally
 
-With Node.js 22.5 or newer:
+With Node.js 22.13 or newer:
 
 ```bash
 npm install   # dev tools only; the app has no runtime dependencies

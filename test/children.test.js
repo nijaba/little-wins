@@ -19,7 +19,7 @@ before(async () => {
 });
 after(() => srv.close());
 
-test('a parent adds a child, who is selected in the reply', async () => {
+test('CH-01 a parent adds a child, who is selected in the reply', async () => {
   const r = await post('/api/child/save', { name: '  Ben  ' });
   assert.equal(r.status, 200);
   assert.deepEqual(
@@ -36,14 +36,14 @@ test('a parent adds a child, who is selected in the reply', async () => {
   );
 });
 
-test('the child query parameter picks the child, and the first is the default', async () => {
+test('CH-02 the child query parameter picks the child, and the first is the default', async () => {
   assert.equal((await get()).childName, 'Ann');
   assert.equal((await get(F.jar, `?child=${two}`)).childName, 'Ben');
   assert.equal((await get(F.jar, '?child=999999')).childName, 'Ann', 'unknown child falls back');
   assert.equal((await get(F.jar, '?child=garbage')).childName, 'Ann');
 });
 
-test('points, warnings, marks and stars are kept per child', async () => {
+test('CH-03 points, warnings, marks and stars are kept per child', async () => {
   const S = await get();
   const t = item(S, 'target', 'Reading 20 min');
   const ch = item(S, 'challenge');
@@ -86,7 +86,7 @@ test('points, warnings, marks and stars are kept per child', async () => {
   );
 });
 
-test("one child's entry can be undone without touching the other", async () => {
+test("CH-04 one child's entry can be undone without touching the other", async () => {
   const B = await get(F.jar, `?child=${two}`);
   const r = await post(`/api/undo?child=${two}`, {
     id: B.hist.find((h) => h.kind === 'points').id,
@@ -96,7 +96,7 @@ test("one child's entry can be undone without touching the other", async () => {
   assert.equal((await get(F.jar, `?child=${one}`)).balance, 10);
 });
 
-test('a child device always sees only its own child, even asking for a sibling', async () => {
+test('CH-05 a child device always sees only its own child, even asking for a sibling', async () => {
   const dev = await srv.pairChild(F.jar, two);
   for (const q of ['', `?child=${one}`, `?child=${two}`, '?child=999999']) {
     const K = await get(dev.jar, q);
@@ -126,7 +126,7 @@ test('a child device always sees only its own child, even asking for a sibling',
   );
 });
 
-test('a parent renames a child; an unknown child is a 404', async () => {
+test('CH-06 a parent renames a child; an unknown child is a 404', async () => {
   const r = await post('/api/child/save', { id: two, name: 'Benji' });
   assert.equal(r.status, 200);
   assert.deepEqual(
@@ -137,7 +137,7 @@ test('a parent renames a child; an unknown child is a 404', async () => {
   assert.equal((await post('/api/child/save', { id: two, name: '' })).status, 400);
 });
 
-test('deleting a child removes their history, devices and codes, and not the others', async () => {
+test('CH-07 deleting a child removes their history, devices and codes, and not the others', async () => {
   const dev = await srv.pairChild(F.jar, two);
   const code = await srv.api(F.jar, '/api/pairing/create', { child_id: two });
   const r = await post('/api/child/delete', { id: two });
@@ -169,7 +169,7 @@ test('deleting a child removes their history, devices and codes, and not the oth
   );
 });
 
-test('the last child cannot be deleted', async () => {
+test('CH-08 the last child cannot be deleted', async () => {
   let S = await get();
   while (S.children.length > 1)
     S = (await post('/api/child/delete', { id: S.children.at(-1).id })).json;
@@ -179,7 +179,7 @@ test('the last child cannot be deleted', async () => {
   assert.equal((await get()).children.length, 1);
 });
 
-test('a child device cannot add, rename or delete children', async () => {
+test('CH-09 a child device cannot add, rename or delete children', async () => {
   const dev = await srv.pairChild(F.jar, one);
   for (const [p, b] of [
     ['/api/child/save', { name: 'Sneaky' }],

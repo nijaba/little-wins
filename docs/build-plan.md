@@ -57,12 +57,15 @@ Tick a box when the item is done and tested.
 
 ## Phase 5: tests and CI
 
-- [ ] `docs/test-plan.md` with an ID for every case; IDs in test names
-- [ ] Playwright tests in WebKit and Chromium: phone sizes, escaping, tabs, folding, pairing, sign-in with the fake provider
-- [ ] Docker image test; coverage report with a threshold
-- [ ] GitHub Actions: lint, tests (Node 22 and 24), end-to-end, image build and healthcheck; docs-only fast path; least-privilege permissions; actions pinned by SHA
-- [ ] Dependabot, CodeQL, gitleaks, image scan
-- [ ] Tagged releases publish a multi-arch image to GHCR
+- [x] `docs/test-plan.md` with an ID for every case; IDs in test names
+- [x] Playwright tests in WebKit and Chromium: phone sizes, escaping, tabs, folding, pairing, sign-in with the fake provider
+- [x] Docker image test; coverage report with a threshold
+- [x] GitHub Actions: lint, tests (Node 22 and 24), end-to-end, image build and healthcheck; docs-only fast path; least-privilege permissions; actions pinned by SHA
+- [x] Dependabot, CodeQL, gitleaks, image scan
+- [x] Tagged releases publish a multi-arch image to GHCR
+- [x] Graceful shutdown on SIGTERM (container stop, coverage from server processes)
+- [ ] First CI run on GitHub checked (workflows were reviewed by hand; actionlint couldn't run locally)
+- [ ] Branch protection on `main` requiring the "CI passed" check
 
 ## Phase 5b: languages
 
@@ -90,3 +93,4 @@ Tick a box when the item is done and tested.
 - [ ] Privacy policy and terms templates for hosted operators
 - [ ] Security review document, with fixes
 - [ ] Repository made public
+- [ ] Launch announcement (blog post), linked from the README and the project page

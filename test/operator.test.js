@@ -22,7 +22,7 @@ async function signedIn(srv, provider, who) {
   return j;
 }
 
-test('a non-parent operator signs in to a closed instance and sees only the operator state', async () => {
+test('OP-01 a non-parent operator signs in to a closed instance and sees only the operator state', async () => {
   const srv = await closed();
   try {
     const j = await signedIn(srv, 'google', OP);
@@ -62,7 +62,7 @@ test('a non-parent operator signs in to a closed instance and sees only the oper
   }
 });
 
-test('operator sign-in matches on account, not display name; strangers are still refused', async () => {
+test('OP-02 operator sign-in matches on account, not display name; strangers are still refused', async () => {
   const srv = await closed();
   try {
     const stranger = jar();
@@ -90,7 +90,7 @@ test('operator sign-in matches on account, not display name; strangers are still
   }
 });
 
-test('operators can be listed by GitHub login or Google Workspace domain', async () => {
+test('OP-03 operators can be listed by GitHub login or Google Workspace domain', async () => {
   const srv = await closed({ OPERATOR_ALLOWLIST: 'github:ops-dev,google-domain:ops.example.test' });
   try {
     const gh = await signedIn(srv, 'github', { sub: '4242', login: 'Ops-Dev', name: 'GH Ops' });
@@ -115,7 +115,7 @@ test('operators can be listed by GitHub login or Google Workspace domain', async
   }
 });
 
-test('/api/operator returns counts and health, and no names or emails', async () => {
+test('OP-04 /api/operator returns counts and health, and no names or emails', async () => {
   const srv = await closed();
   try {
     const A = await srv.newFamily({ name: 'Walnut Family', child: 'Hazel Kid', who: OWNER });
@@ -187,7 +187,7 @@ test('/api/operator returns counts and health, and no names or emails', async ()
   }
 });
 
-test('/api/operator: a normal parent, a child device and a visitor are refused', async () => {
+test('OP-05 /api/operator: a normal parent, a child device and a visitor are refused', async () => {
   const srv = await closed();
   try {
     const A = await srv.newFamily({ name: 'Walnut Family', who: OWNER });
@@ -211,7 +211,7 @@ test('/api/operator: a normal parent, a child device and a visitor are refused',
   }
 });
 
-test('a parent who is also an operator keeps their family and gains the operator page', async () => {
+test('OP-06 a parent who is also an operator keeps their family and gains the operator page', async () => {
   const srv = await closed({ OPERATOR_ALLOWLIST: 'google:owner@example.test' });
   try {
     const A = await srv.newFamily({ name: 'Walnut Family', who: OWNER });
@@ -235,7 +235,7 @@ test('a parent who is also an operator keeps their family and gains the operator
   }
 });
 
-test('an operator in open or invite mode who has no family sees the operator flag next to setup', async () => {
+test('OP-07 an operator in open or invite mode who has no family sees the operator flag next to setup', async () => {
   const srv = await startServer({
     signup: 'open',
     env: { OPERATOR_ALLOWLIST: 'google:op@example.test' },
@@ -250,7 +250,7 @@ test('an operator in open or invite mode who has no family sees the operator fla
   }
 });
 
-test('/api/setup tells an operator so, and not an ordinary parent', async () => {
+test('OP-08 /api/setup tells an operator so, and not an ordinary parent', async () => {
   const srv = await startServer({
     signup: 'open',
     env: { OPERATOR_ALLOWLIST: 'google:op@example.test' },
@@ -285,7 +285,7 @@ test('/api/setup tells an operator so, and not an ordinary parent', async () => 
   }
 });
 
-test('an unreadable OPERATOR_ALLOWLIST entry refuses to start', async () => {
+test('SV-08 an unreadable OPERATOR_ALLOWLIST entry refuses to start', async () => {
   const dir = tmpDir('operator');
   const r = await startFails({
     PORT: '0',

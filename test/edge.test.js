@@ -47,7 +47,7 @@ const KINDS = [
   ['healthz', 'GET', '/healthz'],
 ];
 
-test('every kind of response on localhost carries the security headers and no HSTS', async () => {
+test('ED-08 every kind of response on localhost carries the security headers and no HSTS', async () => {
   const srv = await startServer();
   try {
     for (const [label, method, p] of KINDS) {
@@ -63,7 +63,7 @@ test('every kind of response on localhost carries the security headers and no HS
   }
 });
 
-test('outside localhost every response carries the headers plus HSTS, redirects included', async () => {
+test('ED-09 outside localhost every response carries the headers plus HSTS, redirects included', async () => {
   const srv = await startServer({ env: hostedEnv({ FORWARDED_ALLOW_IPS: TRUSTED }) });
   try {
     const https = { 'X-Forwarded-Proto': 'https' };
@@ -96,7 +96,7 @@ const attempt = async (srv, forwardedFor) =>
     )
   ).status;
 
-test('X-Forwarded-For from an untrusted peer is ignored: one budget for the peer', async () => {
+test('ED-10 X-Forwarded-For from an untrusted peer is ignored: one budget for the peer', async () => {
   for (const FORWARDED_ALLOW_IPS of [undefined, '10.9.8.7']) {
     const srv = await startServer({ env: { FORWARDED_ALLOW_IPS } });
     try {
@@ -120,7 +120,7 @@ test('X-Forwarded-For from an untrusted peer is ignored: one budget for the peer
   }
 });
 
-test('from a trusted proxy each forwarded client has its own budget, using the LAST entry', async () => {
+test('ED-11 from a trusted proxy each forwarded client has its own budget, using the LAST entry', async () => {
   const srv = await startServer({ env: { FORWARDED_ALLOW_IPS: TRUSTED } });
   try {
     assert.equal(await burn(srv, '203.0.113.1'), 429, 'client 1 used up its budget');
@@ -142,7 +142,7 @@ test('from a trusted proxy each forwarded client has its own budget, using the L
   }
 });
 
-test('the forwarded address also governs sign-in attempts', async () => {
+test('ED-12 the forwarded address also governs sign-in attempts', async () => {
   const srv = await startServer({ env: { FORWARDED_ALLOW_IPS: '*' } });
   try {
     const login = (xff) =>
@@ -160,7 +160,7 @@ test('the forwarded address also governs sign-in attempts', async () => {
 });
 
 // --- API rate limits -----------------------------------------------------------------------
-test('the 601st API read within a minute is refused with Retry-After', async () => {
+test('ED-13 the 601st API read within a minute is refused with Retry-After', async () => {
   const srv = await startServer();
   try {
     for (let i = 0; i < 600; i++) {
@@ -185,7 +185,7 @@ test('the 601st API read within a minute is refused with Retry-After', async () 
   }
 });
 
-test('the 121st API write within a minute is refused with Retry-After', async () => {
+test('ED-14 the 121st API write within a minute is refused with Retry-After', async () => {
   const srv = await startServer();
   try {
     for (let i = 0; i < 120; i++) {
@@ -201,7 +201,7 @@ test('the 121st API write within a minute is refused with Retry-After', async ()
   }
 });
 
-test('API budgets are per client behind a trusted proxy', async () => {
+test('ED-15 API budgets are per client behind a trusted proxy', async () => {
   const srv = await startServer({ env: { FORWARDED_ALLOW_IPS: TRUSTED } });
   const as = (ip) => ({ headers: { 'X-Forwarded-For': ip } });
   try {
@@ -215,7 +215,7 @@ test('API budgets are per client behind a trusted proxy', async () => {
 });
 
 // --- Legal pages ---------------------------------------------------------------------------
-test('/api/config reports the privacy and terms links, null by default', async () => {
+test('ED-16 /api/config reports the privacy and terms links, null by default', async () => {
   let srv = await startServer();
   try {
     const cfg = (await srv.api(null, '/api/config')).json;
@@ -244,7 +244,7 @@ test('/api/config reports the privacy and terms links, null by default', async (
   }
 });
 
-test('an invalid PRIVACY_URL or TERMS_URL refuses to start', async () => {
+test('SV-02 an invalid PRIVACY_URL or TERMS_URL refuses to start', async () => {
   const dir = tmpDir('edge');
   const base = {
     PORT: '0',

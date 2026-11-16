@@ -28,7 +28,7 @@ const tagOf = async (srv, j, q) => {
   return r.headers.get('etag');
 };
 
-test('/api/state has an ETag; repeating with If-None-Match is a 304 with no body', async () => {
+test('ET-01 /api/state has an ETag; repeating with If-None-Match is a 304 with no body', async () => {
   const { srv, A, co, kid } = await setup();
   try {
     for (const [name, j] of [
@@ -61,7 +61,7 @@ test('/api/state has an ETag; repeating with If-None-Match is a 304 with no body
   }
 });
 
-test('any write in the family gives parents and children a new ETag', async () => {
+test('ET-02 any write in the family gives parents and children a new ETag', async () => {
   const { srv, A, co, kid, target, challenge } = await setup();
   try {
     const writes = [
@@ -97,7 +97,7 @@ test('any write in the family gives parents and children a new ETag', async () =
   }
 });
 
-test("a child device's ETag changes when a parent records points for that child", async () => {
+test("ET-03 a child device's ETag changes when a parent records points for that child", async () => {
   const { srv, A, kid, target } = await setup();
   try {
     const first = await getState(srv, kid.jar);
@@ -114,7 +114,7 @@ test("a child device's ETag changes when a parent records points for that child"
   }
 });
 
-test('a failed write does not change the ETag', async () => {
+test('ET-04 a failed write does not change the ETag', async () => {
   const { srv, A, target } = await setup();
   try {
     const tag = await tagOf(srv, A.jar);
@@ -132,7 +132,7 @@ test('a failed write does not change the ETag', async () => {
   }
 });
 
-test('a pairing redemption, a device log-out and an invite join give parents a new ETag', async () => {
+test('ET-05 a pairing redemption, a device log-out and an invite join give parents a new ETag', async () => {
   const { srv, A, co } = await setup();
   try {
     // A pairing redemption: a new device appears in Settings.
@@ -182,7 +182,7 @@ test('a pairing redemption, a device log-out and an invite join give parents a n
   }
 });
 
-test('revoking a device and removing a parent change the ETag', async () => {
+test('ET-06 revoking a device and removing a parent change the ETag', async () => {
   const { srv, A, kid } = await setup();
   try {
     const tag = await tagOf(srv, A.jar);
@@ -196,7 +196,7 @@ test('revoking a device and removing a parent change the ETag', async () => {
   }
 });
 
-test('different ?week= and ?child= give different ETags', async () => {
+test('ET-07 different ?week= and ?child= give different ETags', async () => {
   const { srv, A } = await setup();
   try {
     const sibling = (await srv.api(A.jar, '/api/child/save', { name: 'Sibling' })).json.childId;
@@ -216,7 +216,7 @@ test('different ?week= and ?child= give different ETags', async () => {
   }
 });
 
-test('ETags differ between sessions and between families', async () => {
+test('ET-08 ETags differ between sessions and between families', async () => {
   const { srv, A, co, kid } = await setup();
   try {
     const B = await srv.newFamily();
@@ -235,7 +235,7 @@ test('ETags differ between sessions and between families', async () => {
   }
 });
 
-test('the 304 needs a session: no cookie is a 401, whatever tag is sent', async () => {
+test('ET-09 the 304 needs a session: no cookie is a 401, whatever tag is sent', async () => {
   const { srv, A } = await setup();
   try {
     const tag = await tagOf(srv, A.jar);

@@ -199,7 +199,7 @@ const cases = () => {
 };
 
 for (const route of parentRouteList()) {
-  test(`${route} from another family cannot touch family A`, async () => {
+  test(`IS-01 ${route} from another family cannot touch family A`, async () => {
     const list = cases()[route];
     assert.ok(list, `no cross-family case for ${route}: add one to test/isolation.test.js`);
     for (const [body, status] of list) {
@@ -216,13 +216,13 @@ for (const route of parentRouteList()) {
   });
 }
 
-test('every case in this file is for a route that still exists', () => {
+test('IS-02 every case in this file is for a route that still exists', () => {
   const routes = new Set(parentRouteList());
   for (const route of Object.keys(cases()))
     assert.ok(routes.has(route), `${route} is gone from routes.js`);
 });
 
-test("family B never sees any of A's names, whatever it asks for", async () => {
+test("IS-03 family B never sees any of A's names, whatever it asks for", async () => {
   for (const q of [
     '',
     `?child=${ids.child}`,
@@ -244,7 +244,7 @@ test("family B never sees any of A's names, whatever it asks for", async () => {
   assert.ok(S.invites.every((i) => i.id !== ids.invite));
 });
 
-test("a child device of B asking for A's child still sees only its own child", async () => {
+test("IS-04 a child device of B asking for A's child still sees only its own child", async () => {
   const K = (await srv.api(kidDevB.jar, `/api/state?child=${ids.child}`)).json;
   assert.equal(K.childName, 'Plain Kid');
   assert.deepEqual(
@@ -253,7 +253,7 @@ test("a child device of B asking for A's child still sees only its own child", a
   );
 });
 
-test("family A's data and its names survive all of the attacks", async () => {
+test("IS-05 family A's data and its names survive all of the attacks", async () => {
   const S = (await srv.api(A.jar, `/api/state?child=${ids.child}`)).json;
   assert.equal(S.family.name, `${SECRET_WORD} Family`);
   assert.equal(S.family.timezone, 'UTC');
@@ -264,13 +264,13 @@ test("family A's data and its names survive all of the attacks", async () => {
   assert.equal(S.invites.length, 1, 'the unused invite is still there');
 });
 
-test("B's own changes through those routes landed in B only", async () => {
+test("IS-06 B's own changes through those routes landed in B only", async () => {
   const S = (await srv.api(B.jar, '/api/state')).json;
   assert.equal(S.family.name, 'B renamed');
   assert.ok(S.children.some((c) => c.name === 'Added to B'));
 });
 
-test('a parent of A is a parent of A only: A2 cannot reach B either', async () => {
+test('IS-07 a parent of A is a parent of A only: A2 cannot reach B either', async () => {
   const r = await srv.api(A2, '/api/item/delete', { id: bItems.target });
   assert.equal(r.status, 404);
   assert.equal(
@@ -281,7 +281,7 @@ test('a parent of A is a parent of A only: A2 cannot reach B either', async () =
 });
 
 // Keep this last: it deletes family B.
-test("B's owner deleting with their own family name deletes B only, never A", async () => {
+test("IS-08 B's owner deleting with their own family name deletes B only, never A", async () => {
   const beforeDb = dump(fidA);
   const beforeView = await aView();
   const r = await srv.api(B.jar, '/api/family/delete', {
