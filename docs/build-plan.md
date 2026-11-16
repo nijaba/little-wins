@@ -14,7 +14,7 @@ Tick a box when the item is done and tested.
 - [x] `docs/design.md`, including hosting for other families
 - [x] `docs/admin-guide.md`, generic
 - [x] `CLAUDE.md`, `README.md`, Apache-2.0 `LICENSE`, `.gitignore` with `*.local.md`, `.dockerignore`
-- [ ] Private GitHub repository created and pushed (made public at the end of phase 6)
+- [x] Private GitHub repository created and pushed (made public at the end of phase 6)
 
 ## Phase 2: readable code and tooling
 
