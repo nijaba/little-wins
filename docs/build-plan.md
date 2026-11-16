@@ -18,12 +18,14 @@ Tick a box when the item is done and tested.
 
 ## Phase 2: readable code and tooling
 
-- [ ] `package.json` with `start`, `test`, `lint`, `format` scripts; Biome for lint and format
-- [ ] Server split into modules: `config`, `db` (with numbered migrations via `PRAGMA user_version`), `auth`, `routes`, `scoring`, `static`
-- [ ] Scoring rules as pure functions with unit tests
-- [ ] Page split into `index.html`, `app.js`, `style.css`; no inline scripts, styles or event handlers (CSP-ready)
-- [ ] User-facing strings kept in one place
-- [ ] Make the weekly-challenge test independent of the day it runs (it skips on Mondays)
+- [x] `package.json` with `start`, `test`, `lint`, `format` scripts; Biome for lint and format
+- [x] Server split into modules: `config`, `db` (with numbered migrations via `PRAGMA user_version`), `auth`, `routes`, `scoring`, `static`
+- [x] Scoring rules as pure functions with unit tests
+- [x] Page split into `index.html`, `app.js`, `style.css`; no inline scripts, styles or event handlers (CSP-ready)
+- [x] User-facing strings kept in one place (`server/messages.js`, `public/strings.js`)
+- [x] Content Security Policy and `nosniff` headers on the page (early part of phase 4)
+- [ ] Serve `HEAD` requests for static files (today they're treated as API calls)
+- [x] Make the weekly-challenge test independent of the day it runs (it skips on Mondays)
 
 ## Phase 3: families, children and real sign-in
 

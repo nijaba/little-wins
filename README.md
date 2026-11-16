@@ -15,18 +15,20 @@ Parents record good behavior and day-by-day marks on a few weekly challenges. Ch
 
 ## Try it locally
 
-With Node.js 22 or newer:
+With Node.js 22.5 or newer:
 
 ```bash
-ALLOW_DEFAULTS=1 DB=/tmp/little-wins.db node server.js
+npm install   # dev tools only; the app has no runtime dependencies
+npm run dev
 ```
 
 Open http://localhost:3000. The parent PIN is `1234` and the child PIN is `0000`. These test PINs work only with `ALLOW_DEFAULTS=1`.
 
-Run the tests:
+Run the tests and the linter:
 
 ```bash
-node --test
+npm test
+npm run lint
 ```
 
 ## Run it on a server

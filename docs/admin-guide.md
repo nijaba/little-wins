@@ -19,7 +19,7 @@ Request path: browser or phone, then your private network or reverse proxy, then
 
 ### What is in git and what is not
 
-- **In git:** code (`server.js`, `public/`), `Dockerfile`, `scripts/`, `test/`, and `docker-compose.yml` with **placeholder** PINs and port 3000.
+- **In git:** code (`server/`, `public/`), `Dockerfile`, `scripts/`, `test/`, and `docker-compose.yml` with **placeholder** PINs and port 3000.
 - **Not in git** (listed in `.gitignore`): `data/` and `*.db`, `docker-compose.override.yml`, `.env`.
 
 Docker Compose automatically merges `docker-compose.override.yml` on top of `docker-compose.yml`, and the override wins. That is how the server gets its real PINs, secret and port while `git pull` stays clean.
@@ -279,13 +279,14 @@ The `ExperimentalWarning: SQLite is an experimental feature` line in the logs is
 From the project folder, with Node 22.5 or newer (the image uses Node 24):
 
 ```bash
-node --test
+npm test        # or: node --test
+npm run lint    # Biome lint and format check
 ```
 
-[test/smoke.test.js](../test/smoke.test.js) starts `server.js` on a free port with a throwaway database (never `data/`) and checks:
+[test/scoring.test.js](../test/scoring.test.js) unit-tests the scoring rules (dates, the balance floor, stars, week limits, what the child's history shows). [test/smoke.test.js](../test/smoke.test.js) starts `server/index.js` on a free port with a throwaway database (never `data/`) and checks:
 
 - the startup check refuses placeholder PINs, a placeholder or short secret, and identical PINs, without creating a database;
-- static files are served and paths like `/../server.js` are blocked;
+- static files are served (also with a query string) and paths like `/../package.json` are blocked;
 - login: wrong PIN, roles, and forged or altered cookies;
 - session tokens are stored hashed, not as-is;
 - devices: listed for parents only, and can be logged out (another device, and your own);
@@ -302,14 +303,14 @@ node --test
 - data and logins surviving a restart;
 - the PIN lockout.
 
-On a Monday the star-rule part is skipped, since it needs two days of the current week. The frontend (escaping, layout) isn't covered; check it in a browser.
+The star-rule test runs every day: on a Monday it uses last week. The page itself (escaping, layout, the Content Security Policy) isn't covered by automated tests yet (Playwright arrives in phase 5); check it in a browser.
 
 ## Running locally by hand
 
 The startup check blocks the placeholder PINs, so pass `ALLOW_DEFAULTS=1` and a throwaway database (parent PIN `1234`, child PIN `0000`):
 
 ```bash
-ALLOW_DEFAULTS=1 DB=/tmp/lw.db node server.js
+ALLOW_DEFAULTS=1 DB=/tmp/lw.db node server/index.js   # or: npm run dev
 ```
 
 Then open http://localhost:3000. Never set `ALLOW_DEFAULTS` on a real server.

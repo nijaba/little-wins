@@ -1,0 +1,22 @@
+{
+  "name": "little-wins",
+  "version": "0.1.0",
+  "description": "A points, stars and rewards tracker for families, made for phones",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "ALLOW_DEFAULTS=1 DB=/tmp/little-wins-dev.db node server/index.js",
+    "test": "node --test",
+    "lint": "biome check .",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.4"
+  }
+}

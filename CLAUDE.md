@@ -20,8 +20,11 @@ Decided by the owner. Ask before trading one away.
 ## Commands
 
 ```bash
-node --test                                     # all tests
-ALLOW_DEFAULTS=1 DB=/tmp/lw.db node server.js   # local server on :3000, PINs 1234 (parent) and 0000 (child)
+npm install                                     # dev tools (Biome); no runtime dependencies
+npm test                                        # all tests (node --test)
+npm run lint                                    # Biome lint + format check; CI will run it
+npm run format                                  # apply Biome formatting
+npm run dev                                     # local server on :3000, PINs 1234 (parent) and 0000 (child)
 docker compose up -d --build                    # container; put real values in docker-compose.override.yml
 scripts/backup.sh                               # consistent backup of data/little-wins.db
 ```
@@ -29,9 +32,11 @@ scripts/backup.sh                               # consistent backup of data/litt
 ## Layout
 
 ```
-server.js        HTTP server, SQLite, scoring, auth (to be split into modules in phase 2)
-public/          index.html (page and script), manifest.json
-test/            smoke.test.js: starts the server on a temp database and exercises the API
+server/          index.js (wiring), config.js (env, startup check), db.js (migrations, seed),
+                 scoring.js (pure rules), state.js, routes.js, sessions.js, http.js, static.js,
+                 messages.js (user-facing strings), clock.js
+public/          index.html (shell), app.js, strings.js (user-facing strings), style.css, manifest.json
+test/            smoke.test.js (API, real server on a temp database), scoring.test.js (unit)
 scripts/         backup.sh
 docs/            design.md, build-plan.md, admin-guide.md
 ```
@@ -49,5 +54,6 @@ docs/            design.md, build-plan.md, admin-guide.md
 ## How to work here
 
 1. Read the matching part of `docs/design.md`. If the design is silent or wrong, ask; when the owner decides, update the design in the same change.
-2. Write or update tests with the change. Run `node --test` before saying the work is done.
+2. Write or update tests with the change. Run `npm test` and `npm run lint` before saying the work is done.
 3. Never test against real data: tests use a temporary database.
+4. The page runs under a strict Content Security Policy: no inline scripts, styles or event handlers. Use `data-action` attributes and the delegated listeners in `app.js`; set dynamic sizes through the DOM, not `style=` attributes.

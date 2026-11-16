@@ -1,0 +1,359 @@
+:root {
+  --n: #1f3a5f;
+  --t: #2a7f8e;
+  --l: #e8f1f4;
+}
+
+body {
+  margin: 0;
+  font:
+    16px -apple-system,
+    sans-serif;
+  background: #f6f8f9;
+  padding-bottom: 70px;
+}
+
+header {
+  background: var(--n);
+  color: #fff;
+  padding: env(safe-area-inset-top) 14px 12px;
+  text-align: center;
+}
+
+header b {
+  font-size: 30px;
+  display: block;
+}
+
+/* Progress bars */
+.bar {
+  height: 10px;
+  background: #dde;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--t);
+}
+
+/* Bottom tabs */
+.tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: #fff;
+  border-top: 1px solid #ccd;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabs button {
+  flex: 1;
+  border: 0;
+  background: 0;
+  padding: 6px 0 8px;
+  font-size: 11px;
+  color: #667;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: inherit;
+}
+
+.tabs i {
+  font-style: normal;
+  font-size: 22px;
+  line-height: 1;
+  padding: 3px 14px;
+  border-radius: 14px;
+}
+
+.tabs .on {
+  color: var(--t);
+  font-weight: 700;
+}
+
+.tabs .on i {
+  background: var(--l);
+}
+
+main {
+  padding: 10px;
+}
+
+/* Cards and rows */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px 0;
+  box-shadow: 0 1px 3px #0002;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.row > div:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.row > div:last-child:not(:first-child) {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.row.stk {
+  flex-wrap: wrap;
+}
+
+.row.stk > div:first-child {
+  flex: 1 1 100%;
+}
+
+.row.stk > div:last-child {
+  margin-left: auto;
+}
+
+small {
+  color: #778;
+}
+
+/* Buttons */
+.b {
+  white-space: nowrap;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 15px;
+  background: var(--t);
+  color: #fff;
+}
+
+.b.r {
+  background: #c0392b;
+}
+
+.b.w {
+  background: #e0a100;
+}
+
+.b.g {
+  background: #999;
+}
+
+.b:disabled {
+  opacity: 0.35;
+}
+
+/* Toast */
+#toast {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  background: #222;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 9;
+  gap: 8px;
+}
+
+/* Reward celebration */
+#party {
+  position: fixed;
+  inset: 0;
+  background: #0008;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  text-align: center;
+  font-size: 22px;
+}
+
+#party div {
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px 36px;
+  font-size: 24px;
+}
+
+#party span {
+  font-size: 64px;
+  display: block;
+  animation: pop 0.6s ease infinite alternate;
+}
+
+@keyframes pop {
+  to {
+    transform: scale(1.25) rotate(8deg);
+  }
+}
+
+/* Week strip */
+.strip {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.strip .d {
+  flex: 1;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  background: var(--l);
+  color: var(--n);
+  text-align: center;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.strip .perfect {
+  background: #cdeedd;
+  color: #12633a;
+}
+
+.strip .ok {
+  background: #fff1c2;
+  color: #7a5b00;
+}
+
+.strip .bad {
+  background: #f7d4d0;
+  color: #9b2c20;
+}
+
+.strip .fut {
+  opacity: 0.4;
+}
+
+h3 {
+  margin: 16px 4px 0;
+  color: var(--n);
+}
+
+.wnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: center;
+}
+
+.wnav .b {
+  font-size: 22px;
+  padding: 6px 16px;
+}
+
+/* Folded Settings sections */
+.fold {
+  margin: 8px 0;
+}
+
+.fold summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px #0002;
+  font-weight: 700;
+  color: var(--n);
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.fold summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold summary::after {
+  content: "›";
+  margin-left: auto;
+  font-size: 24px;
+  line-height: 1;
+  color: #99a;
+  transition: transform 0.15s;
+}
+
+.fold[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.fold .cnt {
+  font-size: 13px;
+  font-weight: 400;
+  color: #778;
+  background: var(--l);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+.fold[open] > summary {
+  margin-bottom: 4px;
+}
+
+.fold > .b {
+  margin: 4px 0 8px;
+}
+
+input {
+  font-size: 20px;
+  padding: 10px;
+  width: 70%;
+  text-align: center;
+}
+
+/* Classes that replace former inline style attributes */
+.center {
+  text-align: center;
+}
+
+.ringcard {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.back {
+  text-align: center;
+  margin: 4px;
+}
+
+.hint {
+  margin: 4px;
+}
+
+.edit-title {
+  margin: 0;
+}
+
+.p0 {
+  margin: 0;
+}
+
+.p8 {
+  margin: 8px 0 0;
+}
