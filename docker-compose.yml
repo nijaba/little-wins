@@ -1,0 +1,13 @@
+# Real PINs, secret, port and time zone go in docker-compose.override.yml (not in git).
+# See docs/admin-guide.md.
+services:
+  little-wins:
+    build: .
+    restart: unless-stopped
+    ports: ["127.0.0.1:3000:3000"]
+    environment:
+      PARENT_PIN: "1234"   # placeholder: the app refuses to start with it
+      CHILD_PIN: "0000"    # placeholder: the app refuses to start with it
+      SECRET: "change-this-long-random-string"
+      TZ: UTC
+    volumes: ["./data:/data"]

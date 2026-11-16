@@ -1,0 +1,13 @@
+.git
+.github
+.claude
+data
+docs
+test
+scripts
+*.md
+.env
+.env.*
+docker-compose*.yml
+node_modules
+coverage

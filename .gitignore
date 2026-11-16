@@ -1,0 +1,19 @@
+# Data and secrets
+data/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+
+# Personal notes (deployment details, to-dos)
+*.local.md
+
+# Tooling
+node_modules/
+coverage/
+test-results/
+playwright-report/
+.DS_Store
