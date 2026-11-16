@@ -9,6 +9,14 @@
   let wkSel = null; // week start being viewed, or null for the current week
   let ed = null; // item or reward being edited, or null
   const op = {}; // which settings sections are open, remembered across renders
+  let chSel = null; // child id being viewed by a parent, or null for the first child
+  let cfg = { appName: STR.appName, providers: [] }; // public config, for the signed-out screen
+  let screen = 'out'; // 'app' while the signed-in state is shown
+  let iss = null; // device code or invite link just issued, shown until Done
+  let cdTimer; // countdown of the device code
+  try {
+    chSel = +localStorage.getItem('child') || null;
+  } catch {}
 
   const $ = (id) => document.getElementById(id);
   const P = () => S.role === 'parent';
@@ -20,10 +28,36 @@
       (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
     );
 
-  // Query string that keeps the selected week on every API call.
-  const wq = () => (wkSel ? `?week=${wkSel}` : '');
+  // Query string that keeps the selected week and child on every API call.
+  const wq = () => {
+    const q = [];
+    if (wkSel) q.push(`week=${wkSel}`);
+    if (chSel && S?.role === 'parent') q.push(`child=${chSel}`);
+    return q.length ? `?${q.join('&')}` : '';
+  };
+
+  const post = (path, body) =>
+    fetch(`/api/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+    });
 
   // ---- API ----
+
+  // Take a state reply: remember the selection it shows and redraw.
+  function take(j) {
+    S = j;
+    if (S.setup) return renderSetup();
+    wkSel = S.week.current ? null : S.week.start;
+    if (P()) {
+      chSel = S.childId;
+      try {
+        localStorage.setItem('child', String(chSel));
+      } catch {}
+    }
+    render();
+  }
 
   // Call the API; on success store the new state and redraw. Returns true on success.
   async function api(path, body) {
@@ -31,19 +65,23 @@
       method: body ? 'POST' : 'GET',
       headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
-    });
-    if (r.status === 401) {
-      S = null;
-      return login();
-    }
-    const j = await r.json();
-    if (j.error) {
-      alert(j.error);
+    }).catch(() => null);
+    if (!r) {
+      alert(STR.login.networkError);
       return false;
     }
-    S = j;
-    wkSel = S.week.current ? null : S.week.start;
-    render();
+    if (r.status === 401) {
+      S = null;
+      login();
+      return false;
+    }
+    const j = await r.json().catch(() => ({}));
+    if (j.error || !r.ok) {
+      alert(j.error || STR.login.networkError);
+      return false;
+    }
+    iss = j.issued ? { ...j.issued, type: path, child: body?.child_id } : iss;
+    take(j);
     return true;
   }
 
@@ -52,21 +90,78 @@
     api('state');
   }
 
-  // ---- Login ----
+  // ---- Signed-out screens ----
 
-  function login() {
-    $('app').innerHTML =
-      `<main class=center><h2>${STR.appName}</h2><input id=pin type=password inputmode=numeric placeholder="${STR.login.pinPlaceholder}"><p><button class=b data-action=login>${STR.login.enter}</button></p></main>`;
+  // The signed-out screen. With an invite token it is the "Join <family>" screen instead.
+  function login(invite) {
+    screen = 'out';
+    clearInterval(cdTimer);
+    const L = STR.login;
+    const q = invite ? `?invite=${encodeURIComponent(invite.token)}` : '';
+    const btns = cfg.providers
+      .map(
+        (p) =>
+          `<p><a class="b lnk" href="/auth/${esc(p)}/login${q}">${esc(L.signInWith[p] || p)}</a></p>`,
+      )
+      .join('');
+    let h = `<main class=center><h2>${esc(cfg.appName)}</h2>`;
+    if (invite) {
+      h += invite.family
+        ? `<h3>${L.joinTitle(esc(invite.family))}</h3><p><small>${L.joinHelp}</small></p>${btns}<p><button class="b g" data-action=not-now>${L.notNow}</button></p>`
+        : `<p class=err>${L.inviteInvalid}</p><p><button class="b g" data-action=not-now>${L.notNow}</button></p>`;
+    } else {
+      h += `<div class=card><h3 class=edit-title>${L.parentsOnly}</h3>${btns}</div><div class=card><h3 class=edit-title>${L.codeTitle}</h3><p><small>${L.codeHelp}</small></p><p><input id=code aria-label="${L.codeTitle}" autocapitalize=characters autocomplete=off autocorrect=off spellcheck=false placeholder="${L.codePlaceholder}"></p><p class=err id=err></p><p><button class=b data-action=pair-code>${L.codeButton}</button></p></div>`;
+    }
+    $('app').innerHTML = `${h}</main>`;
   }
 
-  async function doLogin() {
-    const r = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: $('pin').value }),
+  // Redeem a pairing code; on success load the child's state.
+  async function redeem(code) {
+    const r = await post('pair', { code }).catch(() => null);
+    if (r?.ok) return api('state');
+    const j = r ? await r.json().catch(() => ({})) : {};
+    const msg = j.error || STR.login.codeFailed;
+    if ($('err')) $('err').textContent = msg;
+    else alert(msg);
+    return false;
+  }
+
+  async function showInvite(token) {
+    const r = await post('invite/info', { token }).catch(() => null);
+    const j = r?.ok ? await r.json().catch(() => ({})) : {};
+    login({ token, family: j.familyName || '' });
+  }
+
+  async function logout() {
+    await post('logout').catch(() => {});
+    S = null;
+    iss = null;
+    login();
+  }
+
+  // ---- Setup ----
+
+  function renderSetup() {
+    screen = 'out';
+    const st = STR.setup;
+    let tz = '';
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch {}
+    const f = (id, label, v, max) =>
+      `<p><label for=${id}>${label}</label><br><input id=${id} maxlength=${max} value="${esc(v)}"></p>`;
+    $('app').innerHTML =
+      `<main><h2 class=center>${st.title}</h2><div class=card><p class=p0>${S.me?.name ? st.hello(esc(S.me.name)) : ''}</p>${f('s_family', st.familyName, '', 60)}${f('s_child', st.childName, '', 40)}${f('s_tz', st.timeZone, tz, 60)}<p><label for=s_week>${st.weekStart}</label><br><select id=s_week><option value=1>${st.monday}</option><option value=0>${st.sunday}</option></select></p><p><label class=chk><input id=s_starter type=checkbox checked> ${st.starter}</label></p><button class=b data-action=do-setup>${st.create}</button></div><p class=center><button class="b g" data-action=logout>${st.signOut}</button></p></main>`;
+  }
+
+  function doSetup() {
+    api('setup', {
+      family_name: $('s_family').value,
+      child_name: $('s_child').value,
+      timezone: $('s_tz').value,
+      week_start: +$('s_week').value,
+      starter: $('s_starter').checked,
     });
-    if (r.ok) api('state');
-    else alert((await r.json().catch(() => ({}))).error || STR.login.wrongPin);
   }
 
   // ---- Toast and celebration ----
@@ -101,7 +196,7 @@
       const ids = S.rewards
         .filter((r) => S.stars >= r.stars && S.balance >= r.points)
         .map((r) => r.id);
-      const k = `seen_${S.role}`;
+      const k = `seen_${S.role}_${S.childId}`;
       const seen = JSON.parse(localStorage.getItem(k) || 'null');
       localStorage.setItem(k, JSON.stringify(ids));
       if (!seen) return; // first visit: nothing is "new"
@@ -128,6 +223,7 @@
   function cyc(id, k) {
     const c = S.week.marks[id][k];
     act('mark', {
+      child_id: S.childId,
       item_id: id,
       mark: { null: 'perfect', perfect: 'ok', ok: 'bad', bad: 'perfect' }[c],
       day: S.week.days[k],
@@ -141,17 +237,18 @@
       p = prompt(STR.today.promptPoints(i.pmin, i.pmax), i.pmin);
       if (p === null) return;
     }
-    act('add', { item_id: id, points: p });
+    act('add', { child_id: S.childId, item_id: id, points: p });
   }
 
   function pen(id) {
     const i = S.items.find((x) => x.id === id);
-    if (i && confirm(STR.today.confirmPenalty(i.name))) act('add', { item_id: id });
+    if (i && confirm(STR.today.confirmPenalty(i.name)))
+      act('add', { child_id: S.childId, item_id: id });
   }
 
   // Open the edit form: t is 'i' (item) or 'r' (reward); id 0 means a new one.
   function edit(t, id, kind) {
-    const l = t === 'r' ? S.rewards : S.items;
+    const l = t === 'r' ? S.rewards : t === 'c' ? S.children : S.items;
     ed = id
       ? { ...l.find((x) => x.id === id), t, kind }
       : { t, kind, name: '', note: '', pmin: 5, pmax: 5, stars: 12, points: 0 };
@@ -161,20 +258,23 @@
   async function saveEd() {
     const g = (k) => $(k)?.value || '';
     const r = ed.t === 'r';
-    const ok = await api(
-      r ? 'reward/save' : 'item/save',
-      r
-        ? { id: ed.id, name: g('f_name'), stars: g('f_stars'), points: g('f_points') }
-        : {
-            id: ed.id,
-            kind: ed.kind,
-            name: g('f_name'),
-            note: g('f_note'),
-            pmin: g('f_min'),
-            pmax: ed.kind === 'target' ? g('f_max') : g('f_min'),
-          },
-    );
-    if (ok) {
+    let path = 'item/save';
+    let body = {
+      id: ed.id,
+      kind: ed.kind,
+      name: g('f_name'),
+      note: g('f_note'),
+      pmin: g('f_min'),
+      pmax: ed.kind === 'target' ? g('f_max') : g('f_min'),
+    };
+    if (ed.t === 'c') {
+      path = 'child/save';
+      body = { id: ed.id || undefined, name: g('f_name') };
+    } else if (r) {
+      path = 'reward/save';
+      body = { id: ed.id, name: g('f_name'), stars: g('f_stars'), points: g('f_points') };
+    }
+    if (await api(path, body)) {
       ed = null;
       render();
     }
@@ -197,7 +297,57 @@
 
   // data-action name -> handler; d is the element's dataset.
   const actions = {
-    login: () => doLogin(),
+    'pair-code': () => redeem($('code').value),
+    'not-now': () => {
+      history.replaceState(null, '', location.pathname);
+      api('state');
+    },
+    'do-setup': () => doSetup(),
+    logout: () => logout(),
+    child: (d) => {
+      chSel = +d.id;
+      api('state');
+    },
+    'save-family': () =>
+      api('family/save', {
+        name: $('f_fam').value,
+        timezone: $('f_tz').value,
+        week_start: +$('f_week').value,
+      }),
+    'del-child': (d) => {
+      const c = S.children.find((x) => x.id === +d.id);
+      if (c && confirm(STR.settings.confirmDeleteChild(c.name))) api('child/delete', { id: c.id });
+    },
+    'make-owner': (d) => {
+      const p = S.parents.find((x) => x.id === +d.id);
+      if (p && confirm(STR.settings.confirmMakeOwner(p.name)))
+        api('owner/transfer', { user_id: p.id });
+    },
+    'rm-parent': (d) => {
+      const p = S.parents.find((x) => x.id === +d.id);
+      if (p && confirm(STR.settings.confirmRemoveParent(p.name)))
+        api('parent/remove', { user_id: p.id });
+    },
+    invite: () => {
+      iss = null;
+      api('invite/create', {});
+    },
+    'cancel-invite': (d) => api('invite/revoke', { id: +d.id }),
+    'pair-dev': (d) => {
+      iss = null;
+      api('pairing/create', { child_id: +d.id });
+    },
+    copy: async () => {
+      try {
+        await navigator.clipboard.writeText(iss.link);
+        toast(STR.settings.copied);
+      } catch {}
+    },
+    share: () => navigator.share({ url: iss.link }).catch(() => {}),
+    done: () => {
+      iss = null;
+      render();
+    },
     tab: (d) => {
       tab = d.tab;
       render();
@@ -205,7 +355,7 @@
     week: (d) => goWeek(d.week || null),
     cyc: (d) => cyc(+d.id, +d.k),
     add: (d) => add(+d.id),
-    warn: (d) => act('warn', { item_id: +d.id }),
+    warn: (d) => act('warn', { child_id: S.childId, item_id: +d.id }),
     pen: (d) => pen(+d.id),
     undo: (d) => api('undo', { id: +d.id }),
     'toast-undo': (d) => {
@@ -218,7 +368,6 @@
       ed = null;
       render();
     },
-    'save-child': () => api('settings/save', { child_name: $('f_child').value }),
     mv: (d) => mv(d.t, +d.id, +d.dir),
     'del-item': (d) => delItem(+d.id),
     'del-rew': (d) => delRew(+d.id),
@@ -359,30 +508,58 @@
     const st = STR.settings;
     const r = ed.t === 'r';
     const k = ed.kind;
+    if (ed.t === 'c')
+      return `<div class=card><h3 class=edit-title>${ed.id ? st.formEdit : st.formAdd} ${st.child}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name maxlength=40 value="${esc(ed.name)}"></p><button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
     const num = (id, label, v) =>
-      `<p>${label}<br><input id=${id} type=number inputmode=numeric value="${v}"></p>`;
+      `<p><label for=${id}>${label}</label><br><input id=${id} type=number inputmode=numeric value="${v}"></p>`;
     let fields = '';
     if (r) {
       fields = num('f_stars', st.fieldStars, ed.stars) + num('f_points', st.fieldPoints, ed.points);
     } else if (k !== 'challenge') {
-      fields = `<p>${st.fieldNote}<br><input id=f_note value="${esc(ed.note)}"></p>${num(
+      fields = `<p><label for=f_note>${st.fieldNote}</label><br><input id=f_note value="${esc(ed.note)}"></p>${num(
         'f_min',
         k === 'penalty' ? st.fieldPenalty : st.fieldMin,
         ed.pmin,
       )}${k === 'target' ? num('f_max', st.fieldMax, ed.pmax) : ''}`;
     }
-    return `<div class=card><h3 class=edit-title>${ed.id ? st.formEdit : st.formAdd} ${r ? st.reward : k}</h3><p>${st.fieldName}<br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
+    return `<div class=card><h3 class=edit-title>${ed.id ? st.formEdit : st.formAdd} ${r ? st.reward : k}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
   }
 
   function viewSettings() {
     if (ed) return viewEdit();
     const st = STR.settings;
+    const fam = S.family;
     let h = fold(
-      'kid',
-      st.child,
-      esc(S.childName || st.notSet),
-      `<div class=card><p class=p0>${st.nameLabel}<br><input id=f_child maxlength=40 value="${esc(S.childName)}" placeholder="${st.namePlaceholder}"></p><p class=p8><button class=b data-action=save-child>${st.save}</button></p></div>`,
+      'fam',
+      st.family,
+      esc(fam.name),
+      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p><p><label for=f_week>${st.weekStart}</label><br><select id=f_week><option value=1 ${fam.weekStart ? 'selected' : ''}>${st.monday}</option><option value=0 ${fam.weekStart ? '' : 'selected'}>${st.sunday}</option></select></p><button class=b data-action=save-family>${st.save}</button></div>`,
     );
+    let c = '';
+    for (const k of S.children) {
+      c += `<div class=card><div class="row stk"><div>${esc(k.name)}</div><div><button class=b data-action=edit data-t=c data-id=${k.id}>${st.rename}</button>${S.children.length > 1 ? ` <button class="b r" data-action=del-child data-id=${k.id}>${st.remove}</button>` : ''}</div></div></div>`;
+    }
+    c += `<button class=b data-action=edit data-t=c data-id=0>${st.addChild}</button>`;
+    h += fold('kids', st.children, S.children.length, c);
+
+    let pr = '';
+    for (const p of S.parents) {
+      const owner = S.me.owner && !p.me;
+      pr += `<div class=card><div class="row stk"><div>${esc(p.name)}${p.me ? ` · <b>${st.you}</b>` : ''}<br><small>${esc(p.label)} · ${p.role === 'owner' ? st.owner : st.parentRole}</small></div>${
+        owner
+          ? `<div><button class="b g" data-action=make-owner data-id=${p.id}>${st.makeOwner}</button> <button class="b r" data-action=rm-parent data-id=${p.id}>${st.removeParent}</button></div>`
+          : ''
+      }</div></div>`;
+    }
+    if (iss?.type === 'invite/create') pr += issuedBox(st.inviteTitle, st.inviteHelp, '');
+    else pr += `<button class=b data-action=invite>${st.inviteParent}</button>`;
+    if (S.invites.length) {
+      pr += `<h3>${st.openInvites}</h3>`;
+      for (const i of S.invites) {
+        pr += `<div class=card><div class="row stk"><div>${st.inviteSent(new Date(i.created).toLocaleDateString())}<br><small>${st.inviteUntil(new Date(i.expires).toLocaleDateString())}</small></div><div><button class="b g" data-action=cancel-invite data-id=${i.id}>${st.cancelInvite}</button></div></div></div>`;
+      }
+    }
+    h += fold('par', st.parents, S.parents.length, pr);
     for (const [k, t] of [
       ['target', st.behaviors],
       ['penalty', st.penalties],
@@ -407,13 +584,43 @@
     g = `<small class=hint>${st.devicesHelp}</small>`;
     const D = S.devices || [];
     for (const d of D) {
-      g += `<div class=card><div class="row stk"><div>${esc(d.device)} · ${
-        d.role === 'parent' ? st.parent : esc(S.childName || st.childFallback)
-      }${d.me ? ` · <b>${st.thisDevice}</b>` : ''}<br><small>${st.lastUsed(ago(d.last_seen))} · ${st.loggedIn(
+      g += `<div class=card><div class="row stk"><div>${esc(st.deviceLabel(d.who || '', d.device))}${
+        d.me ? ` · <b>${st.thisDevice}</b>` : ''
+      }<br><small>${d.kind === 'parent' ? st.parentDevice : st.childDevice} · ${st.lastUsed(ago(d.last_seen))} · ${st.loggedIn(
         new Date(d.created).toLocaleDateString(),
       )}</small></div><div><button class="b r" data-action=revoke data-id=${d.id} data-me=${d.me ? 1 : 0}>${st.logOut}</button></div></div></div>`;
     }
-    return h + fold('dev', st.devices, D.length, g);
+    if (iss?.type === 'pairing/create') {
+      const k = S.children.find((x) => x.id === iss.child) || {};
+      g += issuedBox(st.pairTitle(esc(k.name || '')), st.pairHelp, iss.code);
+    } else {
+      for (const k of S.children)
+        g += `<p class=p0><button class=b data-action=pair-dev data-id=${k.id}>${st.addDevice(esc(k.name))}</button></p>`;
+    }
+    h += fold('dev', st.devices, D.length, g);
+    return `${h}<p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>`;
+  }
+
+  // Box showing a freshly issued link (and code); the pairing one counts down.
+  function issuedBox(title, help, code) {
+    const st = STR.settings;
+    const pair = iss.type === 'pairing/create';
+    return `<div class="card center"><h3 class=edit-title>${title}</h3><p><small>${help}</small></p>${
+      code ? `<p class=code>${esc(code)}</p>` : ''
+    }<p><input class=link readonly value="${esc(iss.link)}"></p><p><button class=b data-action=copy>${st.copy}</button>${
+      navigator.share ? ` <button class=b data-action=share>${st.share}</button>` : ''
+    }</p><p><small id=cd>${pair ? '' : st.inviteExpires}</small></p><button class="b g" data-action=done>${st.done}</button></div>`;
+  }
+
+  // Update the "Expires in m:ss" line once a second; stop at zero.
+  function tickCountdown() {
+    const el = $('cd');
+    if (!el || iss?.type !== 'pairing/create') return;
+    const left = Math.max(0, Math.round((Date.parse(iss.expires) - Date.now()) / 1000));
+    const st = STR.settings;
+    el.textContent = left
+      ? st.expiresIn(`${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`)
+      : st.expired;
   }
 
   // Apply the dynamic bar widths (HTML style attributes are blocked by the CSP).
@@ -422,9 +629,22 @@
   }
 
   function render() {
+    screen = 'app';
     const T = { ...STR.tabs };
     if (!P()) delete T.set;
-    let h = `<header><b>${STR.header(S.balance, S.stars)}</b>${S.today}</header><main>`;
+    if (!P() && tab === 'set') tab = 'today';
+    const chips =
+      P() && S.children.length > 1
+        ? `<div class=chips>${S.children
+            .map(
+              (c) =>
+                `<button class="chip${c.id === S.childId ? ' on' : ''}" data-action=child data-id=${c.id}>${esc(c.name)}</button>`,
+            )
+            .join('')}</div>`
+        : '';
+    let h = `<header><b>${STR.header(S.balance, S.stars)}</b>${S.today}${
+      P() ? '' : `<div class=who>${esc(S.childName)}</div>`
+    }</header>${chips}<main>`;
     if (tab === 'today') h += viewToday();
     if (tab === 'week') h += viewWeek();
     if (tab === 'rew') h += viewRewards();
@@ -437,6 +657,7 @@
       )
       .join('')}</div>`;
     applyWidths();
+    tickCountdown();
     celebrate();
   }
 
@@ -457,25 +678,50 @@
     true,
   );
 
-  api('state');
+  async function boot() {
+    try {
+      cfg = await (await fetch('/api/config')).json();
+    } catch {}
+    if (!(await handleHash())) api('state');
+  }
+
+  // A pairing or invite link (#pair=… / #invite=…): on load, or opened while the app is open.
+  async function handleHash() {
+    const m = location.hash.match(/^#(pair|invite)=([\w-]+)$/);
+    if (!m) return false;
+    history.replaceState(null, '', location.pathname + location.search);
+    if (m[1] === 'invite') showInvite(m[2]);
+    else if (!(await redeem(m[2]))) login();
+    return true;
+  }
+
+  window.addEventListener('hashchange', () => {
+    handleHash();
+  });
+
+  boot();
+  setInterval(tickCountdown, 1000);
 
   // Poll every 5 s while the page is visible, unless the user is editing or typing.
   setInterval(() => {
     if (
+      screen === 'app' &&
       S &&
       document.visibilityState === 'visible' &&
       !ed &&
-      !document.activeElement.matches('input')
+      !document.activeElement.matches('input, select')
     ) {
       const w = wkSel;
+      const c = chSel;
       fetch(`/api/state${wq()}`)
         .then((r) => (r.ok ? r.json() : 0))
         .then((j) => {
-          if (j && w === wkSel) {
+          if (j && screen === 'app' && w === wkSel && c === chSel) {
             S = j;
             render();
           }
-        });
+        })
+        .catch(() => {});
     }
   }, 5000);
 })();

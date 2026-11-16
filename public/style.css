@@ -357,3 +357,72 @@ input {
 .p8 {
   margin: 8px 0 0;
 }
+
+/* Signed-out, setup, child picker, issued codes */
+.lnk {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.err {
+  color: #c0392b;
+  margin: 4px 0;
+}
+
+select {
+  font-size: 18px;
+  padding: 8px;
+}
+
+.chk {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+}
+
+.chk input {
+  width: auto;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  padding: 10px 10px 0;
+  overflow-x: auto;
+}
+
+.chip {
+  border: 1px solid var(--t);
+  background: #fff;
+  color: var(--t);
+  border-radius: 16px;
+  padding: 6px 16px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.chip.on {
+  background: var(--t);
+  color: #fff;
+  font-weight: 700;
+}
+
+.who {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.code {
+  font:
+    700 30px ui-monospace,
+    Menlo,
+    monospace;
+  letter-spacing: 2px;
+  margin: 8px 0;
+}
+
+.link {
+  font-size: 13px;
+  width: 90%;
+}

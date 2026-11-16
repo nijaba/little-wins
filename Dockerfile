@@ -2,7 +2,7 @@ FROM node:24-alpine
 WORKDIR /app
 COPY server server
 COPY public public
-# TZ sets "today" and week boundaries until per-family time zones arrive (design.md).
-ENV DB=/data/little-wins.db TZ=UTC
+# Time zones are per family (Settings → Family), so the container's own zone doesn't matter.
+ENV DATABASE_PATH=/data/little-wins.db
 VOLUME /data
 CMD ["node","server/index.js"]

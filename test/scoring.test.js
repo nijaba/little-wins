@@ -249,3 +249,46 @@ test('history keeps the last 60 entries', () => {
   assert.equal(h[0].id, 100);
   assert.equal(h.at(-1).id, 41);
 });
+
+test('startOfWeek with a Sunday start finds the Sunday for every weekday', () => {
+  // 2026-11-15 is a Sunday.
+  const week = [
+    '2026-11-15',
+    '2026-11-16',
+    '2026-11-17',
+    '2026-11-18',
+    '2026-11-19',
+    '2026-11-20',
+    '2026-11-21',
+  ];
+  for (const day of week) assert.equal(s.startOfWeek(day, 0), '2026-11-15', day);
+  assert.equal(s.startOfWeek('2026-11-22', 0), '2026-11-22', 'the next Sunday starts a new week');
+  assert.equal(s.startOfWeek('2027-01-01', 0), '2026-12-27', 'across a year boundary');
+});
+
+test('startOfWeek defaults to Monday and agrees with monday()', () => {
+  assert.equal(s.startOfWeek('2026-11-22'), '2026-11-16');
+  assert.equal(s.startOfWeek('2026-11-22', 1), s.monday('2026-11-22'));
+  assert.equal(s.startOfWeek('2026-11-15', 1), '2026-11-09', 'a Sunday belongs to the Monday week');
+});
+
+test('dayLabels start with the first day of the week', () => {
+  assert.deepEqual(s.dayLabels(1), ['M', 'T', 'W', 'T', 'F', 'S', 'S']);
+  assert.deepEqual(s.dayLabels(), ['M', 'T', 'W', 'T', 'F', 'S', 'S']);
+  assert.deepEqual(s.dayLabels(0), ['S', 'M', 'T', 'W', 'T', 'F', 'S']);
+});
+
+test('stars: a Sunday-start week groups Sunday with the days after it', () => {
+  const marks = { '1|2026-11-15': 'perfect', '1|2026-11-16': 'perfect' }; // Sunday + Monday
+  assert.equal(s.stars(marks, '2026-11-15', 1).stars, 0, 'Monday weeks split them');
+  const sunday = s.stars(marks, '2026-11-15', 0);
+  assert.equal(sunday.stars, 1, 'Sunday weeks keep them together');
+  assert.equal(sunday.won[1], 1);
+});
+
+test('weekRange with a Sunday start begins on Sunday and clamps like Monday weeks', () => {
+  const r = s.weekRange('2026-11-18', '2026-10-07', null, 0); // Wednesday; first entry a Wednesday
+  assert.deepEqual(r, { start: '2026-11-15', current: true, prev: '2026-11-08', next: null });
+  const past = s.weekRange('2026-11-18', '2026-10-07', '2020-01-01', 0);
+  assert.deepEqual([past.start, past.prev], ['2026-10-04', null]);
+});

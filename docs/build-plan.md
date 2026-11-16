@@ -24,20 +24,24 @@ Tick a box when the item is done and tested.
 - [x] Page split into `index.html`, `app.js`, `style.css`; no inline scripts, styles or event handlers (CSP-ready)
 - [x] User-facing strings kept in one place (`server/messages.js`, `public/strings.js`)
 - [x] Content Security Policy and `nosniff` headers on the page (early part of phase 4)
-- [ ] Serve `HEAD` requests for static files (today they're treated as API calls)
+- [x] Serve `HEAD` requests for static files (done in phase 3)
 - [x] Make the weekly-challenge test independent of the day it runs (it skips on Mondays)
 
 ## Phase 3: families, children and real sign-in
 
-- [ ] Data model from design.md: families, users, memberships, children, family-scoped items, rewards, entries and sessions; migration from the single-family schema
-- [ ] Family-scoped data layer; a cross-family test for every endpoint
-- [ ] Google and GitHub sign-in (OAuth code flow with PKCE); fake provider on localhost only
-- [ ] `SIGNUP_MODE`, `PARENT_ALLOWLIST`; family setup (name, timezone, first child, starter list or empty)
-- [ ] Co-parent invite links; owner can remove parents and hand over ownership
-- [ ] Several children: per-child points, stars, marks and history; child picker for parents
-- [ ] Device pairing for children (single-use link and QR, 10 minutes)
-- [ ] Per-family timezone and week start
-- [ ] PINs removed
+- [x] Data model from design.md: families, users, memberships, children, family-scoped items, rewards, entries and sessions; migration from the single-family schema
+- [x] Family-scoped data layer; a cross-family test for every endpoint
+- [x] Google and GitHub sign-in (OAuth code flow with PKCE); fake provider on localhost only
+- [x] `SIGNUP_MODE` (`closed`, `open`), `PARENT_ALLOWLIST`; family setup (name, timezone, first child, starter list or empty)
+- [ ] `SIGNUP_MODE=invite` with operator-issued family invites (behaves like `closed` until then; needs the operator page, phase 4)
+- [x] Co-parent invite links; owner can remove parents and hand over ownership
+- [x] Several children: per-child points, stars, marks and history; child picker for parents
+- [x] Device pairing for children (single-use code and link, 10 minutes, rate limited; Share/Copy)
+- [ ] QR code for pairing (needs a dependency or a hand-written encoder; see design.md)
+- [x] Per-family timezone and week start
+- [x] PINs removed
+- [x] Writes must be JSON from the app's own origin (early part of phase 4)
+- [x] Unclaimed (migrated) family is claimed only by an allowlisted parent
 
 ## Phase 4: ready for the internet
 
@@ -59,9 +63,28 @@ Tick a box when the item is done and tested.
 - [ ] Dependabot, CodeQL, gitleaks, image scan
 - [ ] Tagged releases publish a multi-arch image to GHCR
 
+## Phase 5b: languages
+
+- [ ] Translations of `public/strings.js` and `server/messages.js` into Chinese (Simplified), Spanish, French and German, alongside English
+- [ ] Language chosen per family in Settings → Family (default: the browser's language at family setup); stored on the family
+- [ ] Dates, day labels and numbers formatted with `Intl` in the family's language
+- [ ] Sign-in, pairing and error pages follow the browser's language until a family is known
+- [ ] Layout checked with longer (German) and CJK (Chinese) text at phone width; tests per language for the main screens
+- [ ] Starter list translated, so a new family gets it in its own language
+
+## Phase 5c: demo, tour and video (modeled on scrum-poker)
+
+- [ ] Demo families (`DEMO_FAMILIES=1`, off by default): **Try a demo** on the sign-in page opens a private demo family with no sign-in, two children and a few weeks of made-up history (points, marks, stars, an unlocked reward). Switch between the parent's and the child's view. Clearly marked as a demo everywhere; never mixed with real families; deleted after an idle time and capped in number (`DEMO_MAX`, `DEMO_IDLE_SECONDS`), with a friendly message when full
+- [ ] Guided tour drawn by the page alone (no library, nothing sent to the server): offered once per device (kept in `localStorage`), on demand from Settings, and every time in a demo; steps by role (parent: earning points, penalties, weekly marks, rewards, Settings, adding a child's device; child: points, stars, next reward); outlines the part it explains, Back/Next/Done, Escape closes, respects reduced motion
+- [ ] Guide pictures and a 30-second narrated tour video, recorded with Playwright from the demo data (`scripts/guide-pictures.js`, `scripts/tour-video.js`, voiceover script in `docs/video/`); only made-up people and data; served at `/tour.mp4` with byte ranges (for Safari); **Watch the video** on the sign-in page (`TOUR_VIDEO=0` hides it)
+- [ ] README "The tour in 30 seconds" with a poster image linking to the video
+
 ## Phase 6: documentation and launch
 
-- [ ] README with screenshots from demo data; user guide; admin guide for self-hosting and for hosted mode
+- [ ] README with screenshots from demo data; admin guide for self-hosting and for hosted mode
+- [ ] `docs/user-guide.md` for families: getting started (sign in, set up, add children and a co-parent, pair a child's phone, add to the home screen), daily use (points, penalties, warnings, weekly marks, undo), rewards and stars explained, past weeks, Settings, what the child sees, tips for running a chart well; with screenshots from the demo data (phase 5c)
+- [ ] Project page on GitHub Pages (`<owner>.github.io/little-wins`): what it is, screenshots, the tour video, self-host vs hosted, privacy stance, links to docs; built from `site/` by a Pages workflow, like scrum-poker; self-hosted fonts, no trackers
+- [ ] `docs/why.md`: why Little Wins exists, the story behind it, linked from the README
 - [ ] `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, issue and PR templates, `CODEOWNERS`
 - [ ] Privacy policy and terms templates for hosted operators
 - [ ] Security review document, with fixes

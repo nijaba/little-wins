@@ -17,12 +17,19 @@ function shift(day, n) {
 const validDay = (day) =>
   typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day) && shift(day, 0) === day;
 
-/** The Monday of the week containing `day`. */
-function monday(day) {
+/** First day of the week containing `day`; `weekStart` is 1 for Monday (default) or 0 for Sunday. */
+function startOfWeek(day, weekStart = 1) {
   const d = noon(day);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  d.setDate(d.getDate() - ((d.getDay() - weekStart + 7) % 7));
   return fmt(d);
 }
+
+/** The Monday of the week containing `day`. */
+const monday = (day) => startOfWeek(day, 1);
+
+/** One-letter day labels for a week that starts on `weekStart`. */
+const dayLabels = (weekStart = 1) =>
+  weekStart === 0 ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 /** Balance from entries in time order; each point entry is clamped so it never goes below 0. */
 function balance(entries) {
@@ -38,12 +45,12 @@ function latestMarks(entries) {
   return marks;
 }
 
-/** Perfect and bad counts per item and week, as { 'itemId|monday': { perfect, bad } }. */
-function weekTotals(marks) {
+/** Perfect and bad counts per item and week, as { 'itemId|weekStartDay': { perfect, bad } }. */
+function weekTotals(marks, weekStart = 1) {
   const totals = {};
   for (const key in marks) {
     const [itemId, day] = key.split('|');
-    const week = `${itemId}|${monday(day)}`;
+    const week = `${itemId}|${startOfWeek(day, weekStart)}`;
     totals[week] ??= { perfect: 0, bad: 0 };
     if (marks[key] === 'perfect') totals[week].perfect++;
     if (marks[key] === 'bad') totals[week].bad++;
@@ -52,18 +59,18 @@ function weekTotals(marks) {
 }
 
 /**
- * Stars across all weeks, and which items won a star in the week starting `weekStart`.
+ * Stars across all weeks, and which items won a star in the week starting `shownWeek`.
  * A week wins a star with at least 2 perfect days and no bad day.
  */
-function stars(marks, weekStart) {
-  const totals = weekTotals(marks);
+function stars(marks, shownWeek, weekStart = 1) {
+  const totals = weekTotals(marks, weekStart);
   let count = 0;
   const won = {};
   for (const week in totals) {
     if (totals[week].perfect < 2 || totals[week].bad > 0) continue;
     count++;
     const [itemId, start] = week.split('|');
-    if (start === weekStart) won[itemId] = 1;
+    if (start === shownWeek) won[itemId] = 1;
   }
   return { stars: count, won };
 }
@@ -85,13 +92,14 @@ function todayStatus(entries, today) {
  * week). Past weeks go back to the first week with entries, and always at least one week
  * (so last Sunday can be fixed on Monday). Future weeks clamp to this week.
  */
-function weekRange(today, firstEntryDay, requested) {
-  const thisMon = monday(today);
+function weekRange(today, firstEntryDay, requested, weekStart = 1) {
+  const week = (day) => startOfWeek(day, weekStart);
+  const thisMon = week(today);
   const minMon = [
-    firstEntryDay && validDay(firstEntryDay) ? monday(firstEntryDay) : thisMon,
+    firstEntryDay && validDay(firstEntryDay) ? week(firstEntryDay) : thisMon,
     shift(thisMon, -7),
   ].sort()[0];
-  let start = validDay(requested) ? monday(requested) : thisMon;
+  let start = validDay(requested) ? week(requested) : thisMon;
   if (start > thisMon) start = thisMon;
   if (start < minMon) start = minMon;
   return {
@@ -135,7 +143,9 @@ function history(entries, role) {
 module.exports = {
   shift,
   validDay,
+  startOfWeek,
   monday,
+  dayLabels,
   balance,
   latestMarks,
   weekTotals,

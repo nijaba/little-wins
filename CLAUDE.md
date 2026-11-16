@@ -24,19 +24,23 @@ npm install                                     # dev tools (Biome); no runtime 
 npm test                                        # all tests (node --test)
 npm run lint                                    # Biome lint + format check; CI will run it
 npm run format                                  # apply Biome formatting
-npm run dev                                     # local server on :3000, PINs 1234 (parent) and 0000 (child)
-docker compose up -d --build                    # container; put real values in docker-compose.override.yml
+npm run dev                                     # local server on :3000 with fake sign-in; pick a test person
+docker compose up -d --build                    # container; real settings go in .env (see .env.example)
 scripts/backup.sh                               # consistent backup of data/little-wins.db
 ```
 
 ## Layout
 
 ```
-server/          index.js (wiring), config.js (env, startup check), db.js (migrations, seed),
-                 scoring.js (pure rules), state.js, routes.js, sessions.js, http.js, static.js,
-                 messages.js (user-facing strings), clock.js
+server/          index.js (wiring), config.js (env, startup check), db.js (migrations, starter list),
+                 repo.js (family-scoped data layer: all SQL), auth.js (OAuth sign-in), fake-sso.js (dev/test only),
+                 sessions.js, allowlist.js, ratelimit.js, routes.js, state.js, scoring.js (pure rules),
+                 http.js (body limit, write guard), static.js, messages.js (user-facing strings), clock.js
 public/          index.html (shell), app.js, strings.js (user-facing strings), style.css, manifest.json
-test/            smoke.test.js (API, real server on a temp database), scoring.test.js (unit)
+test/            *.test.js: real server on a temp database, signed in through the fake provider
+                 (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
+                 isolation.test.js (cross-family check for every parent route), scoring.test.js (unit);
+                 helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh
 docs/            design.md, build-plan.md, admin-guide.md
 ```
@@ -49,7 +53,10 @@ docs/            design.md, build-plan.md, admin-guide.md
 - Every user-entered string is escaped before it reaches the page.
 - Session tokens are random and stored only as SHA-256 hashes.
 - The app refuses to start with placeholder or weak secrets.
-- (From phase 3) The family comes from the session, never from the request. Every query filters on `family_id`, and every ID in a request is checked to belong to that family.
+- The family comes from the session, never from the request. All SQL lives in `server/repo.js`; every function takes the family ID first and filters on it, and every ID in a request is used only together with that family ID. A new route needs a cross-family test.
+- A child's device sees only its own child. Parents are matched on (provider, stable subject), never on email or display name.
+- Writes are POST with a JSON body from the app's own origin.
+- The fake sign-in provider only runs on localhost.
 
 ## How to work here
 

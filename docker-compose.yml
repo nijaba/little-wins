@@ -1,13 +1,13 @@
-# Real PINs, secret, port and time zone go in docker-compose.override.yml (not in git).
-# See docs/admin-guide.md.
+# Settings (address, secret, sign-in apps, allowlist) go in .env, copied from .env.example.
+# .env is git-ignored and never committed. See docs/admin-guide.md.
+# To change the published port or add other compose settings, use docker-compose.override.yml
+# (also git-ignored).
 services:
   little-wins:
     build: .
     restart: unless-stopped
     ports: ["127.0.0.1:3000:3000"]
+    env_file: .env
     environment:
-      PARENT_PIN: "1234"   # placeholder: the app refuses to start with it
-      CHILD_PIN: "0000"    # placeholder: the app refuses to start with it
-      SECRET: "change-this-long-random-string"
-      TZ: UTC
+      DATABASE_PATH: /data/little-wins.db
     volumes: ["./data:/data"]

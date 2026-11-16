@@ -92,7 +92,7 @@ Every table except `users` has a `family_id`, and every query filters on it.
 
 | Table | Columns (main ones) |
 |---|---|
-| `families` | id, name, timezone (IANA, e.g. `America/Chicago`), week_start, created |
+| `families` | id, name, timezone (IANA, e.g. `America/Chicago`), week_start, language (`en`, `zh`, `es`, `fr`, `de`; phase 5b), created |
 | `users` | id, provider (`google`/`github`), subject (stable provider ID), email, login, display name, created, last_seen. Unique on (provider, subject). |
 | `memberships` | family_id, user_id, role (`owner`/`parent`), created |
 | `invites` | id, family_id, token_hash, role, created_by, expires, used_at |
@@ -120,17 +120,20 @@ Every table except `users` has a `family_id`, and every query filters on it.
   - Otherwise, if `SIGNUP_MODE` lets them (open, or they're on `PARENT_ALLOWLIST`), a short setup creates a family: family name, timezone (from the browser), the first child's name, and the starter list or an empty one.
   - Anyone else sees "This Little Wins is private" and is signed out.
 - `PARENT_ALLOWLIST` entries: `google:you@example.com` (verified email), `github:login`, `google-domain:example.com` (Workspace `hd` claim), `*` (anyone).
-- **Co-parents** join by an invite link: single use, 7 days, created in Settings → Family. The owner can remove parents and hand ownership to another parent.
+- **Co-parents** join by an invite link: single use, 7 days, created in Settings → Parents. Opening it shows "Sign in to join <family>"; the invite rides through sign-in inside the signed state cookie.
+- The owner can remove parents and hand ownership to another parent, after a confirmation. The old owner stays as a parent. (No offer-and-accept step: both are trusted members of the same family.)
+- **A family with no parents** (for example after migrating data from an older single-family install) is claimed by the first parent who signs in and is allowed to create a family. They become its owner instead of creating a new family.
 
 ### Children's devices
 
-- A parent picks a child in Settings → Devices and taps **Add a device**. The app shows a QR code and a link holding a random 128-bit token. The token is single use and expires after 10 minutes; only its hash is stored.
-- Opening the link on the child's phone creates a child session bound to that one child.
-- No child ever types a password or PIN.
+- A parent picks a child in Settings → Devices and taps **Add a device**. The app shows a one-time code of 10 characters, grouped for reading (`KD7Q-M3XA-PJ`, about 50 bits, no look-alike characters), and a link holding it (`/#pair=…`) with **Share** and **Copy** buttons. The code is single use and expires after 10 minutes; only its hash is stored.
+- On the child's phone, opening the link, or typing the code under "Use a code from a parent" on the sign-in screen, creates a child session bound to that one child.
+- Redeeming codes is rate limited per client. With 50 bits and a 10-minute life, guessing one is not practical.
+- No child ever types a password. A QR code may be added later; it needs either a dependency or a hand-written encoder, so v1 uses sharing and typing.
 
 ### Sessions
 
-- The cookie `lw_session` holds a random 256-bit token; the database stores its SHA-256 hash. HttpOnly, SameSite=Lax (OAuth returns by redirect), Secure outside `localhost`.
+- The cookie `lw_session` holds a random 256-bit token; the database stores its SHA-256 hash. HttpOnly, SameSite=Lax (the sign-in provider returns by redirect, which a Strict cookie would not survive), Secure outside `localhost`. Because Lax cookies ride along on top-level navigations from other sites, every write must also be JSON from the app's own `Origin` (see "Security").
 - Sessions unused for a year are deleted. Settings → Devices lists a family's sessions with device type, who, and last use; any can be logged out, including "this device".
 - Signing out deletes the session.
 
@@ -237,7 +240,7 @@ These hold in both modes.
 | `LIMIT_*` | Overrides for "Limits" | Mode defaults |
 | `LITTLE_WINS_FAKE_SSO` | Fake sign-in, localhost only | Off |
 
-Until phase 3 of the build plan, the app instead reads `PARENT_PIN`, `CHILD_PIN`, `SECRET` and `DB`.
+`DB` is still read as a fallback for `DATABASE_PATH`. `SIGNUP_MODE=invite` behaves like `closed` until operator-issued family invites exist (phase 4, operator page).
 
 ## Front end
 
@@ -255,6 +258,6 @@ Each has a working default; the owner decides.
 | Should rewards be redeemable (spend points, record it)? | No: milestones |
 | Per-child behavior and reward lists? | One list per family |
 | Can a child's device see siblings' progress? | No |
-| Languages other than English? | English only; strings kept in one place |
+| Languages | Decided: English, Chinese (Simplified), Spanish, French and German, chosen per family (build plan, phase 5b). Until then English only; strings kept in one place |
 | Passkeys as a sign-in option? | Later |
 | Several families per parent? | One in v1 |

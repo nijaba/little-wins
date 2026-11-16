@@ -1,162 +1,172 @@
-/** The JSON API: login, state, and the parent-only editing and recording routes. */
+/**
+ * The JSON API. The family always comes from the session, never from the request; every ID
+ * in a request goes through the family-scoped repo, so another family's IDs act as unknown.
+ * Writes are POST with a JSON body from this site (see http.checkWrite).
+ */
 const config = require('./config');
-const { today } = require('./clock');
-const { sendJson, readBody } = require('./http');
+const { today, validTimeZone } = require('./clock');
+const { sendJson, readBody, checkWrite } = require('./http');
 const messages = require('./messages');
 const { validDay } = require('./scoring');
 const { buildState } = require('./state');
+const { clearSessionCookie } = require('./sessions');
 
-const clearCookie = `${config.cookieName}=; ${config.cookieAttrs}; Max-Age=0`;
-
-// Clamp a request value to a whole number in [lo, hi]; text is trimmed and capped at 120 chars.
+// Clamp a request value to a whole number in [lo, hi]; text is trimmed and capped.
 const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+v) || 0));
-const text = (v) =>
-  String(v || '')
+const text = (v, max = 120) =>
+  String(v ?? '')
     .trim()
-    .slice(0, 120);
+    .slice(0, max);
+const id = (v) => num(v, 0, 1e12);
+const formatCode = (code) => code.replace(/(.{4})(.{4})(.{2})/, '$1-$2-$3');
 
-function createRouter({ db, sessions, lockout }) {
-  const { newSession, auth } = sessions;
-
-  // Each handler gets { b (body), role, sid, state() } and returns a reply: [status, json, headers?].
-  // Returning nothing means "bad request".
+function createRouter({ repo, sessions, limiter, clientIp }) {
+  // Each handler gets ctx = { b (body), s (session), fid, state(extra?) } and returns
+  // [status, json, headers?]. Handlers here are for parents of a family.
   const parentRoutes = {
-    '/api/item/save'({ b, state }) {
+    '/api/item/save'({ b, fid, state }) {
       const name = text(b.name);
-      const note = text(b.note);
       if (!name || !['target', 'penalty', 'challenge'].includes(b.kind)) {
         return [400, { error: messages.nameRequired }];
       }
       let pmin = num(b.pmin, 0, 10000);
       let pmax = num(b.pmax, 0, 10000);
       if (b.kind === 'challenge') pmin = pmax = 0;
-      if (b.kind === 'penalty') {
-        pmin = Math.max(1, pmin);
-        pmax = pmin;
-      }
+      if (b.kind === 'penalty') pmax = pmin = Math.max(1, pmin);
       if (pmax < pmin) pmax = pmin;
-      if (b.id) {
-        db.prepare('UPDATE items SET name=?,note=?,pmin=?,pmax=? WHERE id=? AND kind=?').run(
-          name,
-          note,
-          pmin,
-          pmax,
-          num(b.id, 0, 1e9),
-          b.kind,
-        );
-      } else {
-        const next = db.prepare('SELECT COALESCE(MAX(sort),0)+1 s FROM items').get().s;
-        db.prepare(
-          'INSERT INTO items(kind,name,note,pmin,pmax,sort,active) VALUES(?,?,?,?,?,?,1)',
-        ).run(b.kind, name, note, pmin, pmax, next);
-      }
+      const ok = repo.saveItem(fid, {
+        id: b.id ? id(b.id) : 0,
+        kind: b.kind,
+        name,
+        note: text(b.note),
+        pmin,
+        pmax,
+      });
+      return ok ? [200, state()] : [404, { error: messages.notFound }];
+    },
+    '/api/item/move': ({ b, fid, state }) => {
+      repo.move(fid, 'items', id(b.id), +b.dir < 0 ? -1 : 1);
       return [200, state()];
     },
+    '/api/item/delete': ({ b, fid, state }) =>
+      repo.deleteItem(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
 
-    '/api/item/move': (ctx) => move(ctx, 'items'),
-    '/api/reward/move': (ctx) => move(ctx, 'rewards'),
-
-    '/api/item/delete'({ b, state }) {
-      db.prepare('UPDATE items SET active=0 WHERE id=?').run(num(b.id, 0, 1e9));
-      return [200, state()];
-    },
-
-    '/api/reward/save'({ b, state }) {
+    '/api/reward/save'({ b, fid, state }) {
       const name = text(b.name);
       if (!name) return [400, { error: messages.nameRequired }];
-      const stars = num(b.stars, 0, 1000);
-      const points = num(b.points, 0, 100000);
+      const ok = repo.saveReward(fid, {
+        id: b.id ? id(b.id) : 0,
+        name,
+        stars: num(b.stars, 0, 1000),
+        points: num(b.points, 0, 100000),
+      });
+      return ok ? [200, state()] : [404, { error: messages.notFound }];
+    },
+    '/api/reward/move': ({ b, fid, state }) => {
+      repo.move(fid, 'rewards', id(b.id), +b.dir < 0 ? -1 : 1);
+      return [200, state()];
+    },
+    '/api/reward/delete': ({ b, fid, state }) =>
+      repo.deleteReward(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
+
+    '/api/add': (ctx) => record(ctx, 'add'),
+    '/api/warn': (ctx) => record(ctx, 'warn'),
+    '/api/mark': (ctx) => record(ctx, 'mark'),
+    '/api/undo': ({ b, fid, state }) =>
+      repo.undoEntry(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
+
+    '/api/family/save'({ b, fid, state }) {
+      const name = text(b.name, 60);
+      if (!name) return [400, { error: messages.nameRequired }];
+      if (!validTimeZone(b.timezone)) return [400, { error: messages.invalidTimeZone }];
+      repo.updateFamily(fid, {
+        name,
+        timezone: b.timezone,
+        weekStart: +b.week_start === 0 ? 0 : 1,
+      });
+      return [200, state()];
+    },
+
+    '/api/child/save'({ b, fid, state }) {
+      const name = text(b.name, 40);
+      if (!name) return [400, { error: messages.nameRequired }];
       if (b.id) {
-        db.prepare('UPDATE rewards SET name=?,stars=?,points=? WHERE id=?').run(
-          name,
-          stars,
-          points,
-          num(b.id, 0, 1e9),
-        );
-      } else {
-        db.prepare(
-          'INSERT INTO rewards(name,stars,points,sort) VALUES(?,?,?,(SELECT COALESCE(MAX(sort),0)+1 FROM rewards))',
-        ).run(name, stars, points);
+        return repo.renameChild(fid, id(b.id), name)
+          ? [200, state()]
+          : [404, { error: messages.notFound }];
       }
-      return [200, state()];
+      const cid = repo.addChild(fid, name);
+      return [200, state({ child: cid })];
+    },
+    '/api/child/delete'({ b, fid, state }) {
+      const cid = id(b.id);
+      if (!repo.child(fid, cid)) return [404, { error: messages.notFound }];
+      if (!repo.deleteChild(fid, cid)) return [400, { error: messages.lastChild }];
+      return [200, state({ child: 0 })];
     },
 
-    '/api/reward/delete'({ b, state }) {
-      db.prepare('DELETE FROM rewards WHERE id=?').run(num(b.id, 0, 1e9));
-      return [200, state()];
+    '/api/invite/create'({ s, fid, state }) {
+      const { token, expires } = repo.createInvite(fid, s.userId, config.inviteMs);
+      return [200, { ...state(), issued: { link: `${config.baseUrl}/#invite=${token}`, expires } }];
+    },
+    '/api/invite/revoke': ({ b, fid, state }) =>
+      repo.revokeInvite(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
+
+    '/api/parent/remove'({ b, s, fid, state }) {
+      if (repo.role(fid, s.userId) !== 'owner') return [403, { error: messages.ownerOnly }];
+      if (id(b.user_id) === s.userId) return [400, { error: messages.notYourself }];
+      return repo.removeParent(fid, id(b.user_id))
+        ? [200, state()]
+        : [404, { error: messages.notFound }];
+    },
+    '/api/owner/transfer'({ b, s, fid, state }) {
+      if (repo.role(fid, s.userId) !== 'owner') return [403, { error: messages.ownerOnly }];
+      if (id(b.user_id) === s.userId) return [400, { error: messages.notYourself }];
+      return repo.transferOwner(fid, s.userId, id(b.user_id))
+        ? [200, state()]
+        : [404, { error: messages.notFound }];
     },
 
-    '/api/settings/save'({ b, state }) {
-      db.prepare(
-        'INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
-      ).run(
-        'child_name',
-        String(b.child_name || '')
-          .trim()
-          .slice(0, 40),
-      );
-      return [200, state()];
+    '/api/pairing/create'({ b, s, fid, state }) {
+      const cid = id(b.child_id);
+      if (!repo.child(fid, cid)) return [404, { error: messages.notFound }];
+      const { code, expires } = repo.createPairing(fid, cid, s.userId, config.pairingMs);
+      return [
+        200,
+        {
+          ...state(),
+          issued: { code: formatCode(code), link: `${config.baseUrl}/#pair=${code}`, expires },
+        },
+      ];
     },
-
-    '/api/session/revoke'({ b, sid, state }) {
-      const id = num(b.id, 0, 1e9);
-      db.prepare('DELETE FROM sessions WHERE id=?').run(id);
-      if (id === sid) return [401, { error: messages.login }, { 'Set-Cookie': clearCookie }];
-      return [200, state()];
-    },
-
-    '/api/undo'({ b, state }) {
-      db.prepare('UPDATE entries SET undone=1 WHERE id=?').run(+b.id);
+    '/api/session/revoke'({ b, s, fid, state }) {
+      const sid = id(b.id);
+      if (!repo.revokeSession(fid, sid)) return [404, { error: messages.notFound }];
+      if (sid === s.id)
+        return [401, { error: messages.login }, { 'Set-Cookie': clearSessionCookie() }];
       return [200, state()];
     },
   };
 
-  // Moves an item (within its kind) or a reward one place up (dir < 0) or down.
-  function move({ b, state }, table) {
-    const dir = +b.dir < 0 ? -1 : 1;
-    const id = num(b.id, 0, 1e9);
-    const row = db.prepare(`SELECT * FROM ${table} WHERE id=?`).get(id);
-    if (row) {
-      const list =
-        table === 'rewards'
-          ? db.prepare('SELECT id FROM rewards ORDER BY sort,id').all()
-          : db
-              .prepare('SELECT id FROM items WHERE active=1 AND kind=? ORDER BY sort,id')
-              .all(row.kind);
-      const from = list.findIndex((x) => x.id === id);
-      const to = from + dir;
-      if (from >= 0 && to >= 0 && to < list.length) {
-        list.splice(to, 0, list.splice(from, 1)[0]);
-        list.forEach((x, k) => {
-          db.prepare(`UPDATE ${table} SET sort=? WHERE id=?`).run(k + 1, x.id);
-        });
-      }
-    }
-    return [200, state()];
-  }
+  /** Points, warnings and marks for one child of the family. */
+  function record({ b, s, fid, state }, kind) {
+    const child = repo.child(fid, id(b.child_id));
+    const item = repo.item(fid, id(b.item_id));
+    if (!child || !item) return [404, { error: messages.notFound }];
+    const day = today(repo.family(fid).timezone);
+    const who = repo.parents(fid).find((p) => p.id === s.userId)?.name || 'Parent';
+    const base = { itemId: item.id, userId: s.userId, who };
 
-  // Recording points, warnings and marks against an item.
-  function recordRoute(path, { b, state }) {
-    const ts = new Date().toISOString();
-    const day = today();
-    const itemId = Number.isInteger(+b.item_id) && b.item_id != null ? +b.item_id : -1;
-    const item = db.prepare('SELECT * FROM items WHERE id=?').get(itemId);
-    const add = (kind, points, note, d = day) =>
-      db
-        .prepare('INSERT INTO entries(ts,day,item_id,kind,points,who,note) VALUES(?,?,?,?,?,?,?)')
-        .run(ts, d, b.item_id, kind, points, 'Parent', note || '');
-
-    if (path === '/api/add' && item && item.kind !== 'challenge') {
+    if (kind === 'add' && item.kind !== 'challenge' && item.active) {
       const points =
         item.kind === 'penalty'
           ? -item.pmin
           : Math.min(item.pmax, Math.max(item.pmin, +b.points || item.pmin));
-      add('points', points, b.note);
-    } else if (path === '/api/warn' && item && item.kind === 'target') {
-      add('warn', 0, b.note);
+      repo.addEntry(fid, child.id, { ...base, kind: 'points', points, note: text(b.note), day });
+    } else if (kind === 'warn' && item.kind === 'target' && item.active) {
+      repo.addEntry(fid, child.id, { ...base, kind: 'warn', points: 0, note: text(b.note), day });
     } else if (
-      path === '/api/mark' &&
-      item &&
+      kind === 'mark' &&
       item.kind === 'challenge' &&
       ['perfect', 'ok', 'bad'].includes(b.mark)
     ) {
@@ -165,51 +175,110 @@ function createRouter({ db, sessions, lockout }) {
         if (!validDay(b.day) || b.day > day) return [400, { error: messages.invalidDay }];
         markDay = b.day;
       }
-      db.prepare("UPDATE entries SET undone=1 WHERE kind='mark' AND item_id=? AND day=?").run(
-        b.item_id,
-        markDay,
-      );
-      add('mark', 0, b.mark, markDay);
+      repo.replaceMark(fid, child.id, item.id, markDay, b.mark, s.userId, who);
     } else {
       return [400, { error: messages.badRequest }];
     }
-    return [200, state()];
+    return [200, state({ child: child.id })];
   }
 
-  function login(req, b) {
-    const now = Date.now();
-    const wait = lockout.remaining(now);
-    if (wait) return [429, { error: messages.tooManyPins(wait) }];
-    const role = b.pin === config.parentPin ? 'parent' : b.pin === config.childPin ? 'child' : null;
-    if (!role) {
-      lockout.fail(now);
-      return [401, { error: messages.wrongPin }];
-    }
-    lockout.reset();
-    return [200, { role }, { 'Set-Cookie': newSession(role, req).cookie }];
+  // --- Routes that work without a family (or without a session) -----------------------------
+
+  function publicConfig() {
+    return [
+      200,
+      {
+        appName: messages.appName,
+        providers: Object.keys(config.providers),
+        signupMode: config.signupMode,
+      },
+    ];
   }
 
-  /** Handles one /api request (or any non-GET request). */
+  function pair(req, b) {
+    const wait = limiter.hit(`pair:${clientIp(req)}`);
+    if (wait) return [429, { error: messages.tooManyTries(wait) }, { 'Retry-After': String(wait) }];
+    const found = repo.redeemPairing(b.code);
+    if (!found) return [400, { error: messages.codeInvalid }];
+    const { cookie } = sessions.create({ kind: 'child', ...found }, req);
+    return [200, { ok: true }, { 'Set-Cookie': cookie }];
+  }
+
+  function inviteInfo(req, b) {
+    const wait = limiter.hit(`invite:${clientIp(req)}`);
+    if (wait) return [429, { error: messages.tooManyTries(wait) }, { 'Retry-After': String(wait) }];
+    const invite = repo.findInvite(b.token);
+    return invite
+      ? [200, { familyName: invite.family_name }]
+      : [404, { error: messages.inviteInvalid }];
+  }
+
+  function setup(s, b) {
+    if (s.kind !== 'parent') return [403, { error: messages.viewOnly }];
+    if (s.familyId != null || repo.membershipOf(s.userId))
+      return [409, { error: messages.setupDone }];
+    const familyName = text(b.family_name, 60);
+    const childName = text(b.child_name, 40);
+    if (!familyName || !childName) return [400, { error: messages.nameRequired }];
+    if (!validTimeZone(b.timezone)) return [400, { error: messages.invalidTimeZone }];
+    const fid = repo.createFamily({
+      name: familyName,
+      timezone: b.timezone,
+      weekStart: +b.week_start === 0 ? 0 : 1,
+      ownerId: s.userId,
+      childName,
+      starter: b.starter !== false,
+    });
+    sessions.joinFamily(s.id, fid);
+    return [200, buildState(repo, { ...s, familyId: fid }, {})];
+  }
+
+  /** Handles one /api request. */
   return async function handle(req, res) {
     const send = (reply) => sendJson(res, ...reply);
     const url = new URL(req.url, 'http://x');
     const path = url.pathname;
-    const week = url.searchParams.get('week');
+    const view = { week: url.searchParams.get('week'), child: url.searchParams.get('child') };
+
+    if (req.method === 'GET') {
+      if (path === '/api/config') return send(publicConfig());
+      if (path !== '/api/state') return send([404, { error: messages.notFound }]);
+    } else if (req.method === 'POST') {
+      const refused = checkWrite(req);
+      if (refused) return send([refused[0], { error: messages[refused[1]] }]);
+    } else {
+      return send([405, { error: messages.badRequest }, { Allow: 'GET, POST' }]);
+    }
 
     const b = await readBody(req);
     if (b === null) return send([413, { error: messages.tooLarge }, { Connection: 'close' }]);
-    if (path === '/api/login') return send(login(req, b));
+    if (path === '/api/pair') return send(pair(req, b));
+    if (path === '/api/invite/info') return send(inviteInfo(req, b));
 
-    const session = auth(req);
-    if (!session) return send([401, { error: messages.login }]);
-    const { role, sid } = session;
-    const state = () => buildState(db, role, sid, week);
+    const s = sessions.auth(req);
+    if (!s) return send([401, { error: messages.login }]);
+    if (path === '/api/logout') {
+      sessions.end(s.id);
+      return send([200, { ok: true }, { 'Set-Cookie': clearSessionCookie() }]);
+    }
+    if (path === '/api/setup') return send(setup(s, b));
+
+    // A parent still setting up a family can only see that.
+    if (s.familyId == null) {
+      if (path === '/api/state') {
+        const name = repo.user(s.userId)?.name || '';
+        return send([200, { setup: true, role: 'parent', me: { userId: s.userId, name } }]);
+      }
+      return send([403, { error: messages.setupNotAllowed }]);
+    }
+
+    const state = (extra = {}) => buildState(repo, s, { ...view, ...extra });
     if (path === '/api/state') return send([200, state()]);
-    if (role !== 'parent') return send([403, { error: messages.viewOnly }]);
+    if (s.kind !== 'parent') return send([403, { error: messages.viewOnly }]);
 
-    const ctx = { b, role, sid, state };
     const handler = parentRoutes[path];
-    send(handler ? handler(ctx) : recordRoute(path, ctx));
+    if (!handler) return send([404, { error: messages.notFound }]);
+    send(handler({ b, s, fid: s.familyId, state }));
   };
 }
 

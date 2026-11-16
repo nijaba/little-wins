@@ -1,56 +1,80 @@
-/** Builds the JSON state object sent to the page, from the database via scoring.js. */
+/**
+ * Builds the JSON state sent to the page for one session: the family, the selected child's
+ * points, stars and week, and (for parents) the family's settings, parents and devices.
+ */
 const { today } = require('./clock');
 const scoring = require('./scoring');
 
-function buildState(db, role, sid, requestedWeek) {
-  const items = db.prepare('SELECT * FROM items WHERE active=1 ORDER BY sort').all();
-  const entries = db
-    .prepare(
-      'SELECT e.*,i.name iname FROM entries e LEFT JOIN items i ON i.id=e.item_id WHERE undone=0 ORDER BY ts,id',
-    )
-    .all();
-  const td = today();
-  const firstDay = db.prepare('SELECT MIN(day) d FROM entries').get().d;
-  const setting = db.prepare('SELECT value FROM settings WHERE key=?').get('child_name');
+/**
+ * `session` is { id, kind, familyId, userId, childId }. Parents pick a child with
+ * `requestedChild` (default: the first); a child's device always shows its own child.
+ */
+function buildState(repo, session, { week: requestedWeek, child: requestedChild } = {}) {
+  const fid = session.familyId;
+  const family = repo.family(fid);
+  const parent = session.kind === 'parent';
+  const children = repo.children(fid);
+  const selected = parent
+    ? (children.find((c) => c.id === Number(requestedChild)) ?? children[0])
+    : children.find((c) => c.id === session.childId);
+  const cid = selected?.id;
+
+  const items = repo.items(fid);
+  const entries = cid ? repo.entries(fid, cid) : [];
+  const td = today(family.timezone);
+  const weekStart = family.week_start;
 
   const marks = scoring.latestMarks(entries);
-  const range = scoring.weekRange(td, firstDay, requestedWeek);
+  const range = scoring.weekRange(
+    td,
+    cid ? repo.firstEntryDay(fid, cid) : null,
+    requestedWeek,
+    weekStart,
+  );
   const week = scoring.weekMarks(
     items.filter((i) => i.kind === 'challenge'),
     marks,
     range.start,
   );
-  const { stars, won } = scoring.stars(marks, range.start);
+  const { stars, won } = scoring.stars(marks, range.start, weekStart);
   const { warn, mk } = scoring.todayStatus(entries, td);
-  const parent = role === 'parent';
+  const role = parent ? 'parent' : 'child';
 
-  return {
-    childName: setting?.value || '',
-    week: {
-      days: week.days,
-      lbl: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-      marks: week.marks,
-      ...range,
-    },
+  const state = {
     role,
+    family: { name: family.name, timezone: family.timezone, weekStart },
+    // A child's device sees only its own child.
+    children: parent ? children : [selected],
+    childId: cid,
+    childName: selected?.name || '',
+    week: { days: week.days, lbl: scoring.dayLabels(weekStart), marks: week.marks, ...range },
     balance: scoring.balance(entries),
     stars,
     items: items.filter((i) => parent || i.kind !== 'penalty'),
-    rewards: db.prepare('SELECT * FROM rewards ORDER BY sort,id').all(),
-    warn,
+    rewards: repo.rewards(fid),
+    warn: parent ? warn : {},
     mk,
     won,
     hist: scoring.history(entries, role),
     today: td,
-    devices: parent
-      ? db
-          .prepare(
-            'SELECT id,role,device,created,last_seen FROM sessions ORDER BY last_seen DESC,id DESC',
-          )
-          .all()
-          .map((d) => ({ ...d, me: d.id === sid }))
-      : undefined,
   };
+
+  if (parent) {
+    const myRole = repo.role(fid, session.userId);
+    state.me = { userId: session.userId, owner: myRole === 'owner' };
+    state.parents = repo.parents(fid).map((p) => ({ ...p, me: p.id === session.userId }));
+    state.invites = repo.invites(fid);
+    state.devices = repo.sessions(fid).map((d) => ({
+      id: d.id,
+      kind: d.kind,
+      device: d.device,
+      who: d.who || '',
+      created: d.created,
+      last_seen: d.last_seen,
+      me: d.id === session.id,
+    }));
+  }
+  return state;
 }
 
 module.exports = { buildState };
