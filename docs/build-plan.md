@@ -111,6 +111,24 @@ Proposed after launch prep and accepted by the owner (2026-11-17). Defaults are 
 - [x] Notices on a child's device when they unlock a reward or reach a milestone, allowed per child by a parent (owner's request, 2026-11-17)
 - [x] An evening reminder to mark the day, for parents who turn it on (Web Push, no dependency)
 
+## Phase 8 (priority 2): a more fun app
+
+Proposed and accepted by the owner (2026-11-17), after the brighter sign-in page. The fun goes to the child's screens;
+the parents' recording and Settings stay quick and calm. Everything stays positive-only, with no dependency, under the
+strict CSP, in light and dark mode, and still with reduced motion. Each item gets its design in design.md first.
+
+- [ ] An emoji for each behavior, reward and child, picked by a parent (a short picker, no library), shown large in the
+  lists, on reward cards and in the child's header, with defaults for the starter list; helps children who can't read
+  well yet
+- [ ] Celebrations: the child's points count up when new ones arrived since they last looked; a reward unlock with CSS
+  confetti and a bounce; a full ring glows; a small "+5" floats up from the + button
+- [ ] Stars to collect: a perfect day as a tilted gold sticker on the child's Week, a "⭐ won!" stamp on a week that wins,
+  and the stars so far filling a jar or row toward the next reward
+- [ ] A greeting on the child's Today by time of day ("Good morning, Mia! ☀️")
+- [ ] Reward cards as goals: progress bars and "3 more ★ to go!" on locked rewards, a sparkle badge on unlocked ones
+- [ ] Friendlier empty moments ("No points yet today — let's go!")
+- [ ] History grouped by day, with each day's total and its best moment on top
+
 ## Later (not yet scheduled)
 
 - [x] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons
