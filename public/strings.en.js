@@ -149,6 +149,26 @@ window.LW_STRINGS.en = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  review: {
+    open: 'Weekly review',
+    title: (name) => `Weekly review: ${name}`,
+    stars: 'Stars won',
+    earned: 'Points earned',
+    lost: 'Points lost (penalties)',
+    warnings: 'Warnings',
+    perfectDays: 'Perfect days',
+    badDays: 'Bad days',
+    byDay: 'Points by day',
+    challenges: 'Weekly challenges',
+    top: 'Done most often',
+    warnedFor: 'Warnings for',
+    recent: 'The last 4 weeks',
+    week: 'Week of',
+    times: (n) => `${n}×`,
+    none: 'Nothing was recorded this week.',
+    print: 'Print',
+    back: 'Back to the week',
+  },
   // History tab
   history: {
     title: 'History',

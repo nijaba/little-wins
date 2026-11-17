@@ -145,6 +145,26 @@ window.LW_STRINGS.zh = {
     pointsPlus: (n) => `+ ${n} 分`,
   },
 
+  review: {
+    open: '本周回顾',
+    title: (name) => `本周回顾：${name}`,
+    stars: '获得的星星',
+    earned: '获得的积分',
+    lost: '扣除的积分（惩罚）',
+    warnings: '警告',
+    perfectDays: '完美的天数',
+    badDays: '糟糕的天数',
+    byDay: '每天的积分',
+    challenges: '每周挑战',
+    top: '最常完成',
+    warnedFor: '警告事项',
+    recent: '最近 4 周',
+    week: '周起始',
+    times: (n) => `${n} 次`,
+    none: '本周没有任何记录。',
+    print: '打印',
+    back: '返回本周',
+  },
   // History tab
   history: {
     title: '记录',

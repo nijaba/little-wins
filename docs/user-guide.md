@@ -180,6 +180,10 @@ On the **Week** tab, the arrows beside the week's date go back through past week
 anything in it. Tap a day to fix it, just like this week. **Back to this week** returns. So if you forgot to
 mark Sunday, you can still do it on Monday morning.
 
+### The weekly review
+
+At the bottom of the **Week** tab, **Weekly review** sums up the chosen child's week: stars won, points earned and lost, warnings, perfect and bad days, points by day, each challenge, what they did most often, and the last four weeks side by side. Use the arrows to look at another week. **Print** prints it, or saves it as a PDF, which is handy for a counselor or a teacher.
+
 ### History and undo
 
 The **History** tab lists everything recorded for the chosen child, newest first: points, warnings, penalties

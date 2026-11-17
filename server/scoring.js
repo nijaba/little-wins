@@ -119,6 +119,84 @@ function weekMarks(challenges, marks, start) {
 }
 
 /**
+ * The weekly review for parents: the week starting `start` in detail, and the `weeks` weeks up
+ * to it side by side. `entries` are one child's live entries in time order; `items` the family's.
+ * Points earned and lost are the entries' own amounts (before the balance's floor at 0).
+ */
+function review(entries, items, start, weekStart = 1, weeks = 4) {
+  const names = Object.fromEntries(items.map((i) => [i.id, i.name]));
+  const marks = latestMarks(entries);
+  const totals = weekTotals(marks, weekStart);
+  const sum = (from, to) => {
+    const t = { earned: 0, lost: 0, warnings: 0, perfectDays: 0, badDays: 0, stars: 0 };
+    for (const e of entries) {
+      if (e.day < from || e.day >= to) continue;
+      if (e.kind === 'points' && e.points > 0) t.earned += e.points;
+      if (e.kind === 'points' && e.points < 0) t.lost -= e.points;
+      if (e.kind === 'warn') t.warnings++;
+    }
+    for (const [key, mark] of Object.entries(marks)) {
+      const day = key.split('|')[1];
+      if (day < from || day >= to) continue;
+      if (mark === 'perfect') t.perfectDays++;
+      if (mark === 'bad') t.badDays++;
+    }
+    for (const [key, w] of Object.entries(totals)) {
+      if (key.split('|')[1] === from && w.perfect >= 2 && w.bad === 0) t.stars++;
+    }
+    return t;
+  };
+  const end = shift(start, 7);
+  const days = [...Array(7)].map((_, k) => shift(start, k));
+  const byDay = days.map((day) => {
+    let earned = 0;
+    let lost = 0;
+    for (const e of entries) {
+      if (e.day !== day || e.kind !== 'points') continue;
+      if (e.points > 0) earned += e.points;
+      else lost -= e.points;
+    }
+    return { day, earned, lost };
+  });
+  const count = (kind, positive) => {
+    const by = {};
+    for (const e of entries) {
+      if (e.day < start || e.day >= end || e.kind !== kind) continue;
+      if (positive && !(e.points > 0)) continue;
+      by[e.item_id] ??= { name: names[e.item_id] ?? e.iname ?? '', times: 0, points: 0 };
+      by[e.item_id].times++;
+      by[e.item_id].points += e.points;
+    }
+    return Object.values(by).sort((a, b) => b.times - a.times || a.name.localeCompare(b.name));
+  };
+  const challenges = items
+    .filter((i) => i.kind === 'challenge' && i.active)
+    .map((c) => {
+      const w = totals[`${c.id}|${start}`] || { perfect: 0, bad: 0 };
+      return {
+        id: c.id,
+        name: c.name,
+        marks: days.map((d) => marks[`${c.id}|${d}`] || null),
+        won: w.perfect >= 2 && w.bad === 0,
+      };
+    });
+  const recent = [...Array(weeks)].map((_, k) => {
+    const from = shift(start, -7 * (weeks - 1 - k));
+    return { start: from, ...sum(from, shift(from, 7)) };
+  });
+  return {
+    start,
+    days,
+    week: sum(start, end),
+    byDay,
+    challenges,
+    top: count('points', true).slice(0, 5),
+    warnedFor: count('warn', false),
+    recent,
+  };
+}
+
+/**
  * The last 60 history rows, newest first. Parents see everything; the child sees only
  * positive points and never notes or marks.
  */
@@ -141,6 +219,7 @@ function history(entries, role) {
 }
 
 module.exports = {
+  review,
   shift,
   validDay,
   startOfWeek,

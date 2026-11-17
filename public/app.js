@@ -24,6 +24,7 @@
   let opsErr = false;
   let delTxt = ''; // what was typed in the "delete family" box
   let iss = null; // device code or invite link just issued, shown until Done
+  let rev = null; // the weekly review on show (parents, Week tab), or null
   let cdTimer; // countdown of the device code
   let tour = null; // the guided tour while it runs: { role, steps, i, shown, back }
   try {
@@ -808,6 +809,7 @@
     logout: () => logout(),
     child: (d) => {
       chSel = +d.id;
+      rev = null;
       api('state');
     },
     'save-family': () =>
@@ -861,8 +863,16 @@
     },
     tab: (d) => {
       tab = d.tab;
+      rev = null;
       render();
     },
+    review: () => openReview(S.week.start),
+    'review-week': (d) => openReview(d.week),
+    'review-close': () => {
+      rev = null;
+      render();
+    },
+    print: () => window.print(),
     week: (d) => goWeek(d.week || null),
     cyc: (d) => cyc(+d.id, +d.k),
     add: (d) => add(+d.id),
@@ -964,6 +974,66 @@
     return h;
   }
 
+  // The weekly review: load one week of the chosen child, then show it.
+  async function openReview(week) {
+    const r = await fetch(
+      `/api/review?child=${S.childId}&week=${encodeURIComponent(week || '')}`,
+    ).catch(() => null);
+    const j = r?.ok ? await r.json().catch(() => null) : null;
+    if (!j) return toast(STR.errors.serverError);
+    rev = j;
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function viewReview() {
+    const R = STR.review;
+    const wk = STR.week;
+    const fd = (d, o = { month: 'short', day: 'numeric' }) => fmtDay(d, o);
+    const range = `${fd(rev.days[0])} – ${fd(rev.days[6])}`;
+    const w = rev.week;
+    const stat = (label, value) =>
+      `<div class=row><div>${label}</div><div><b>${value}</b></div></div>`;
+    let h = `<div class="card wnav noprint"><button class="b g" ${rev.prev ? `data-action=review-week data-week="${rev.prev}"` : 'disabled'} aria-label="${wk.prevLabel}">‹</button><div><b>${rev.current ? wk.thisWeek : wk.weekOf(fd(rev.start))}</b><br><small>${range}</small></div><button class="b g" ${rev.next ? `data-action=review-week data-week="${rev.next}"` : 'disabled'} aria-label="${wk.nextLabel}">›</button></div>`;
+    h += `<h3>${R.title(esc(rev.child.name))}</h3><p class=hint><small>${range}</small></p>`;
+    h += `<div class=card>${stat(R.stars, `${w.stars} ${STR.star}`)}${stat(R.earned, `+${w.earned}`)}${stat(R.lost, w.lost ? `−${w.lost}` : '0')}${stat(R.warnings, w.warnings)}${stat(R.perfectDays, w.perfectDays)}${stat(R.badDays, w.badDays)}</div>`;
+    const most = Math.max(1, ...rev.byDay.map((d) => d.earned));
+    h += `<h3>${R.byDay}</h3><div class=card>${rev.byDay
+      .map(
+        (d) =>
+          `<div class="row rv-day"><div class=rv-d>${fd(d.day, { weekday: 'short', day: 'numeric' })}</div><div class=rv-bar><div class=bar><i data-w=${Math.round((100 * d.earned) / most)}></i></div></div><div class=rv-n><b>+${d.earned}</b>${d.lost ? ` <small>−${d.lost}</small>` : ''}</div></div>`,
+      )
+      .join('')}</div>`;
+    if (rev.challenges.length) {
+      h += `<h3>${R.challenges}</h3>`;
+      for (const c of rev.challenges) {
+        const strip = c.marks
+          .map(
+            (m, k) =>
+              `<span class="d ${m || ''}">${fd(rev.days[k], { weekday: 'narrow' })}<br>${wk.marks[m] || wk.marks.none}</span>`,
+          )
+          .join('');
+        h += `<div class=card><div class=row><div>${esc(c.name)}</div>${c.won ? `<b>${wk.won}</b>` : ''}</div><div class=strip>${strip}</div></div>`;
+      }
+    }
+    const list = (title, rows, fmt) =>
+      rows.length
+        ? `<h3>${title}</h3><div class=card>${rows.map((x) => `<div class=row><div>${esc(x.name)}</div><div><b>${fmt(x)}</b></div></div>`).join('')}</div>`
+        : '';
+    h += list(R.top, rev.top, (x) => `${R.times(x.times)} · +${x.points}`);
+    h += list(R.warnedFor, rev.warnedFor, (x) => R.times(x.times));
+    if (!w.earned && !w.lost && !w.warnings && !w.perfectDays && !w.badDays)
+      h += `<p class=center><small>${R.none}</small></p>`;
+    h += `<h3>${R.recent}</h3><div class="card rv-table"><table><thead><tr><th>${R.week}</th><th>${STR.star}</th><th>+</th><th>−</th><th>⚠</th></tr></thead><tbody>${rev.recent
+      .map(
+        (x) =>
+          `<tr><td>${fd(x.start)}</td><td>${x.stars}</td><td>${x.earned}</td><td>${x.lost}</td><td>${x.warnings}</td></tr>`,
+      )
+      .join('')}</tbody></table></div>`;
+    h += `<p class="center noprint"><button class=b data-action=print>${R.print}</button> <button class="b g" data-action=review-close>${R.back}</button></p>`;
+    return h;
+  }
+
   function viewWeek() {
     const W = S.week;
     const fd = (d) => fmtDay(d, { month: 'short', day: 'numeric' });
@@ -998,6 +1068,8 @@
         S.won[i.id] ? '' : wk.perfectDays(pf) + (bd ? wk.aBadDay : '')
       }</small></div>${S.won[i.id] ? `<b>${wk.won}</b>` : ''}</div><div class=strip>${days}</div></div>`;
     }
+    if (P())
+      h += `<p class=center><button class=b data-action=review>${STR.review.open}</button></p>`;
     return h;
   }
 
@@ -1196,7 +1268,7 @@
       P() ? '' : `<div class=who>${esc(S.childName)}</div>`
     }</header>${demoBar()}${tourOffer()}${chips}<main>`;
     if (tab === 'today') h += viewToday();
-    if (tab === 'week') h += viewWeek();
+    if (tab === 'week') h += rev ? viewReview() : viewWeek();
     if (tab === 'rew') h += viewRewards();
     if (tab === 'hist') h += viewHistory();
     if (tab === 'set' && P()) h += viewSettings();

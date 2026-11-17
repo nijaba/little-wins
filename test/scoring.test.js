@@ -292,3 +292,65 @@ test('SC-21 weekRange with a Sunday start begins on Sunday and clamps like Monda
   const past = s.weekRange('2026-11-18', '2026-10-07', '2020-01-01', 0);
   assert.deepEqual([past.start, past.prev], ['2026-10-04', null]);
 });
+
+test('SC-22 review sums one week and the weeks before it, and counts what was done most often', () => {
+  const items = [
+    { id: 1, kind: 'target', name: 'Reading', active: 1 },
+    { id: 2, kind: 'target', name: 'Tidy room', active: 1 },
+    { id: 3, kind: 'penalty', name: 'Rude words', active: 1 },
+    { id: 9, kind: 'challenge', name: 'Bedtime', active: 1 },
+    { id: 8, kind: 'challenge', name: 'Old one', active: 0 },
+  ];
+  const e = (kind, item_id, day, extra = {}) => ({ kind, item_id, day, points: 0, ...extra });
+  const entries = [
+    e('points', 1, '2026-11-02', { points: 5 }), // the week before
+    e('mark', 9, '2026-11-02', { note: 'perfect' }),
+    e('mark', 9, '2026-11-03', { note: 'perfect' }),
+    e('points', 1, '2026-11-09', { points: 5 }),
+    e('points', 1, '2026-11-10', { points: 5 }),
+    e('points', 2, '2026-11-10', { points: 10 }),
+    e('points', 3, '2026-11-11', { points: -15 }),
+    e('warn', 2, '2026-11-11'),
+    e('warn', 2, '2026-11-12'),
+    e('mark', 9, '2026-11-09', { note: 'perfect' }),
+    e('mark', 9, '2026-11-10', { note: 'bad' }),
+    e('mark', 9, '2026-11-10', { note: 'perfect' }), // fixed: the latest mark counts
+    e('mark', 9, '2026-11-12', { note: 'ok' }),
+    e('points', 1, '2026-11-16', { points: 5 }), // the week after: not counted
+  ];
+  const r = s.review(entries, items, '2026-11-09', 1, 2);
+  assert.deepEqual(r.week, {
+    earned: 20,
+    lost: 15,
+    warnings: 2,
+    perfectDays: 2,
+    badDays: 0,
+    stars: 1,
+  });
+  assert.equal(r.days.length, 7);
+  assert.deepEqual(r.byDay[1], { day: '2026-11-10', earned: 15, lost: 0 });
+  assert.deepEqual(r.byDay[2], { day: '2026-11-11', earned: 0, lost: 15 });
+  assert.deepEqual(r.challenges, [
+    {
+      id: 9,
+      name: 'Bedtime',
+      marks: ['perfect', 'perfect', null, 'ok', null, null, null],
+      won: true,
+    },
+  ]);
+  assert.deepEqual(r.top, [
+    { name: 'Reading', times: 2, points: 10 },
+    { name: 'Tidy room', times: 1, points: 10 },
+  ]);
+  assert.deepEqual(r.warnedFor, [{ name: 'Tidy room', times: 2, points: 0 }]);
+  assert.deepEqual(
+    r.recent.map((w) => [w.start, w.earned, w.stars]),
+    [
+      ['2026-11-02', 5, 1],
+      ['2026-11-09', 20, 1],
+    ],
+  );
+  const empty = s.review([], items, '2026-11-09');
+  assert.equal(empty.recent.length, 4, 'four weeks by default');
+  assert.deepEqual(empty.top, []);
+});
