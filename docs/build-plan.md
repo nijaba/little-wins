@@ -65,7 +65,7 @@ Tick a box when the item is done and tested.
 - [x] Tagged releases publish a multi-arch image to GHCR
 - [x] Graceful shutdown on SIGTERM (container stop, coverage from server processes)
 - [x] First CI run on GitHub checked: it caught npm CVEs in the image, a literal test secret and a slow browser test, all fixed
-- [ ] Branch protection on `main` requiring the "CI passed" check
+- [x] Branch protection on `main` requiring the "CI passed" check (`.github/rulesets/main.json`, applied once the repository went public)
 
 ## Phase 5b: languages
 
@@ -92,5 +92,6 @@ Tick a box when the item is done and tested.
 - [ ] `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, issue and PR templates, `CODEOWNERS`
 - [ ] Privacy policy and terms templates for hosted operators
 - [ ] Security review document, with fixes
-- [ ] Repository made public
+- [x] Repository made public (early, before the rest of phase 6, to enable branch protection and CodeQL)
+- [x] Apply `.github/rulesets/main.json` (branch protection) right after the repository goes public
 - [ ] Launch announcement (blog post), linked from the README and the project page
