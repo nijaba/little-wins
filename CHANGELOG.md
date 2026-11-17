@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added in phase 6 (documentation and launch)
 
+- Why Little Wins? (`docs/why.md`): the story behind it, linked from the README, the user guide and the project page.
 - User guide for families (`docs/user-guide.md`), with pictures from the demo family.
 - Project page on GitHub Pages (`site/`, published by `.github/workflows/pages.yml`), with the tour video.
 - Admin guide section on hosting for other families; privacy policy and terms templates for hosted operators (`docs/legal/`).

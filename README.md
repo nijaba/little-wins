@@ -16,7 +16,7 @@ Parents record good behavior and day-by-day marks on a few weekly challenges. Ch
 - **A guided tour** for parents and children, and optional **demo families** anyone can try with no sign-in
 - One small container, one SQLite file, no third-party scripts or trackers
 
-Project page: [nijaba.github.io/little-wins](https://nijaba.github.io/little-wins/). New to Little Wins? The [user guide](docs/user-guide.md) walks a family through it.
+Project page: [nijaba.github.io/little-wins](https://nijaba.github.io/little-wins/). New to Little Wins? The [user guide](docs/user-guide.md) walks a family through it. [Why Little Wins?](docs/why.md) tells the story behind it.
 
 <p>
   <img src="docs/images/parent-today.png" alt="A parent's Today tab: points and stars in the header, behaviors with + and warning buttons" width="220">
@@ -57,6 +57,7 @@ See [docs/admin-guide.md](docs/admin-guide.md) for Docker setup, updates, backup
 
 ## Documents
 
+- [Why Little Wins?](docs/why.md): the story behind it
 - [User guide](docs/user-guide.md): for families, from sign-in to rewards
 - [Design](docs/design.md): how the app behaves, including hosting for other families
 - [Build plan](docs/build-plan.md): what's done and what's next

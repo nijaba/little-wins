@@ -7,6 +7,8 @@ toward rewards you agreed on together.
 This guide is for parents. The last part, [What your child sees](#what-your-child-sees), is worth showing your
 children too.
 
+Curious why it works the way it does? [Why Little Wins?](why.md) tells the story behind it.
+
 The pictures come from a demo family: Sam is the parent, Mia and Leo the children. Nobody in them is real.
 
 - [Getting started](#getting-started)
