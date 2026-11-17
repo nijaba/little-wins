@@ -149,6 +149,16 @@ window.LW_STRINGS.en = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  cheer: {
+    from: (who) => `from ${who}`,
+    write: (name) => `💬 Write ${name} a message`,
+    change: 'Change',
+    clear: 'Clear',
+    prompt: (name) =>
+      `A short message for ${name} (up to 140 characters). It shows on their Today for a week. Leave empty to remove it.`,
+    streak: (n) => `🔥 ${n} perfect days in a row!`,
+    best: '🏅 Best week so far!',
+  },
   review: {
     open: 'Weekly review',
     title: (name) => `Weekly review: ${name}`,

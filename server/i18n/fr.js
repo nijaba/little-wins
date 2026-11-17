@@ -18,7 +18,12 @@ module.exports = {
     tooManyTries: (seconds) => `Trop d’essais. Réessaie dans ${seconds} s.`,
   },
 
-  demo: { family: 'Famille de démo', parent: 'Sam (démo)', children: ['Mia', 'Léo'] },
+  demo: {
+    family: 'Famille de démo',
+    parent: 'Sam (démo)',
+    children: ['Mia', 'Léo'],
+    message: 'Bravo pour ton aide au dîner hier. Je suis fier de toi !',
+  },
 
   starter: {
     // [name, note]

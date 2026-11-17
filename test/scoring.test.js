@@ -354,3 +354,64 @@ test('SC-22 review sums one week and the weeks before it, and counts what was do
   assert.equal(empty.recent.length, 4, 'four weeks by default');
   assert.deepEqual(empty.top, []);
 });
+
+test('SC-23 milestones: a streak of perfect days up to today or yesterday, and a best week', () => {
+  const m = (day, note = 'perfect', item_id = 1) => ({
+    kind: 'mark',
+    item_id,
+    day,
+    note,
+    points: 0,
+  });
+  const p = (day, points) => ({ kind: 'points', item_id: 2, day, points });
+  assert.deepEqual(
+    s.milestones([m('2026-11-15'), m('2026-11-16')], '2026-11-17'),
+    [],
+    'two days are not yet a streak',
+  );
+  assert.deepEqual(
+    s.milestones([m('2026-11-15'), m('2026-11-16'), m('2026-11-17')], '2026-11-17'),
+    [{ kind: 'streak', days: 3 }],
+  );
+  assert.deepEqual(
+    s.milestones([m('2026-11-14'), m('2026-11-15'), m('2026-11-16')], '2026-11-17'),
+    [{ kind: 'streak', days: 3 }],
+    'today not marked yet: the streak up to yesterday still counts',
+  );
+  assert.deepEqual(
+    s.milestones(
+      [m('2026-11-15'), m('2026-11-16'), m('2026-11-16', 'ok'), m('2026-11-17')],
+      '2026-11-17',
+    ),
+    [],
+    'a day whose only mark was changed to OK breaks it',
+  );
+  assert.deepEqual(
+    s.milestones(
+      [m('2026-11-15', 'perfect', 1), m('2026-11-16', 'perfect', 2), m('2026-11-17', 'perfect', 3)],
+      '2026-11-17',
+    ),
+    [{ kind: 'streak', days: 3 }],
+    'any challenge counts for its day',
+  );
+  const weeks = [p('2026-11-02', 30), p('2026-11-09', 40)];
+  assert.deepEqual(s.milestones([...weeks, p('2026-11-16', 41)], '2026-11-17'), [{ kind: 'best' }]);
+  assert.deepEqual(
+    s.milestones([...weeks, p('2026-11-16', 40)], '2026-11-17'),
+    [],
+    'a tie is not a record',
+  );
+  assert.deepEqual(
+    s.milestones([p('2026-11-09', 10), p('2026-11-16', 50)], '2026-11-17'),
+    [],
+    'needs two earlier weeks',
+  );
+  assert.deepEqual(
+    s.milestones(
+      [...weeks, p('2026-11-16', 30), p('2026-11-16', -30), p('2026-11-17', 20)],
+      '2026-11-17',
+    ),
+    [{ kind: 'best' }],
+    'penalties do not take away from points earned',
+  );
+});

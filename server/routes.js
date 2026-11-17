@@ -135,6 +135,13 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     '/api/mark': (ctx) => record(ctx, 'mark'),
     '/api/undo': ({ b, fid, state }) =>
       repo.undoEntry(fid, id(b.id)) ? [200, state()] : [404, apiError('notFound')],
+    '/api/message'({ b, s, fid, state }) {
+      const cid = id(b.child_id);
+      const who = repo.parents(fid).find((p) => p.id === s.userId)?.name || 'Parent';
+      return repo.setMessage(fid, cid, text(b.text, 140), s.userId, who)
+        ? [200, state({ child: cid })]
+        : [404, apiError('notFound')];
+    },
     '/api/entry/note': ({ b, fid, state }) =>
       repo.setNote(fid, id(b.id), text(b.note)) ? [200, state()] : [404, apiError('notFound')],
 

@@ -148,6 +148,16 @@ window.LW_STRINGS.es = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  cheer: {
+    from: (who) => `de ${who}`,
+    write: (name) => `💬 Escribir un mensaje a ${name}`,
+    change: 'Cambiar',
+    clear: 'Borrar',
+    prompt: (name) =>
+      `Un mensaje corto para ${name} (hasta 140 caracteres). Se muestra en su pantalla Hoy durante una semana. Déjalo vacío para quitarlo.`,
+    streak: (n) => `🔥 ¡${n} días perfectos seguidos!`,
+    best: '🏅 ¡La mejor semana hasta ahora!',
+  },
   review: {
     open: 'Resumen de la semana',
     title: (name) => `Resumen de la semana: ${name}`,

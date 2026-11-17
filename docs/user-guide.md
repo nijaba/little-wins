@@ -125,6 +125,12 @@ A message at the bottom confirms each entry for a few seconds, with **Undo** if 
 **Note** to add a few words about it, such as "helped grandma with the shopping". Notes are for parents: your
 child never sees them.
 
+### A message for your child
+
+At the top of **Today**, **Write <name> a message** leaves a short note for your child, such as "So proud of how you helped your sister today!". It shows at the top of their Today, signed with your name, for a week or until you change or clear it. Unlike the notes on points and warnings, this one is for your child to read.
+
+Little Wins also cheers on its own: **3 perfect days in a row** (or more) and **Best week so far** appear on Today when your child earns them.
+
 ### Warnings
 
 The yellow **⚠0/2** button gives a warning on that behavior: a gentle heads-up, such as "that's your first
@@ -225,8 +231,8 @@ Your child's device shows only their own progress, and only the positive parts.
 
 ![A child's Today tab: their points and stars, the ring for the next reward, and the ways to earn points, with no buttons](images/child-today.png)
 
-- **Today:** their points and stars, their name, the next reward with its ring, and the ways to earn points
-  (to look at: there are no buttons).
+- **Today:** your message, if you left one, and any milestone they reached; their points and stars, their
+  name, the next reward with its ring, and the ways to earn points (to look at: there are no buttons).
 - **Week:** this week's challenges and marks, and past weeks, read-only.
 - **Rewards:** every reward and what it needs, with the ones they've unlocked.
 - **History:** the points they earned and their marks.

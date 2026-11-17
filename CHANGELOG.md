@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Encouragement: a parent's message on the child's Today (a week, or until changed), and milestones the app spots (perfect days in a row, best week so far).
 - Weekly review for parents, at the bottom of the Week tab: the week's stars, points, warnings and challenges, the last four weeks, and a Print button for a counselor or teacher.
 - An app icon: a gold star on navy, as the favicon, the iOS and Android home-screen icons (with a maskable one) and on the project page.
 - Dark mode: the page follows the device's light or dark setting. Colors are theme tokens, and every text color passes WCAG AA contrast in both themes. In light mode, gray buttons are darker and warning buttons have dark text, for contrast.

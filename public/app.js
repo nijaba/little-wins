@@ -884,6 +884,8 @@
       hideToast();
     },
     note: (d) => note(+d.id),
+    msg: () => writeMessage(),
+    'msg-clear': () => api('message', { child_id: S.childId, text: '' }),
     'toast-note': (d) => {
       hideToast();
       note(+d.id);
@@ -950,8 +952,36 @@
     return `<div class="card ringcard" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle class=ring-track cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle class=ring-value cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text class=ring-text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${esc(r.name)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
   }
 
-  function viewToday() {
+  // A parent's message and the milestones the app spotted: at the top of Today, for both views.
+  function cheers() {
+    const E = STR.cheer;
     let h = '';
+    const m = S.message;
+    if (m) {
+      h += `<div class="card msg"><p class=p0>💬 ${esc(m.text)}</p><small>${E.from(esc(m.who))}</small>${
+        P()
+          ? `<p class=p8><button class="b g" data-action=msg>${E.change}</button> <button class="b g" data-action=msg-clear>${E.clear}</button></p>`
+          : ''
+      }</div>`;
+    } else if (P()) {
+      h += `<p class=hint><button class="b g" data-action=msg>${E.write(esc(S.childName))}</button></p>`;
+    }
+    const ms = (S.milestones || []).map((x) =>
+      x.kind === 'streak' ? E.streak(x.days) : x.kind === 'best' ? E.best : '',
+    );
+    if (ms.length)
+      h += `<div class=cheers>${ms.map((t) => `<span class=cheer>${t}</span>`).join('')}</div>`;
+    return h;
+  }
+
+  // Write, change or (with an empty answer) clear the chosen child's message.
+  function writeMessage() {
+    const text = prompt(STR.cheer.prompt(S.childName), S.message?.text || '');
+    if (text !== null) api('message', { child_id: S.childId, text });
+  }
+
+  function viewToday() {
+    let h = cheers();
     if (!P()) h += ring();
     h += `<h3>${P() ? STR.today.earn : STR.today.waysToEarn}</h3>`;
     S.items

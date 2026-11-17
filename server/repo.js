@@ -439,6 +439,24 @@ function createRepo(db) {
       .prepare("UPDATE entries SET note=? WHERE family_id=? AND id=? AND kind IN ('points','warn')")
       .run(note, fid, id).changes > 0;
 
+  // --- Encouragement: one message per child -------------------------------------------------
+  /** Sets (or, with an empty text, clears) a child's message; false when the child isn't here. */
+  function setMessage(fid, cid, text, userId, who) {
+    if (!child(fid, cid)) return false;
+    db.prepare('DELETE FROM messages WHERE family_id=? AND child_id=?').run(fid, cid);
+    if (text) {
+      db.prepare(
+        'INSERT INTO messages(child_id,family_id,text,user_id,who,created) VALUES(?,?,?,?,?,?)',
+      ).run(cid, fid, text, userId, who, now());
+    }
+    return true;
+  }
+
+  const message = (fid, cid) =>
+    db
+      .prepare('SELECT text, who, created FROM messages WHERE family_id=? AND child_id=?')
+      .get(fid, cid) ?? null;
+
   // --- Devices --------------------------------------------------------------------------------
   const sessions = (fid) =>
     db
@@ -530,6 +548,11 @@ function createRepo(db) {
         .prepare(
           `SELECT id, child_id, item_id, kind, points, note, day, ts, who, undone FROM entries
            WHERE family_id=? ORDER BY ts, id`,
+        )
+        .all(fid),
+      messages: db
+        .prepare(
+          'SELECT child_id, text, who, created FROM messages WHERE family_id=? ORDER BY child_id',
         )
         .all(fid),
     };
@@ -627,6 +650,8 @@ function createRepo(db) {
     addEntry,
     replaceMark,
     undoEntry,
+    setMessage,
+    message,
     setNote,
     sessions,
     revokeSession,

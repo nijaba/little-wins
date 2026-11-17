@@ -155,6 +155,8 @@ function seedDemo(repo, { timezone, language, now = Date.now() }) {
         }
       });
   });
+  // A message from the parent, so the child's view shows one (encouragement).
+  repo.setMessage(familyId, kids[0].id, names.message, user.id, who);
   return { familyId, userId: user.id };
 }
 

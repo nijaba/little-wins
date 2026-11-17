@@ -64,7 +64,12 @@ function buildState(
     won,
     hist: scoring.history(entries, role),
     today: td,
+    milestones: scoring.milestones(entries, td, weekStart),
   };
+
+  // A parent's encouraging message to this child, shown for 7 days or until replaced.
+  const msg = cid ? repo.message(fid, cid) : null;
+  if (msg && Date.now() - Date.parse(msg.created) < 7 * 864e5) state.message = msg;
 
   // A demo family: the banner gives its idle time.
   if (demo) state.demo = { idleSeconds: demo.idleSeconds };

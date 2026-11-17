@@ -149,6 +149,16 @@ window.LW_STRINGS.de = {
     pointsPlus: (n) => `+ ${n} Pkt.`,
   },
 
+  cheer: {
+    from: (who) => `von ${who}`,
+    write: (name) => `💬 ${name} eine Nachricht schreiben`,
+    change: 'Ändern',
+    clear: 'Löschen',
+    prompt: (name) =>
+      `Eine kurze Nachricht für ${name} (bis zu 140 Zeichen). Sie erscheint eine Woche lang auf „Heute“. Leer lassen, um sie zu entfernen.`,
+    streak: (n) => `🔥 ${n} perfekte Tage in Folge!`,
+    best: '🏅 Beste Woche bisher!',
+  },
   review: {
     open: 'Wochenrückblick',
     title: (name) => `Wochenrückblick: ${name}`,
