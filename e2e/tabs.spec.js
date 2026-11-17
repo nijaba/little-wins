@@ -41,8 +41,8 @@ test('E2E-31 the Settings sections start folded, with counts', async ({ page }) 
   await startFamily(page, { family: 'Fold Family' });
   await goTab(page, 'Settings');
   const folds = page.locator('details.fold');
-  await expect(folds).toHaveCount(8);
-  for (let i = 0; i < 8; i++) await expect(folds.nth(i)).not.toHaveAttribute('open', '');
+  await expect(folds).toHaveCount(9);
+  for (let i = 0; i < 9; i++) await expect(folds.nth(i)).not.toHaveAttribute('open', '');
   const counts = {
     fam: 'Fold Family',
     kids: '1',
@@ -52,6 +52,7 @@ test('E2E-31 the Settings sections start folded, with counts', async ({ page }) 
     challenge: '4',
     rew: '6',
     dev: '1',
+    rem: '', // the evening reminder: no time until this device turns it on
   };
   for (const [key, n] of Object.entries(counts)) {
     await expect(fold(page, key).locator('.cnt')).toHaveText(n);

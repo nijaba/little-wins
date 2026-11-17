@@ -794,3 +794,10 @@ select {
   font-size: 14px;
   font-weight: 600;
 }
+
+/* The per-child notices switch in Settings -> Children */
+.bell {
+  margin-top: 6px;
+  font-size: 13px;
+  padding: 5px 10px;
+}

@@ -285,10 +285,13 @@ function createRepo(db) {
 
   // --- Children -----------------------------------------------------------------------------
   const children = (fid) =>
-    db.prepare('SELECT id, name FROM children WHERE family_id=? ORDER BY sort, id').all(fid);
+    db
+      .prepare('SELECT id, name, notify FROM children WHERE family_id=? ORDER BY sort, id')
+      .all(fid);
 
   const child = (fid, cid) =>
-    db.prepare('SELECT id, name FROM children WHERE family_id=? AND id=?').get(fid, cid) ?? null;
+    db.prepare('SELECT id, name, notify FROM children WHERE family_id=? AND id=?').get(fid, cid) ??
+    null;
 
   function addChild(fid, name) {
     const sort = db
@@ -527,15 +530,47 @@ function createRepo(db) {
       .get(fid, cid) ?? null;
 
   // --- Evening reminders (Web Push), one subscription per parent device -------------------
-  function setPush(fid, sessionId, { endpoint, p256dh, auth, time }) {
+  function setPush(fid, sessionId, { endpoint, p256dh, auth, time, kind = 'parent' }) {
     db.prepare('DELETE FROM push_subscriptions WHERE family_id=? AND session_id=?').run(
       fid,
       sessionId,
     );
     db.prepare(
-      'INSERT INTO push_subscriptions(session_id,family_id,endpoint,p256dh,auth,time,created) VALUES(?,?,?,?,?,?,?)',
-    ).run(sessionId, fid, endpoint, p256dh, auth, time, now());
+      'INSERT INTO push_subscriptions(session_id,family_id,endpoint,p256dh,auth,time,kind,created) VALUES(?,?,?,?,?,?,?,?)',
+    ).run(sessionId, fid, endpoint, p256dh, auth, time, kind, now());
   }
+
+  // --- Notices on a child's device -------------------------------------------------------
+  /** Allows (or stops) notices for one child; stopping removes their devices' subscriptions. */
+  function setNotify(fid, cid, on) {
+    const ok =
+      db
+        .prepare('UPDATE children SET notify=? WHERE family_id=? AND id=?')
+        .run(on ? 1 : 0, fid, cid).changes > 0;
+    if (ok && !on) {
+      db.prepare(
+        `DELETE FROM push_subscriptions WHERE family_id=? AND kind='child'
+           AND session_id IN (SELECT id FROM sessions WHERE family_id=? AND child_id=?)`,
+      ).run(fid, fid, cid);
+    }
+    return ok;
+  }
+
+  /** The subscriptions of a child's devices. */
+  const childPush = (fid, cid) =>
+    db
+      .prepare(
+        `SELECT p.session_id, p.endpoint, p.p256dh, p.auth FROM push_subscriptions p
+           JOIN sessions s ON s.id = p.session_id
+         WHERE p.family_id=? AND p.kind='child' AND s.child_id=?`,
+      )
+      .all(fid, cid);
+
+  /** Records that a notice was sent; false when it already had been (each one goes once). */
+  const noticeOnce = (fid, cid, key) =>
+    db
+      .prepare('INSERT OR IGNORE INTO child_notices(child_id,family_id,key,sent) VALUES(?,?,?,?)')
+      .run(cid, fid, key, now()).changes > 0;
   const clearPush = (fid, sessionId) =>
     db
       .prepare('DELETE FROM push_subscriptions WHERE family_id=? AND session_id=?')
@@ -572,7 +607,8 @@ function createRepo(db) {
     db
       .prepare(
         `SELECT p.session_id, p.family_id, p.endpoint, p.p256dh, p.auth, p.time, p.last_day,
-                f.timezone, f.language FROM push_subscriptions p JOIN families f ON f.id = p.family_id`,
+                f.timezone, f.language FROM push_subscriptions p JOIN families f ON f.id = p.family_id
+         WHERE p.kind = 'parent'`,
       )
       .all();
   const pushSent = (sessionId, day) =>
@@ -792,6 +828,9 @@ function createRepo(db) {
     replaceMark,
     undoEntry,
     setPush,
+    setNotify,
+    childPush,
+    noticeOnce,
     clearPush,
     pushOf,
     unmarked,

@@ -395,6 +395,7 @@ Family language, the starter list in it, error codes and the translation files.
 | LG-12 | Every page translation has exactly the English keys, functions staying functions | Unit |
 | LG-13 | Server page translations have the English keys; every page file has a locale | Unit |
 | LG-14 | Sign-in problem pages are in the `Accept-Language` language (`html lang` and text), English by default | API |
+| LG-15 | Every server text in every language is filled in, and its functions give text | Unit |
 
 ## DM: Demo families
 
@@ -431,9 +432,9 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
 
-## RM: Evening reminders
+## RM: Evening reminders and child notices
 
-Web Push without dependencies (`server/webpush.js`) and the scheduler (`server/reminders.js`).
+Web Push without dependencies (`server/webpush.js`), the reminder scheduler (`server/reminders.js`) and notices on a child's device (`server/notices.js`).
 
 | ID | Expectation | Level |
 | --- | --- | --- |
@@ -445,6 +446,9 @@ Web Push without dependencies (`server/webpush.js`) and the scheduler (`server/r
 | RM-02 | At its time the device gets one encrypted, signed push, in the family language, and only once | API |
 | RM-03 | No push when every challenge is marked; a gone subscription is dropped; logging out removes it | API |
 | RM-04 | PUSH_REMINDERS=0 turns reminders off | API |
+| CN-01 | A parent allows notices for one child; only that child's device can turn them on | API |
+| CN-02 | Unlocking a reward sends the child one notice, in the family language, and never again | API |
+| CN-03 | A third perfect day in a row sends a streak notice; the evening reminder skips child devices | API |
 
 ## PC: Lists for some children
 

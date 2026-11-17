@@ -43,7 +43,9 @@ const { reads, writes, windowMs } = config.apiRateLimit;
 const readLimiter = createRateLimiter({ max: reads, windowMs });
 const writeLimiter = createRateLimiter({ max: writes, windowMs });
 const auth = createAuth({ repo, sessions, limiter, clientIp });
-const handleApi = createRouter({ repo, sessions, limiter, clientIp, reminders });
+// Notices on a child's device (a reward unlocked, a milestone), where a parent allowed them.
+const notices = config.push ? require('./notices').createNotices({ repo }) : null;
+const handleApi = createRouter({ repo, sessions, limiter, clientIp, reminders, notices });
 // Demo families, in memory only (DEMO_FAMILIES=1).
 const demo = config.demo.on ? require('./demo').createDemo({ limiter, clientIp }) : null;
 if (demo) console.warn(`Demo families are ON (at most ${config.demo.max})`);

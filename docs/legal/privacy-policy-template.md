@@ -60,6 +60,8 @@ third-party fonts. Nothing about you or your children is sold or shared for mark
   through that phone's push service: Apple (iPhone, Safari), Google (Android, Chrome) or Mozilla (Firefox).
   It is encrypted so they can't read it, and it says nothing about your children, but they learn that
   [Service name] sent your device a reminder, and when. Reminders are off unless you turn them on, per device.
+  The same goes for notices on a child's device (a reward unlocked, a milestone), if a parent allows them for
+  that child: the push service can't read which reward, only that a notice was sent.
   [Remove this if you set PUSH_REMINDERS=0.]
 - [Anyone else who can access the data, such as a support contractor. If none, say so.]
 

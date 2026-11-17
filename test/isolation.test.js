@@ -27,6 +27,7 @@ const TABLES = [
   'memberships',
   'sessions',
   'push_subscriptions',
+  'child_notices',
 ];
 
 /** Everything stored for a family, as one string. */
@@ -175,6 +176,10 @@ const cases = () => {
       ],
     ],
     '/api/push/unsubscribe': [[{}, 200]],
+    '/api/child/notify': [
+      [{ child_id: ids.child, on: true }, 404],
+      [{ child_id: ids.child, on: false }, 404],
+    ],
     '/api/message': [
       [{ child_id: ids.child, text: 'from B' }, 404],
       [{ child_id: ids.child, text: '' }, 404],

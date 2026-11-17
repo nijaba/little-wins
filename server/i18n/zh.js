@@ -16,6 +16,12 @@ module.exports = {
     tooManyTries: (seconds) => `尝试次数太多，请 ${seconds} 秒后再试。`,
   },
 
+  // Notices on a child's device (server/notices.js): good news only.
+  notice: {
+    reward: (name) => `⭐ 你解锁了${name}！`,
+    streak: (n) => `🔥 连续 ${n} 天完美！`,
+    best: '🏅 你目前最好的一周！',
+  },
   // The evening reminder (server/reminders.js), as the phone shows it.
   reminder: { title: 'Little Wins', body: '该记录今天的挑战啦。' },
 

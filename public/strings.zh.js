@@ -145,6 +145,12 @@ window.LW_STRINGS.zh = {
     pointsPlus: (n) => `+ ${n} 分`,
   },
 
+  notices: {
+    on: '🔔 孩子设备上的通知：开',
+    off: '🔔 孩子设备上的通知：关',
+    offer: '解锁奖励或达到里程碑时，在这台设备上收到通知。',
+    turnOn: '开启通知',
+  },
   reminder: {
     title: '晚间提醒',
     help: '在这部手机上提醒你记录今天的挑战，只有还有未记录的内容时才会发送。提醒经由手机厂商的推送服务（Apple、Google 或 Mozilla）发送，它们无法读取内容。',
