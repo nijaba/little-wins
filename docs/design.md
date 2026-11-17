@@ -110,13 +110,15 @@ Every table except `users` and `family_invites` has a `family_id`, and every que
 | `invites` | id, family_id, token_hash, role, created_by, expires, used_at |
 | `family_invites` | id, token_hash, created_by, created, expires, used_by, used_at, family_id (set when the invited parent's family is created). Installation-wide, not family-scoped: only the operator page reaches it. |
 | `children` | id, family_id, name, sort, created |
-| `items` | id, family_id, kind (`target`/`penalty`/`challenge`), name, note, pmin, pmax, sort, active |
-| `rewards` | id, family_id, name, stars, points, sort |
+| `items` | id, family_id, kind (`target`/`penalty`/`challenge`), name, note, pmin, pmax, sort, active, for_all |
+| `item_children`, `reward_children` | item_id or reward_id, child_id, family_id: who a limited item or reward is for |
+| `rewards` | id, family_id, name, stars, points, sort, for_all |
 | `entries` | id, family_id, child_id, item_id, kind (`points`/`warn`/`mark`), points, day, ts, user_id, note, undone |
 | `sessions` | id, token_hash, family_id, kind (`parent`/`child`), user_id or child_id, device, created, last_seen |
 | `pairings` | id, family_id, child_id, token_hash, created_by, expires, used_at |
 
-- Behaviors, penalties, challenges and rewards are one list per family, shared by its children. **(Open question: per-child lists.)**
+- Behaviors, penalties, challenges and rewards are one list per family. Each one is **for everyone** (`for_all=1`, the default) or **for some children** (`for_all=0`, the children named in `item_children` / `reward_children`; migration 8). The edit form, with two or more children, asks "Who is it for?": every child ticked means everyone, including children added later. If the only children an item was for are deleted, it is for nobody until edited, never suddenly for everyone.
+- Today, Week, Rewards (and the ring), the weekly review and the stars' challenges show what is for the chosen child. Settings lists everything, with "For: Mia" under the limited ones. Recording an item for a child it is not for is refused (`400`). A child's device receives only what is for that child. IDs of another family's children are dropped when saving.
 - `day` is the calendar date in the family's timezone; `ts` is UTC.
 - Deleting an item hides it; history keeps it. Deleting a child or a family deletes its rows.
 - Schema changes are numbered migrations tracked with `PRAGMA user_version`, each in a transaction. WAL mode and `foreign_keys = ON`.
@@ -323,7 +325,6 @@ Each has a working default; the owner decides.
 | Question | Default until decided |
 |---|---|
 | Should rewards be redeemable (spend points, record it)? | No: milestones |
-| Per-child behavior and reward lists? | One list per family |
 | Can a child's device see siblings' progress? | No |
 | Passkeys as a sign-in option? | Later |
 | Several families per parent? | One in v1 |

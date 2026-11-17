@@ -68,3 +68,5 @@ app is meant to open are handled with `expectDialog`.
 | E2E-121 | the weekly review fits a phone; its print view hides the buttons and tabs          |
 | E2E-130 | a parent writes a message for the child, sees it on Today, and clears it          |
 | E2E-131 | the child's view shows the parent's message, with no buttons                      |
+| E2E-140 | a behavior for one child shows on that child's Today only, labelled in Settings  |
+| E2E-141 | with one child the edit form has no "Who is it for?" choice                      |

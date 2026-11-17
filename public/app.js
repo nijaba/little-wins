@@ -667,17 +667,27 @@
   // Celebrate rewards unlocked since the last render on this device (remembered per role).
   function celebrate() {
     try {
-      const ids = S.rewards
+      const ids = myRewards()
         .filter((r) => S.stars >= r.stars && S.balance >= r.points)
         .map((r) => r.id);
       const k = `seen_${S.demo ? 'demo_' : ''}${S.role}_${S.childId}`;
       const seen = JSON.parse(localStorage.getItem(k) || 'null');
       localStorage.setItem(k, JSON.stringify(ids));
       if (!seen) return; // first visit: nothing is "new"
-      const fresh = S.rewards.filter((r) => ids.includes(r.id) && !seen.includes(r.id));
+      const fresh = myRewards().filter((r) => ids.includes(r.id) && !seen.includes(r.id));
       if (fresh.length) party(fresh[0].name);
     } catch {}
   }
+
+  // Items and rewards can be for some children only (`for`: null = everyone).
+  const mine = (r) => r.for == null || r.for.includes(S.childId);
+  const myRewards = () => S.rewards.filter(mine);
+  // "For: Mia, Leo" under an item or reward that isn't for everyone (Settings).
+  const forLabel = (r) => {
+    if (r.for == null) return '';
+    const names = S.children.filter((c) => r.for.includes(c.id)).map((c) => esc(c.name));
+    return ` · ${STR.settings.forLabel(names.length ? names.join(', ') : STR.settings.forNobody)}`;
+  };
 
   // ---- Actions ----
 
@@ -752,12 +762,25 @@
       pmin: g('f_min'),
       pmax: ed.kind === 'target' ? g('f_max') : g('f_min'),
     };
+    // Who it is for, when there is a choice: every child ticked means everyone.
+    if (S.children.length > 1) {
+      const ticked = [...document.querySelectorAll('input[name=f_for]:checked')].map(
+        (x) => +x.value,
+      );
+      body.children = ticked.length === S.children.length ? null : ticked;
+    }
     if (ed.t === 'c') {
       path = 'child/save';
       body = { id: ed.id || undefined, name: g('f_name') };
     } else if (r) {
       path = 'reward/save';
-      body = { id: ed.id, name: g('f_name'), stars: g('f_stars'), points: g('f_points') };
+      body = {
+        id: ed.id,
+        name: g('f_name'),
+        stars: g('f_stars'),
+        points: g('f_points'),
+        children: body.children,
+      };
     }
     if (await api(path, body)) {
       ed = null;
@@ -943,7 +966,7 @@
 
   // Progress ring toward the next locked reward.
   function ring() {
-    const r = S.rewards.find((x) => !(S.stars >= x.stars && S.balance >= x.points));
+    const r = myRewards().find((x) => !(S.stars >= x.stars && S.balance >= x.points));
     if (!r) return `<div class="card center" data-tour=ring>${STR.ring.allUnlocked}</div>`;
     const a = Math.min(1, S.stars / (r.stars || 1));
     const b = r.points ? Math.min(1, S.balance / r.points) : a;
@@ -985,7 +1008,7 @@
     if (!P()) h += ring();
     h += `<h3>${P() ? STR.today.earn : STR.today.waysToEarn}</h3>`;
     S.items
-      .filter((x) => x.kind === 'target')
+      .filter((x) => x.kind === 'target' && mine(x))
       .forEach((i, n) => {
         const t = (name) => (n ? '' : ` data-tour=${name}`); // the tour points at the first one
         h += `<div class=card${t('earn')}><div class=row><div>${esc(i.name)}<br><small>${i.note ? `${esc(i.note)} · ` : ''}${range(i)}</small></div>${
@@ -996,7 +1019,7 @@
       });
     if (P()) {
       h += `<div data-tour=penalties><h3>${STR.today.penalties}</h3>`;
-      for (const i of S.items.filter((x) => x.kind === 'penalty')) {
+      for (const i of S.items.filter((x) => x.kind === 'penalty' && mine(x))) {
         h += `<div class=card><div class=row><div>${esc(i.name)}<br><small>${esc(i.note)}</small></div><button class="b r" data-action=pen data-id=${i.id}>-${i.pmin}</button></div></div>`;
       }
       h += '</div>';
@@ -1079,7 +1102,7 @@
     if (!W.current)
       h += `<p class=back><button class="b g" data-action=week data-week="">${wk.back}</button></p>`;
     h += `<h3>${wk.challenges}</h3><small class=hint>${wk.rule}${P() ? wk.ruleParent : ''}</small>`;
-    for (const [n, i] of S.items.filter((x) => x.kind === 'challenge').entries()) {
+    for (const [n, i] of S.items.filter((x) => x.kind === 'challenge' && mine(x)).entries()) {
       const m = W.marks[i.id] || [];
       const pf = m.filter((x) => x === 'perfect').length;
       const bd = m.includes('bad');
@@ -1105,7 +1128,7 @@
 
   function viewRewards() {
     let h = `${ring()}<h3>${STR.rewards.title}</h3>`;
-    for (const [n, r] of S.rewards.entries()) {
+    for (const [n, r] of myRewards().entries()) {
       const ok = S.stars >= r.stars && S.balance >= r.points;
       h += `<div class=card${n ? '' : ' data-tour=rewards'}><div class=row><b>${esc(r.name)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}</div>`;
     }
@@ -1152,6 +1175,15 @@
         k === 'penalty' ? st.fieldPenalty : st.fieldMin,
         ed.pmin,
       )}${k === 'target' ? num('f_max', st.fieldMax, ed.pmax) : ''}`;
+    }
+    // With several children: who it is for (all ticked = everyone, now and for children added later).
+    if (S.children.length > 1) {
+      fields += `<fieldset class=radios><legend>${st.forWho}</legend>${S.children
+        .map(
+          (c) =>
+            `<label class=chk><input type=checkbox name=f_for value=${c.id}${ed.for == null || ed.for.includes(c.id) ? ' checked' : ''}> ${esc(c.name)}</label>`,
+        )
+        .join('')}<small>${st.forHelp}</small></fieldset>`;
     }
     return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle)[r ? 'reward' : k]}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
   }
@@ -1209,7 +1241,7 @@
       const list = S.items.filter((i) => i.kind === k);
       let g = '';
       list.forEach((i, x) => {
-        const sub = k === 'challenge' ? '' : range(i);
+        const sub = (k === 'challenge' ? '' : range(i)) + forLabel(i);
         g += `<div class=card><div class="row stk"><div>${esc(i.name)}<br><small>${sub}</small></div><div>${mvb('item', i.id, x, list.length)}<button class=b data-action=edit data-t=i data-id=${i.id} data-kind=${k}>${st.edit}</button> <button class="b r" data-action=del-item data-id=${i.id}>${st.remove}</button></div></div></div>`;
       });
       g += `<button class=b data-action=edit data-t=i data-id=0 data-kind=${k}>${st.add}</button>`;
@@ -1217,7 +1249,7 @@
     }
     let g = '';
     S.rewards.forEach((r, x, L) => {
-      g += `<div class=card><div class="row stk"><div>${esc(r.name)}<br><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small></div><div>${mvb('reward', r.id, x, L.length)}<button class=b data-action=edit data-t=r data-id=${r.id}>${st.edit}</button> <button class="b r" data-action=del-rew data-id=${r.id}>${st.remove}</button></div></div></div>`;
+      g += `<div class=card><div class="row stk"><div>${esc(r.name)}<br><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}${forLabel(r)}</small></div><div>${mvb('reward', r.id, x, L.length)}<button class=b data-action=edit data-t=r data-id=${r.id}>${st.edit}</button> <button class="b r" data-action=del-rew data-id=${r.id}>${st.remove}</button></div></div></div>`;
     });
     g += `<button class=b data-action=edit data-t=r data-id=0>${st.add}</button>`;
     h += fold('rew', st.rewards, S.rewards.length, g);

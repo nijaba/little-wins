@@ -189,6 +189,10 @@ window.LW_STRINGS.es = {
 
   // Settings tab
   settings: {
+    forLabel: (names) => `Para: ${names}`,
+    forNobody: 'nadie por ahora',
+    forWho: '¿Para quién?',
+    forHelp: 'Marca a todos los niños para que sea para todos, también los que añadas después.',
     idleNote: (days) =>
       `Una familia que ningún teléfono ni navegador usa durante ${days} días se elimina, con todos sus datos.`,
     family: 'Familia',

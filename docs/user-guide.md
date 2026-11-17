@@ -73,7 +73,8 @@ In **Settings → Children**, choose **+ Add child** and type a name. Each child
 marks and history. With more than one child, buttons with their names appear at the top of every tab: tap one
 to choose who you're recording for.
 
-Your family shares one list of behaviors, penalties, challenges and rewards for all its children.
+Your family has one list of behaviors, penalties, challenges and rewards. Each one is for all your children
+unless you choose some of them in **Settings** (see [Settings](#settings)).
 
 ### Add a co-parent
 
@@ -211,7 +212,9 @@ Everything in **Settings** is in folding sections. Each header shows a count; ta
   keeps at least one child).
 - **Parents:** who's in the family, invites, and for the owner, **Make owner** and **Remove**.
 - **Behaviors, Penalties, Weekly challenges, Rewards:** **Edit** changes one, **+ Add** creates one, ▲ and ▼
-  change the order, ✕ removes one. A behavior has a name, a short note (such as "per day") and its points: the
+  change the order, ✕ removes one. With more than one child, **Who is it for?** lets you keep one for some
+  children only, such as piano practice for one and swimming for another: the others don't see it on their
+  Today, Week or Rewards. Settings shows "For: …" under those. A behavior has a name, a short note (such as "per day") and its points: the
   same number twice for a fixed amount, or a minimum and a maximum for a range. Removing a behavior, penalty or
   challenge hides it but keeps the history that used it.
 - **Devices:** every phone and browser logged in to your family, parents' and children's, with when each was

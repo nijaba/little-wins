@@ -312,21 +312,81 @@ function createRepo(db) {
   }
 
   // --- Behaviors, penalties, challenges -------------------------------------------------------
+  // --- Who an item or reward is for: null = every child, else a list of child IDs ---------
+  /** { id: [childId, …] } for the limited rows of `table` ('item' or 'reward') in a family. */
+  function forMap(fid, table) {
+    const map = {};
+    const rows = db
+      .prepare(`SELECT ${table}_id AS id, child_id FROM ${table}_children WHERE family_id=?`)
+      .all(fid);
+    for (const r of rows) {
+      map[r.id] ??= [];
+      map[r.id].push(r.child_id);
+    }
+    return map;
+  }
+  const withFor = (fid, table, rows) => {
+    const map = forMap(fid, table);
+    return rows.map(({ for_all, ...r }) => ({ ...r, for: for_all ? null : map[r.id] || [] }));
+  };
+
+  /**
+   * Sets who a row is for: `children` null (or every child) means everyone; otherwise only those
+   * of this family's children. IDs from another family are dropped.
+   */
+  function setFor(fid, table, id, children) {
+    const own = new Set(
+      db
+        .prepare('SELECT id FROM children WHERE family_id=?')
+        .all(fid)
+        .map((c) => c.id),
+    );
+    const chosen = Array.isArray(children)
+      ? [...new Set(children.map(Number))].filter((c) => own.has(c))
+      : null;
+    const everyone = !chosen || chosen.length === own.size;
+    db.prepare(`UPDATE ${table}s SET for_all=? WHERE family_id=? AND id=?`).run(
+      everyone ? 1 : 0,
+      fid,
+      id,
+    );
+    db.prepare(`DELETE FROM ${table}_children WHERE family_id=? AND ${table}_id=?`).run(fid, id);
+    if (everyone) return;
+    const add = db.prepare(
+      `INSERT INTO ${table}_children(${table}_id,child_id,family_id) VALUES(?,?,?)`,
+    );
+    for (const c of chosen) add.run(id, c, fid);
+  }
+
+  /** Whether this family's item applies to the child (for everyone, or for them). */
+  const itemAppliesTo = (fid, itemId, cid) =>
+    !!db
+      .prepare(
+        `SELECT 1 FROM items i WHERE i.family_id=? AND i.id=? AND (i.for_all=1 OR EXISTS
+           (SELECT 1 FROM item_children ic WHERE ic.family_id=i.family_id AND ic.item_id=i.id AND ic.child_id=?))`,
+      )
+      .get(fid, itemId, cid);
+
   const items = (fid) =>
-    db.prepare('SELECT * FROM items WHERE family_id=? AND active=1 ORDER BY sort, id').all(fid);
+    withFor(
+      fid,
+      'item',
+      db.prepare('SELECT * FROM items WHERE family_id=? AND active=1 ORDER BY sort, id').all(fid),
+    );
 
   const item = (fid, id) =>
     db.prepare('SELECT * FROM items WHERE family_id=? AND id=?').get(fid, id) ?? null;
 
-  function saveItem(fid, { id, kind, name, note, pmin, pmax }) {
+  function saveItem(fid, { id, kind, name, note, pmin, pmax, children }) {
     if (id) {
-      return (
+      const ok =
         db
           .prepare(
             'UPDATE items SET name=?,note=?,pmin=?,pmax=? WHERE family_id=? AND id=? AND kind=? AND active=1',
           )
-          .run(name, note, pmin, pmax, fid, id, kind).changes > 0
-      );
+          .run(name, note, pmin, pmax, fid, id, kind).changes > 0;
+      if (ok && children !== undefined) setFor(fid, 'item', id, children);
+      return ok;
     }
     const sort = db
       .prepare('SELECT COALESCE(MAX(sort),0)+1 s FROM items WHERE family_id=?')
@@ -334,6 +394,8 @@ function createRepo(db) {
     db.prepare(
       'INSERT INTO items(family_id,kind,name,note,pmin,pmax,sort,active) VALUES(?,?,?,?,?,?,?,1)',
     ).run(fid, kind, name, note, pmin, pmax, sort);
+    const newId = Number(db.prepare('SELECT last_insert_rowid() id').get().id);
+    if (children !== undefined) setFor(fid, 'item', newId, children);
     return true;
   }
 
@@ -343,19 +405,24 @@ function createRepo(db) {
 
   // --- Rewards ------------------------------------------------------------------------------
   const rewards = (fid) =>
-    db
-      .prepare(
-        'SELECT id, name, stars, points, sort FROM rewards WHERE family_id=? ORDER BY sort, id',
-      )
-      .all(fid);
+    withFor(
+      fid,
+      'reward',
+      db
+        .prepare(
+          'SELECT id, name, stars, points, sort, for_all FROM rewards WHERE family_id=? ORDER BY sort, id',
+        )
+        .all(fid),
+    );
 
-  function saveReward(fid, { id, name, stars, points }) {
+  function saveReward(fid, { id, name, stars, points, children }) {
     if (id) {
-      return (
+      const ok =
         db
           .prepare('UPDATE rewards SET name=?,stars=?,points=? WHERE family_id=? AND id=?')
-          .run(name, stars, points, fid, id).changes > 0
-      );
+          .run(name, stars, points, fid, id).changes > 0;
+      if (ok && children !== undefined) setFor(fid, 'reward', id, children);
+      return ok;
     }
     const sort = db
       .prepare('SELECT COALESCE(MAX(sort),0)+1 s FROM rewards WHERE family_id=?')
@@ -367,6 +434,8 @@ function createRepo(db) {
       points,
       sort,
     );
+    const newId = Number(db.prepare('SELECT last_insert_rowid() id').get().id);
+    if (children !== undefined) setFor(fid, 'reward', newId, children);
     return true;
   }
 
@@ -538,11 +607,13 @@ function createRepo(db) {
         .all(fid),
       items: db
         .prepare(
-          'SELECT id, kind, name, note, pmin, pmax, active FROM items WHERE family_id=? ORDER BY sort, id',
+          'SELECT id, kind, name, note, pmin, pmax, active, for_all FROM items WHERE family_id=? ORDER BY sort, id',
         )
         .all(fid),
       rewards: db
-        .prepare('SELECT id, name, stars, points FROM rewards WHERE family_id=? ORDER BY sort, id')
+        .prepare(
+          'SELECT id, name, stars, points, for_all FROM rewards WHERE family_id=? ORDER BY sort, id',
+        )
         .all(fid),
       entries: db
         .prepare(
@@ -554,6 +625,13 @@ function createRepo(db) {
         .prepare(
           'SELECT child_id, text, who, created FROM messages WHERE family_id=? ORDER BY child_id',
         )
+        .all(fid),
+      // Items and rewards for some children only (for_all is 0 on those rows).
+      itemsFor: db
+        .prepare('SELECT item_id, child_id FROM item_children WHERE family_id=? ORDER BY 1, 2')
+        .all(fid),
+      rewardsFor: db
+        .prepare('SELECT reward_id, child_id FROM reward_children WHERE family_id=? ORDER BY 1, 2')
         .all(fid),
     };
   }
@@ -650,6 +728,7 @@ function createRepo(db) {
     addEntry,
     replaceMark,
     undoEntry,
+    itemAppliesTo,
     setMessage,
     message,
     setNote,

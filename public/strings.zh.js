@@ -186,6 +186,10 @@ window.LW_STRINGS.zh = {
 
   // Settings tab
   settings: {
+    forLabel: (names) => `适用：${names}`,
+    forNobody: '暂无',
+    forWho: '适用于谁？',
+    forHelp: '全部勾选即适用于所有孩子，包括以后添加的孩子。',
     idleNote: (days) =>
       `如果 ${days} 天内没有任何手机或浏览器使用某个家庭，该家庭及其所有数据将被删除。`,
     family: '家庭',
