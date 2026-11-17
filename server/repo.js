@@ -37,22 +37,33 @@ function createRepo(db) {
   // --- Families -------------------------------------------------------------------------
   const family = (fid) => db.prepare('SELECT * FROM families WHERE id=?').get(fid);
 
-  function updateFamily(fid, { name, timezone, weekStart }) {
-    db.prepare('UPDATE families SET name=?, timezone=?, week_start=? WHERE id=?').run(
+  function updateFamily(fid, { name, timezone, weekStart, language }) {
+    db.prepare('UPDATE families SET name=?, timezone=?, week_start=?, language=? WHERE id=?').run(
       name,
       timezone,
       weekStart,
+      language,
       fid,
     );
   }
 
-  /** Creates a family with its owner and first child; optionally the starter list. */
-  function createFamily({ name, timezone, weekStart = 1, ownerId, childName, starter }) {
+  /** Creates a family with its owner and first child; optionally the starter list, in its language. */
+  function createFamily({
+    name,
+    timezone,
+    weekStart = 1,
+    language = 'en',
+    ownerId,
+    childName,
+    starter,
+  }) {
     return tx(() => {
       const fid = Number(
         db
-          .prepare('INSERT INTO families(name,timezone,week_start,created) VALUES(?,?,?,?)')
-          .run(name, timezone, weekStart, now()).lastInsertRowid,
+          .prepare(
+            'INSERT INTO families(name,timezone,week_start,language,created) VALUES(?,?,?,?,?)',
+          )
+          .run(name, timezone, weekStart, language, now()).lastInsertRowid,
       );
       db.prepare('INSERT INTO memberships(family_id,user_id,role,created) VALUES(?,?,?,?)').run(
         fid,
@@ -65,7 +76,7 @@ function createRepo(db) {
         childName,
         now(),
       );
-      if (starter) seedStarter(db, fid);
+      if (starter) seedStarter(db, fid, language);
       return fid;
     });
   }

@@ -42,7 +42,7 @@ function buildState(repo, session, { week: requestedWeek, child: requestedChild 
 
   const state = {
     role,
-    family: { name: family.name, timezone: family.timezone, weekStart },
+    family: { name: family.name, timezone: family.timezone, weekStart, language: family.language },
     // A child's device sees only its own child.
     children: parent ? children : [selected],
     childId: cid,

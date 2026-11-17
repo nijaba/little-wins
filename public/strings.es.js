@@ -1,0 +1,288 @@
+// Spanish strings for the page. Same keys as strings.en.js; missing keys fall back to English.
+window.LW_STRINGS = window.LW_STRINGS || {};
+window.LW_STRINGS.es = {
+  appName: 'Little Wins',
+  locale: 'es',
+
+  // Bottom tabs: [icon, label]
+  tabs: {
+    today: ['☀️', 'Hoy'],
+    week: ['⭐', 'Semana'],
+    rew: ['🏆', 'Premios'],
+    hist: ['🕘', 'Historial'],
+    set: ['⚙️', 'Ajustes'],
+  },
+
+  // Header and shared bits
+  header: (balance, stars) => `${balance} pts · ${stars} ★`,
+  pts: 'pts',
+  ptsRange: (a, b) => `${a}-${b} pts`,
+  star: '★',
+
+  // Signed-out screen, invite and setup
+  login: {
+    signInWith: { google: 'Entrar con Google', github: 'Entrar con GitHub' },
+    parentsOnly: 'Para padres',
+    codeTitle: 'Usa un código de un adulto',
+    codeHelp: 'En el dispositivo de un niño, escribe el código que un padre creó en Ajustes.',
+    codePlaceholder: 'ABCD-EFGH-JK',
+    codeButton: 'Conectar este dispositivo',
+    codeFailed: 'Ese código no funcionó. Pide uno nuevo a un padre.',
+    joinTitle: (family) => `Únete a ${family}`,
+    joinHelp: 'Entra para unirte a esta familia como padre.',
+    inviteInvalid:
+      'Este enlace de invitación no funciona. Puede que haya caducado o ya se haya usado.',
+    notNow: 'Ahora no',
+    networkError: 'No se puede conectar con el servidor. Inténtalo de nuevo.',
+    familyDeleted: 'Familia eliminada.',
+  },
+  legal: { privacy: 'Privacidad', terms: 'Condiciones' },
+  operator: {
+    title: 'Operador',
+    help: 'Cifras de esta instalación. Aquí nunca se muestra el contenido de las familias.',
+    loading: 'Cargando…',
+    refresh: 'Actualizar',
+    failed: 'No se pudieron cargar las cifras. Inténtalo de nuevo.',
+    families: 'Familias',
+    unclaimedFamilies: 'Familias sin reclamar',
+    parents: 'Padres',
+    children: 'Niños',
+    devices: 'Dispositivos',
+    activeDevices30d: 'Dispositivos activos (30 días)',
+    entries: 'Registros',
+    dbSize: 'Tamaño de la base de datos',
+    mb: (n) => `${n} MB`,
+    version: 'Versión',
+    uptime: 'Tiempo activo',
+    duration: (s) => {
+      const d = Math.floor(s / 86400);
+      const h = Math.floor((s % 86400) / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      return d ? `${d} d ${h} h` : h ? `${h} h ${m} min` : `${m} min`;
+    },
+  },
+  setup: {
+    title: 'Configura tu familia',
+    hello: (name) => `Te damos la bienvenida, ${name}.`,
+    familyName: 'Nombre de la familia',
+    childName: 'Nombre del primer niño',
+    timeZone: 'Zona horaria',
+    weekStart: 'La semana empieza el',
+    monday: 'Lunes',
+    sunday: 'Domingo',
+    starter: 'Empezar con una lista de ejemplo de comportamientos y premios',
+    language: 'Idioma',
+    create: 'Crear',
+    private:
+      'Este Little Wins es privado. Pide a un padre de la familia un enlace de invitación y entra desde él.',
+    signOut: 'Salir',
+  },
+
+  // Toast and history descriptions
+  undo: 'Deshacer',
+  undoLower: 'deshacer',
+  warningPrefix: '⚠ Aviso · ',
+
+  // Next-reward ring
+  ring: {
+    allUnlocked: '🎉 ¡Todo desbloqueado!',
+    next: 'Próximo premio',
+    pts: 'pts',
+  },
+
+  // Celebration overlay
+  party: {
+    unlocked: '¡Premio desbloqueado!',
+  },
+
+  // Today tab
+  today: {
+    earn: 'Ganar puntos',
+    waysToEarn: 'Formas de ganar puntos',
+    penalties: 'Penalizaciones',
+    promptPoints: (min, max) => `Puntos (${min}-${max})`,
+    confirmPenalty: (name) => `¿Registrar penalización: ${name}?`,
+    warnButton: (n) => `⚠${n}/2`,
+  },
+
+  // Week tab
+  week: {
+    prevLabel: 'Semana anterior',
+    nextLabel: 'Semana siguiente',
+    thisWeek: 'Esta semana',
+    weekOf: (d) => `Semana del ${d}`,
+    starsWon: (n) => ` · ${n} ★ ganada${n === 1 ? '' : 's'}`,
+    back: 'Volver a esta semana',
+    challenges: 'Retos semanales',
+    rule: 'Gana ★ con 2 o más días perfectos y ningún día malo en la semana.',
+    ruleParent: ' Toca un día para marcar ✓ perfecto, ~ regular o ✗ malo.',
+    won: '★ ganada',
+    perfectDays: (n) => `${n}/2 días perfectos`,
+    aBadDay: ' · un día malo',
+    marks: { perfect: '✓', ok: '~', bad: '✗', none: '·' },
+  },
+
+  // Rewards tab
+  rewards: {
+    title: 'Premios',
+    unlocked: '✅ desbloqueado',
+    pointsPlus: (n) => `+ ${n} pts`,
+  },
+
+  // History tab
+  history: {
+    title: 'Historial',
+    warning: '⚠ aviso',
+    mark: 'marca: ',
+    // Challenge marks, by name
+    markNames: { perfect: 'perfecto', ok: 'regular', bad: 'malo' },
+  },
+
+  // Settings tab
+  settings: {
+    family: 'Familia',
+    familyName: 'Nombre de la familia',
+    timeZone: 'Zona horaria',
+    weekStart: 'La semana empieza el',
+    monday: 'Lunes',
+    sunday: 'Domingo',
+    language: 'Idioma',
+    save: 'Guardar',
+    children: 'Niños',
+    rename: 'Renombrar',
+    addChild: '+ Añadir niño',
+    confirmDeleteChild: (name) => `¿Eliminar a ${name} y todo su historial? No se puede deshacer.`,
+    parents: 'Padres',
+    owner: 'Titular',
+    parentRole: 'Padre',
+    you: 'tú',
+    makeOwner: 'Hacer titular',
+    removeParent: 'Quitar',
+    confirmMakeOwner: (name) => `¿Hacer titular a ${name}? Tú pasarás a ser un padre normal.`,
+    confirmRemoveParent: (name) => `¿Quitar a ${name} de la familia?`,
+    inviteParent: 'Invitar a un padre',
+    inviteTitle: 'Enlace de invitación',
+    inviteHelp: 'Envía este enlace al padre. Solo funciona una vez.',
+    inviteExpires: 'Caduca en 7 días',
+    openInvites: 'Invitaciones abiertas',
+    inviteSent: (date) => `Invitación enviada ${date}`,
+    inviteUntil: (date) => `caduca ${date}`,
+    cancelInvite: 'Cancelar',
+    copy: 'Copiar',
+    copied: 'Copiado',
+    share: 'Compartir',
+    done: 'Listo',
+    signOut: 'Salir',
+    exportData: 'Descargar todos nuestros datos',
+    deleteTitle: 'Eliminar esta familia',
+    deleteWarning:
+      'Esto elimina todos los niños, el historial, los comportamientos, los premios y los dispositivos de toda la familia. No se puede deshacer. Descarga antes tus datos.',
+    deleteType: 'Escribe el nombre de la familia para confirmar',
+    deleteButton: 'Eliminar esta familia',
+    confirmDeleteFamily: '¿Eliminar esta familia y todo lo que contiene? No se puede deshacer.',
+    behaviors: 'Comportamientos',
+    penalties: 'Penalizaciones',
+    challenges: 'Retos semanales',
+    rewards: 'Premios',
+    devices: 'Dispositivos',
+    edit: 'Editar',
+    remove: '✕',
+    add: '+ Añadir',
+    confirmRemoveItem: '¿Quitar esto? El historial anterior se conserva.',
+    confirmRemoveReward: '¿Quitar este premio?',
+    up: '▲',
+    down: '▼',
+
+    // Edit form titles, by what is edited
+    editTitle: {
+      target: 'Editar comportamiento',
+      penalty: 'Editar penalización',
+      challenge: 'Editar reto',
+      reward: 'Editar premio',
+      child: 'Editar niño',
+    },
+    addTitle: {
+      target: 'Añadir un comportamiento',
+      penalty: 'Añadir una penalización',
+      challenge: 'Añadir un reto',
+      reward: 'Añadir un premio',
+      child: 'Añadir un niño',
+    },
+    fieldName: 'Nombre',
+    fieldStars: 'Estrellas necesarias',
+    fieldPoints: 'Puntos necesarios',
+    fieldNote: 'Nota (p. ej. por día)',
+    fieldPenalty: 'Puntos perdidos',
+    fieldMin: 'Puntos (mín.)',
+    fieldMax: 'Puntos (máx.; igual al mín. si es fijo)',
+    cancel: 'Cancelar',
+
+    // Devices
+    devicesHelp:
+      'Teléfonos y navegadores con la sesión iniciada. Cierra la sesión de uno perdido o que ya no uses.',
+    parentDevice: 'Padre',
+    childDevice: 'Niño',
+    deviceLabel: (who, device) => `${who} · ${device}`,
+    addDevice: (name) => `Añadir un dispositivo para ${name}`,
+    pairTitle: (name) => `Dispositivo de ${name}`,
+    pairHelp: 'En el dispositivo del niño, abre el enlace o escribe este código.',
+    expiresIn: (t) => `Caduca en ${t}`,
+    expired: 'Caducado',
+    thisDevice: 'este dispositivo',
+    lastUsed: (ago) => `Último uso ${ago}`,
+    loggedIn: (date) => `sesión iniciada ${date}`,
+    logOut: 'Cerrar sesión',
+    confirmLogOutMe: '¿Cerrar la sesión de este dispositivo? Tendrás que entrar de nuevo.',
+    confirmLogOutOther:
+      '¿Cerrar la sesión de ese dispositivo? Tendrá que entrar o vincularse de nuevo.',
+  },
+
+  // "Last seen" wording
+  ago: {
+    justNow: 'ahora mismo',
+    min: (n) => `hace ${n} min`,
+    hours: (n) => `hace ${n} h`,
+    days: (n) => `hace ${n} días`,
+  },
+
+  // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
+  errors: {
+    login: 'Entra de nuevo, por favor.',
+    viewOnly: 'Este dispositivo solo puede mirar, no cambiar nada.',
+    badRequest: 'No funcionó. Inténtalo de nuevo.',
+    notFound: 'Eso ya no está aquí. Puede que se haya quitado desde otro dispositivo.',
+    tooLarge: 'Es demasiado largo.',
+    jsonOnly: 'No funcionó. Recarga la página e inténtalo de nuevo.',
+    foreignOrigin: 'Se rechazó una petición de otro sitio.',
+    serverError: 'Algo salió mal en el servidor. Inténtalo de nuevo.',
+    nameRequired: 'Hace falta un nombre.',
+    invalidDay: 'Ese día no es válido.',
+    invalidTimeZone: 'Zona horaria desconocida.',
+    invalidLanguage: 'Idioma desconocido.',
+    setupDone: 'Esta cuenta ya tiene una familia.',
+    setupNotAllowed: 'Termina primero de entrar.',
+    privateInstance:
+      'Este Little Wins es privado. Pide a un padre de la familia un enlace de invitación y entra desde él.',
+    lastChild: 'Una familia necesita al menos un niño.',
+    ownerOnly: 'Solo el titular puede hacer eso.',
+    notYourself: 'No puedes hacerte eso a ti mismo.',
+    codeInvalid:
+      'Ese código no funciona. Puede que haya caducado o ya se haya usado. Pide uno nuevo a un padre.',
+    limitReached: ({ limit }) =>
+      `Esta familia ha alcanzado su límite de ${
+        {
+          children: 'niños',
+          parents: 'padres',
+          items: 'comportamientos, penalizaciones y retos',
+          rewards: 'premios',
+          devices: 'dispositivos',
+          entriesPerDay: 'registros de hoy',
+        }[limit] || limit
+      }.`,
+    confirmFamilyName: 'Escribe el nombre de la familia tal cual para confirmar.',
+    operatorOnly: 'Solo los operadores pueden ver esto.',
+    inviteInvalid:
+      'Este enlace de invitación no funciona. Puede que haya caducado o ya se haya usado.',
+    tooManyTries: ({ seconds }) => `Demasiados intentos. Inténtalo de nuevo en ${seconds} s.`,
+  },
+};

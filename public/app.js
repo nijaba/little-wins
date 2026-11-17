@@ -1,8 +1,12 @@
 // Little Wins front end. No inline script, style or handlers: the page is served under a strict
 // Content Security Policy. Markup is generated as strings; clicks are handled by delegation on
 // elements carrying data-action, and dynamic widths are applied after rendering.
+// Text comes from strings.<lang>.js (English is loaded with the page; others on demand).
 (() => {
-  const STR = window.STRINGS;
+  // Languages the app speaks, each named in its own language for the choice in Settings.
+  const LANGS = { en: 'English', zh: '中文（简体）', es: 'Español', fr: 'Français', de: 'Deutsch' };
+  let lang = 'en';
+  let STR = window.LW_STRINGS.en;
 
   let S = null; // last state received from the server
   let tab = 'today'; // selected tab
@@ -27,6 +31,92 @@
 
   const $ = (id) => document.getElementById(id);
   const P = () => S.role === 'parent';
+
+  // ---- Language ----
+
+  // A translation over English, key by key, so anything it leaves out stays in English.
+  const merge = (base, over) => {
+    const out = { ...base };
+    for (const [k, v] of Object.entries(over || {})) {
+      const nested = (x) => x && typeof x === 'object' && !Array.isArray(x);
+      out[k] = nested(v) && nested(base[k]) ? merge(base[k], v) : v;
+    }
+    return out;
+  };
+
+  // The first language the browser asks for that the app speaks; English otherwise.
+  const browserLang = () =>
+    (navigator.languages?.length ? navigator.languages : [navigator.language])
+      .map(
+        (l) =>
+          String(l || '')
+            .toLowerCase()
+            .split('-')[0],
+      )
+      .find((l) => Object.hasOwn(LANGS, l)) || 'en';
+
+  // The family's language once known; before that (sign-in, pairing, setup) the browser's.
+  const wantedLang = () => S?.family?.language || browserLang();
+
+  // Load strings.<lang>.js once, by a script element (same origin, so the CSP allows it).
+  const loading = {};
+  function loadLang(l) {
+    if (l === 'en' || window.LW_STRINGS[l]) return Promise.resolve();
+    if (!loading[l]) {
+      loading[l] = new Promise((done) => {
+        const el = document.createElement('script');
+        el.src = `strings.${l}.js`;
+        el.onload = done;
+        el.onerror = () => {
+          delete loading[l]; // try again next time; English meanwhile
+          done();
+        };
+        document.head.appendChild(el);
+      });
+    }
+    return loading[l];
+  }
+
+  // Switch to a language (unknown codes mean English). Resolves once its text is in place.
+  async function useLang(l) {
+    const want = Object.hasOwn(LANGS, l) ? l : 'en';
+    if (want === lang) return;
+    await loadLang(want);
+    lang = want;
+    STR = merge(window.LW_STRINGS.en, window.LW_STRINGS[want]);
+    document.documentElement.lang = STR.locale;
+  }
+
+  // Dates in the family's language. `day` is a calendar date (YYYY-MM-DD); `ts` is a time.
+  const fmt = (date, opts) => {
+    try {
+      return new Intl.DateTimeFormat(STR.locale, opts).format(date);
+    } catch {
+      return date.toLocaleString();
+    }
+  };
+  const fmtDay = (day, opts) => fmt(new Date(`${day}T12:00:00Z`), { ...opts, timeZone: 'UTC' });
+  const fmtTs = (ts, opts) => {
+    const tz = S?.family?.timezone;
+    try {
+      return fmt(new Date(ts), { ...opts, ...(tz ? { timeZone: tz } : {}) });
+    } catch {
+      return fmt(new Date(ts), opts);
+    }
+  };
+  const fmtNum = (n) => {
+    try {
+      return new Intl.NumberFormat(STR.locale).format(n);
+    } catch {
+      return String(n);
+    }
+  };
+
+  // The text of an API error: translated by its code, else the server's English text.
+  const errText = (j, fallback = STR.login.networkError) => {
+    const e = j?.code && STR.errors[j.code];
+    return (typeof e === 'function' ? e(j) : e) || j?.error || fallback;
+  };
 
   // Escape every user-entered string before it reaches the page.
   const esc = (s) =>
@@ -66,9 +156,11 @@
   // ---- API ----
 
   // Take a state reply: remember the selection it shows and redraw.
-  function take(j) {
+  async function take(j) {
     S = j;
     gen++;
+    await useLang(wantedLang());
+    if (S !== j) return; // a newer state arrived while the language loaded
     if (S.setup) return renderSetup();
     wkSel = S.week.current ? null : S.week.start;
     if (P()) {
@@ -94,19 +186,20 @@
     }
     if (r.status === 401) {
       S = null;
+      await useLang(browserLang());
       login();
       return false;
     }
     const j = await r.json().catch(() => ({}));
     if (j.error || !r.ok) {
-      alert(j.error || STR.login.networkError);
+      alert(errText(j));
       return false;
     }
     // Writes return fresh state without an ETag; a state read gives the tag for polling.
     etag = body ? null : r.headers.get('ETag');
     etagKey = key;
     iss = j.issued ? { ...j.issued, type: path, child: body?.child_id } : iss;
-    take(j);
+    await take(j);
     return true;
   }
 
@@ -147,7 +240,7 @@
     const r = await post('pair', { code }).catch(() => null);
     if (r?.ok) return api('state');
     const j = r ? await r.json().catch(() => ({})) : {};
-    const msg = j.error || STR.login.codeFailed;
+    const msg = errText(j, STR.login.codeFailed);
     if (!$('err')) login(); // opened from a #pair= link: show the sign-in screen first
     $('err').textContent = msg;
     return false;
@@ -164,6 +257,7 @@
     S = null;
     iss = null;
     ops = null;
+    await useLang(browserLang());
     login();
   }
 
@@ -181,9 +275,10 @@
       delTxt = '';
       tab = 'today';
       for (const k of Object.keys(op)) delete op[k];
+      await useLang(browserLang());
       notice = STR.login.familyDeleted;
       login();
-    } else alert(r ? j.error || STR.login.networkError : STR.login.networkError);
+    } else alert(errText(r ? j : null));
   }
 
   // ---- Operator numbers ----
@@ -224,7 +319,18 @@
       value ? ' checked' : ''
     }> ${st.monday}</label> <label><input type=radio name=${name} value=0${value ? '' : ' checked'}> ${st.sunday}</label></fieldset>`;
 
+  // The language choice: radio buttons (a <select> inserted as HTML trips WebKit's CSP check).
+  const langRadios = (name, label, value) =>
+    `<fieldset class="radios langs"><legend>${label}</legend>${Object.entries(LANGS)
+      .map(
+        ([code, own]) =>
+          `<label lang=${code}><input type=radio name=${name} value=${code}${code === value ? ' checked' : ''}> ${own}</label>`,
+      )
+      .join(' ')}</fieldset>`;
+
   // ---- Setup ----
+
+  let draft = null; // setup fields kept while the page switches language
 
   function renderSetup() {
     screen = 'out';
@@ -245,10 +351,25 @@
     try {
       tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
     } catch {}
+    const d = draft || { family: '', child: '', tz, week: 1, starter: true };
+    draft = null;
     const f = (id, label, v, max) =>
       `<p><label for=${id}>${label}</label><br><input id=${id} maxlength=${max} value="${esc(v)}"></p>`;
     $('app').innerHTML =
-      `<main><h2 class=center>${st.title}</h2><div class=card><p class=p0>${S.me?.name ? st.hello(esc(S.me.name)) : ''}</p>${f('s_family', st.familyName, '', 60)}${f('s_child', st.childName, '', 40)}${f('s_tz', st.timeZone, tz, 60)}${weekRadios('s_week', st, 1)}<p><label class=chk><input id=s_starter type=checkbox checked> ${st.starter}</label></p><button class=b data-action=do-setup>${st.create}</button></div><p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
+      `<main><h2 class=center>${st.title}</h2><div class=card><p class=p0>${S.me?.name ? st.hello(esc(S.me.name)) : ''}</p>${f('s_family', st.familyName, d.family, 60)}${f('s_child', st.childName, d.child, 40)}${f('s_tz', st.timeZone, d.tz, 60)}${weekRadios('s_week', st, d.week)}${langRadios('s_lang', st.language, lang)}<p><label class=chk><input id=s_starter type=checkbox${d.starter ? ' checked' : ''}> ${st.starter}</label></p><button class=b data-action=do-setup>${st.create}</button></div><p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
+  }
+
+  // Picking a language during setup shows the page in it right away, keeping what was typed.
+  async function setupLang(l) {
+    draft = {
+      family: $('s_family').value,
+      child: $('s_child').value,
+      tz: $('s_tz').value,
+      week: +document.querySelector('input[name=s_week]:checked').value,
+      starter: $('s_starter').checked,
+    };
+    await useLang(l);
+    renderSetup();
   }
 
   function doSetup() {
@@ -258,6 +379,7 @@
       timezone: $('s_tz').value,
       week_start: +document.querySelector('input[name=s_week]:checked').value,
       starter: $('s_starter').checked,
+      language: document.querySelector('input[name=s_lang]:checked')?.value || lang,
     });
   }
 
@@ -309,7 +431,7 @@
       ? `${(e.points > 0 ? '+' : '') + e.points} · ${e.name}`
       : e.kind === 'warn'
         ? STR.warningPrefix + e.name
-        : `${e.name}: ${e.note}`;
+        : `${e.name}: ${STR.history.markNames[e.note] || e.note}`;
 
   // Call the API, then toast the newest history entry with an Undo button.
   async function act(path, body) {
@@ -415,6 +537,7 @@
         name: $('f_fam').value,
         timezone: $('f_tz').value,
         week_start: +document.querySelector('input[name=f_week]:checked').value,
+        language: document.querySelector('input[name=f_lang]:checked')?.value,
       }),
     'del-child': (d) => {
       const c = S.children.find((x) => x.id === +d.id);
@@ -548,8 +671,13 @@
 
   function viewWeek() {
     const W = S.week;
-    const fd = (d) =>
-      new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const fd = (d) => fmtDay(d, { month: 'short', day: 'numeric' });
+    // Day letters in the family's language (the server's English letters as a fallback).
+    let letters = W.lbl;
+    try {
+      const wd = new Intl.DateTimeFormat(STR.locale, { weekday: 'narrow', timeZone: 'UTC' });
+      letters = W.days.map((d) => wd.format(new Date(`${d}T12:00:00Z`)));
+    } catch {}
     const nw = Object.keys(S.won).length;
     const wk = STR.week;
     let h = `<div class="card wnav"><button class="b g" ${W.prev ? `data-action=week data-week="${W.prev}"` : 'disabled'} aria-label="${wk.prevLabel}">‹</button><div><b>${W.current ? wk.thisWeek : wk.weekOf(fd(W.days[0]))}</b><br><small>${fd(W.days[0])} – ${fd(W.days[6])}${nw ? wk.starsWon(nw) : ''}</small></div><button class="b g" ${W.next ? `data-action=week data-week="${W.next}"` : 'disabled'} aria-label="${wk.nextLabel}">›</button></div>`;
@@ -565,7 +693,7 @@
           const v = m[k];
           const fut = d > S.today;
           const sym = wk.marks[v] || wk.marks.none;
-          const label = `${W.lbl[k]} ${+d.slice(8)}<br>${sym}`;
+          const label = `${esc(letters[k])} ${+d.slice(8)}<br>${sym}`;
           return P() && !fut
             ? `<button class="d ${v || ''}" data-action=cyc data-id=${i.id} data-k=${k}>${label}</button>`
             : `<span class="d ${v || ''}${fut ? ' fut' : ''}">${label}</span>`;
@@ -594,9 +722,9 @@
         e.kind === 'warn'
           ? STR.history.warning
           : e.kind === 'mark'
-            ? STR.history.mark + esc(e.note)
+            ? STR.history.mark + esc(STR.history.markNames[e.note] || e.note)
             : ''
-      }<br><small>${new Date(e.ts).toLocaleString()} ${
+      }<br><small>${fmtTs(e.ts, { dateStyle: 'medium', timeStyle: 'short' })} ${
         e.note && e.kind === 'points' ? `· ${esc(e.note)}` : ''
       }</small></div><div>${e.kind === 'points' ? (e.points > 0 ? '+' : '') + e.points : ''} ${
         P() ? `<button class="b g" data-action=undo data-id=${e.id}>${STR.undoLower}</button>` : ''
@@ -611,7 +739,7 @@
     const r = ed.t === 'r';
     const k = ed.kind;
     if (ed.t === 'c')
-      return `<div class=card><h3 class=edit-title>${ed.id ? st.formEdit : st.formAdd} ${st.child}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name maxlength=40 value="${esc(ed.name)}"></p><button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
+      return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle).child}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name maxlength=40 value="${esc(ed.name)}"></p><button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
     const num = (id, label, v) =>
       `<p><label for=${id}>${label}</label><br><input id=${id} type=number inputmode=numeric value="${v}"></p>`;
     let fields = '';
@@ -624,7 +752,7 @@
         ed.pmin,
       )}${k === 'target' ? num('f_max', st.fieldMax, ed.pmax) : ''}`;
     }
-    return `<div class=card><h3 class=edit-title>${ed.id ? st.formEdit : st.formAdd} ${r ? st.reward : k}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
+    return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle)[r ? 'reward' : k]}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
   }
 
   // Owner only: export and delete, at the bottom of the Family section.
@@ -642,7 +770,7 @@
       'fam',
       st.family,
       esc(fam.name),
-      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p>${weekRadios('f_week', st, fam.weekStart)}<button class=b data-action=save-family>${st.save}</button></div>${S.me.owner ? ownerTools() : ''}`,
+      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p>${weekRadios('f_week', st, fam.weekStart)}${langRadios('f_lang', st.language, fam.language || 'en')}<button class=b data-action=save-family>${st.save}</button></div>${S.me.owner ? ownerTools() : ''}`,
     );
     let c = '';
     for (const k of S.children) {
@@ -665,7 +793,7 @@
     if (S.invites.length) {
       pr += `<h3>${st.openInvites}</h3>`;
       for (const i of S.invites) {
-        pr += `<div class=card><div class="row stk"><div>${st.inviteSent(new Date(i.created).toLocaleDateString())}<br><small>${st.inviteUntil(new Date(i.expires).toLocaleDateString())}</small></div><div><button class="b g" data-action=cancel-invite data-id=${i.id}>${st.cancelInvite}</button></div></div></div>`;
+        pr += `<div class=card><div class="row stk"><div>${st.inviteSent(fmtTs(i.created, { dateStyle: 'medium' }))}<br><small>${st.inviteUntil(fmtTs(i.expires, { dateStyle: 'medium' }))}</small></div><div><button class="b g" data-action=cancel-invite data-id=${i.id}>${st.cancelInvite}</button></div></div></div>`;
       }
     }
     h += fold('par', st.parents, S.parents.length, pr);
@@ -696,7 +824,7 @@
       g += `<div class=card><div class="row stk"><div>${esc(st.deviceLabel(d.who || '', d.device))}${
         d.me ? ` · <b>${st.thisDevice}</b>` : ''
       }<br><small>${d.kind === 'parent' ? st.parentDevice : st.childDevice} · ${st.lastUsed(ago(d.last_seen))} · ${st.loggedIn(
-        new Date(d.created).toLocaleDateString(),
+        fmtTs(d.created, { dateStyle: 'medium' }),
       )}</small></div><div><button class="b r" data-action=revoke data-id=${d.id} data-me=${d.me ? 1 : 0}>${st.logOut}</button></div></div></div>`;
     }
     if (iss?.type === 'pairing/create') {
@@ -758,7 +886,8 @@
             )
             .join('')}</div>`
         : '';
-    let h = `<header><b>${STR.header(S.balance, S.stars)}</b>${S.today}${
+    const day = fmtDay(S.today, { weekday: 'short', month: 'short', day: 'numeric' });
+    let h = `<header><b>${STR.header(fmtNum(S.balance), fmtNum(S.stars))}</b>${esc(day)}${
       P() ? '' : `<div class=who>${esc(S.childName)}</div>`
     }</header>${chips}<main>`;
     if (tab === 'today') h += viewToday();
@@ -795,6 +924,10 @@
     },
     true,
   );
+  // A language picked during setup applies to the page at once.
+  $('app').addEventListener('change', (e) => {
+    if (e.target.name === 's_lang') setupLang(e.target.value);
+  });
   // Enable the Delete button only while the typed text is the family name.
   $('app').addEventListener('input', (e) => {
     if (e.target.id !== 'del_name') return;
@@ -803,6 +936,7 @@
   });
 
   async function boot() {
+    await useLang(browserLang());
     try {
       cfg = await (await fetch('/api/config')).json();
     } catch {}
@@ -847,7 +981,8 @@
             S = j;
             etag = r.headers.get('ETag');
             etagKey = key;
-            render();
+            await useLang(wantedLang()); // another parent may have changed it
+            if (S === j) render();
           }
         })
         .catch(() => {});

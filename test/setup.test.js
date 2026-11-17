@@ -57,7 +57,12 @@ test('SU-04 setup with the starter list creates it, and the first child', async 
     challenge: starterCounts.challenges,
   });
   assert.equal(S.rewards.length, starterCounts.rewards);
-  assert.deepEqual(S.family, { name: 'Starter', timezone: 'America/Chicago', weekStart: 1 });
+  assert.deepEqual(S.family, {
+    name: 'Starter',
+    timezone: 'America/Chicago',
+    weekStart: 1,
+    language: 'en',
+  });
   assert.deepEqual(
     S.children.map((c) => c.name),
     ['Kid'],

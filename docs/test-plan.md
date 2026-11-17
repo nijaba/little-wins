@@ -351,6 +351,27 @@ Skipped when Docker is missing or `SKIP_IMAGE_TESTS=1`.
 | IM-06 | The page answers 200 behind `X-Forwarded-Proto: https` and carries the content security policy | Image |
 | IM-07 | An `http://` `APP_BASE_URL` makes the container exit non-zero with a message | Image |
 
+## LG: Languages
+
+Family language, the starter list in it, error codes and the translation files.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| LG-01 | The language chosen at setup is stored and returned in the state, for every language | API |
+| LG-02 | An unknown language at setup is a 400 `invalidLanguage`, and the account can still set up | API |
+| LG-03 | Setup without a language follows `Accept-Language` (quality, regions), else English; an explicit language wins | API |
+| LG-04 | Family save changes the language, keeps it when absent, refuses an unknown one and leaves it unchanged | API |
+| LG-05 | Changing the language later does not rewrite existing names | API |
+| LG-06 | The starter list is seeded in the family language with the same points and stars | API |
+| LG-07 | Every starter translation has the English lengths and no empty names | API |
+| LG-08 | `fromAcceptLanguage` handles q values, region tags, `zh-CN`/`zh-TW`, empty and junk headers | Unit |
+| LG-09 | API errors carry the English text and a `code` (404, 400, 401, 415, 403, invalidLanguage) | API |
+| LG-10 | `limitReached` carries `limit` and `tooManyTries` carries `seconds` | API |
+| LG-11 | Every code the server can send has a string in `strings.en.js` errors | API |
+| LG-12 | Every page translation has exactly the English keys, functions staying functions | Unit |
+| LG-13 | Server page translations have the English keys; every page file has a locale | Unit |
+| LG-14 | Sign-in problem pages are in the `Accept-Language` language (`html lang` and text), English by default | API |
+
 ## E2E: browser tests
 
 Titles and steps are in [e2e/README.md](../e2e/README.md); each test name starts with its ID.

@@ -69,12 +69,12 @@ Tick a box when the item is done and tested.
 
 ## Phase 5b: languages
 
-- [ ] Translations of `public/strings.js` and `server/messages.js` into Chinese (Simplified), Spanish, French and German, alongside English
-- [ ] Language chosen per family in Settings → Family (default: the browser's language at family setup); stored on the family
-- [ ] Dates, day labels and numbers formatted with `Intl` in the family's language
-- [ ] Sign-in, pairing and error pages follow the browser's language until a family is known
-- [ ] Layout checked with longer (German) and CJK (Chinese) text at phone width; tests per language for the main screens
-- [ ] Starter list translated, so a new family gets it in its own language
+- [x] Translations of the page strings (`public/strings.<lang>.js`), the server's own pages and API error codes (`server/i18n`, `code` on every error) into Chinese (Simplified), Spanish, French and German, alongside English
+- [x] Language chosen per family in Settings → Family (default: the browser's language at family setup); stored on the family
+- [x] Dates, day labels and numbers formatted with `Intl` in the family's language
+- [x] Sign-in, pairing and error pages follow the browser's language until a family is known
+- [x] Layout checked with longer (German) and CJK (Chinese) text at phone width; tests per language for the main screens
+- [x] Starter list translated, so a new family gets it in its own language
 
 ## Phase 5c: demo, tour and video (modeled on scrum-poker)
 

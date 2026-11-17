@@ -7,43 +7,11 @@ const {
   openFold,
   fold,
   addChild,
+  SIZES,
+  FOLDS,
+  checkFits,
+  eachSize,
 } = require('./fixtures');
-
-const SIZES = [
-  { width: 360, height: 640 },
-  { width: 375, height: 667 },
-  { width: 390, height: 844 },
-  { width: 430, height: 932 },
-];
-const FOLDS = ['fam', 'kids', 'par', 'target', 'penalty', 'challenge', 'rew', 'dev'];
-
-/** No sideways scroll, and (when there is a tab bar) the last item ends above it. */
-async function checkFits(page, label) {
-  const r = await page.evaluate(() => {
-    window.scrollTo(0, document.body.scrollHeight);
-    const tabs = document.querySelector('.tabs');
-    const last = document.querySelector('main')?.lastElementChild;
-    return {
-      scrollWidth: document.documentElement.scrollWidth,
-      innerWidth: window.innerWidth,
-      tabsTop: tabs ? tabs.getBoundingClientRect().top : null,
-      lastBottom: last ? last.getBoundingClientRect().bottom : null,
-    };
-  });
-  expect(r.scrollWidth, `${label}: horizontal scroll`).toBeLessThanOrEqual(r.innerWidth);
-  if (r.tabsTop !== null) {
-    expect(r.lastBottom, `${label}: last item under the tab bar`).toBeLessThanOrEqual(
-      r.tabsTop + 0.5,
-    );
-  }
-}
-
-async function eachSize(page, name, fn) {
-  for (const size of SIZES) {
-    await page.setViewportSize(size);
-    await fn(`${name} @${size.width}x${size.height}`);
-  }
-}
 
 test('E2E-70 the sign-in and setup screens fit phone screens', async ({ page }) => {
   await page.goto('/');

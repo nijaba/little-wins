@@ -5,7 +5,7 @@
  */
 const crypto = require('node:crypto');
 const config = require('./config');
-const messages = require('./messages');
+const i18n = require('./i18n');
 const { allows } = require('./allowlist');
 const { readCookie } = require('./sessions');
 
@@ -44,8 +44,15 @@ const escapeHtml = (text) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
   );
 
-/** A plain page for sign-in problems (no inline script or style, so the CSP holds). */
-function failPage(res, message, status = 400) {
+/**
+ * A plain page for sign-in problems (no inline script or style, so the CSP holds), in the
+ * browser's language: no family is known yet. `key` names the text in server/i18n; a
+ * function there gets `arg`.
+ */
+function failPage(req, res, key, status = 400, arg) {
+  const lang = i18n.fromAcceptLanguage(req.headers['accept-language']);
+  const text = i18n.pages(lang);
+  const message = typeof text[key] === 'function' ? text[key](arg) : text[key];
   res.writeHead(status, {
     'Content-Type': 'text/html; charset=utf-8',
     'Set-Cookie': stateCookie('', 0),
@@ -53,7 +60,7 @@ function failPage(res, message, status = 400) {
     'X-Content-Type-Options': 'nosniff',
   });
   res.end(
-    `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>${escapeHtml(messages.appName)}</title><link rel=stylesheet href=/style.css><main class=center><h2>${escapeHtml(messages.appName)}</h2><p>${escapeHtml(message)}</p><p><a href=/>${escapeHtml(messages.backToApp)}</a></p></main>`,
+    `<!doctype html><html lang=${lang}><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>${escapeHtml(text.appName)}</title><link rel=stylesheet href=/style.css><main class=center><h2>${escapeHtml(text.appName)}</h2><p>${escapeHtml(message)}</p><p><a href=/>${escapeHtml(text.backToApp)}</a></p></main>`,
   );
 }
 
@@ -92,7 +99,7 @@ async function fetchIdentity(provider, code, verifier) {
 
   if (provider.name === 'google') {
     if (!info.sub || !info.email || info.email_verified !== true) {
-      throw new SignInError(messages.emailNotVerified);
+      throw new SignInError('emailNotVerified'); // a key in server/i18n
     }
     return {
       provider: 'google',
@@ -117,9 +124,9 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
   /** GET /auth/<provider>/login[?invite=…]: off to the provider. */
   function login(req, res, providerName, query) {
     const provider = config.providers[providerName];
-    if (!provider) return failPage(res, messages.unknownProvider, 404);
+    if (!provider) return failPage(req, res, 'unknownProvider', 404);
     const wait = limiter.hit(`auth:${clientIp(req)}`);
-    if (wait) return failPage(res, messages.tooManyTries(wait), 429);
+    if (wait) return failPage(req, res, 'tooManyTries', 429, wait);
 
     const verifier = b64url(crypto.randomBytes(32));
     const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
@@ -144,11 +151,11 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
   /** GET /auth/<provider>/callback: checks the state, signs the parent in, decides where to go. */
   async function callback(req, res, providerName, query) {
     const provider = config.providers[providerName];
-    if (!provider) return failPage(res, messages.unknownProvider, 404);
+    if (!provider) return failPage(req, res, 'unknownProvider', 404);
     const saved = verify(readCookie(req, config.cookies.state), config.cookies.stateMaxAge * 1000);
-    if (!saved) return failPage(res, messages.signInExpired);
+    if (!saved) return failPage(req, res, 'signInExpired');
     if (saved.p !== provider.name || !query.get('state') || query.get('state') !== saved.s) {
-      return failPage(res, messages.signInUnchecked);
+      return failPage(req, res, 'signInUnchecked');
     }
     if (query.get('error') || !query.get('code')) return redirect(res, '/', [stateCookie('', 0)]);
 
@@ -156,13 +163,13 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
     try {
       identity = await fetchIdentity(provider, query.get('code'), saved.v);
     } catch (err) {
-      if (err instanceof SignInError) return failPage(res, err.message);
+      if (err instanceof SignInError) return failPage(req, res, err.message);
       console.warn(`${provider.name} sign-in failed: ${err.message}`);
-      return failPage(res, messages.providerFailed, 502);
+      return failPage(req, res, 'providerFailed', 502);
     }
 
     const owner = decide(identity, saved.i);
-    if (!owner) return failPage(res, messages.privateInstance, 403);
+    if (!owner) return failPage(req, res, 'privateInstance', 403);
     const { cookie } = sessions.create({ kind: 'parent', ...owner }, req);
     redirect(res, '/', [stateCookie('', 0), cookie]);
   }

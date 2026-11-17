@@ -110,6 +110,11 @@ const migrations = [
     addColumn(db, 'families', 'version', 'INT NOT NULL DEFAULT 0');
     addColumn(db, 'users', 'domain', 'TEXT');
   },
+
+  // 4: each family's language (en, zh, es, fr, de).
+  (db) => {
+    addColumn(db, 'families', 'language', "TEXT NOT NULL DEFAULT 'en'");
+  },
 ];
 
 function migrate(db) {
@@ -129,48 +134,28 @@ function migrate(db) {
   });
 }
 
-// Starter list a new family can choose at setup; parents edit everything in Settings.
-const TARGETS = [
-  ['Morning routine done', 'per routine', 5, 5],
-  ['Help with a family chore', 'points per chore', 5, 15],
-  ['Tidy room', 'per day', 10, 10],
-  ['Homework 30 min', '', 10, 10],
-  ['Reading 20 min', '', 5, 5],
-  ['Kind words or a kind gesture', 'per occasion', 5, 10],
-  ['Practice an instrument or sport 15 min', '', 5, 5],
-  ['Follow screen-time rules', 'per day', 5, 5],
-  ['Use a calming strategy', 'when upset', 5, 5],
-];
-const PENALTIES = [
-  ['Hitting or hurting someone', 'per incident'],
-  ['Unkind or rude words', 'per incident'],
-  ['Breaking screen-time rules', 'per incident'],
-];
-const CHALLENGES = ['Morning routine', 'Kind words', 'Homework', 'Bedtime on time'];
-const REWARDS = [
-  ['Pick the family movie', 2, 0],
-  ['Choose dinner', 3, 0],
-  ['Extra 30 min screen time', 2, 50],
-  ['Trip to the park', 4, 100],
-  ['New book', 6, 200],
-  ['A special day out', 12, 500],
-];
+const i18n = require('./i18n');
 
-/** Adds the starter list to a family. The caller runs it inside a transaction. */
-function seedStarter(db, familyId) {
+/** Adds the starter list, in the family's language, to a family. The caller runs it in a transaction. */
+function seedStarter(db, familyId, lang = 'en') {
+  const names = i18n.starter(lang);
+  const pts = i18n.STARTER_POINTS;
   const item = db.prepare(
     'INSERT INTO items(family_id,kind,name,note,pmin,pmax,sort,active) VALUES(?,?,?,?,?,?,?,1)',
   );
   let sort = 0;
-  for (const [name, note, pmin, pmax] of TARGETS)
-    item.run(familyId, 'target', name, note, pmin, pmax, sort++);
-  for (const [name, note] of PENALTIES) item.run(familyId, 'penalty', name, note, 50, 50, sort++);
-  for (const name of CHALLENGES) item.run(familyId, 'challenge', name, '', 0, 0, sort++);
+  names.targets.forEach(([name, note], i) => {
+    item.run(familyId, 'target', name, note, pts.targets[i][0], pts.targets[i][1], sort++);
+  });
+  for (const [name, note] of names.penalties) {
+    item.run(familyId, 'penalty', name, note, pts.penalty, pts.penalty, sort++);
+  }
+  for (const name of names.challenges) item.run(familyId, 'challenge', name, '', 0, 0, sort++);
   const reward = db.prepare(
     'INSERT INTO rewards(family_id,name,stars,points,sort) VALUES(?,?,?,?,?)',
   );
-  REWARDS.forEach(([name, stars, points], i) => {
-    reward.run(familyId, name, stars, points, i + 1);
+  names.rewards.forEach((name, i) => {
+    reward.run(familyId, name, pts.rewards[i][0], pts.rewards[i][1], i + 1);
   });
 }
 
@@ -186,9 +171,9 @@ module.exports = {
   open,
   seedStarter,
   starterCounts: {
-    targets: TARGETS.length,
-    penalties: PENALTIES.length,
-    challenges: CHALLENGES.length,
-    rewards: REWARDS.length,
+    targets: i18n.STARTER_POINTS.targets.length,
+    penalties: 3,
+    challenges: 4,
+    rewards: i18n.STARTER_POINTS.rewards.length,
   },
 };
