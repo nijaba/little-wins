@@ -439,6 +439,17 @@ Families no device has used for `DELETE_IDLE_FAMILIES_DAYS` are deleted.
 | IF-02 | Any device using the app keeps its family active | API |
 | IF-03 | Parents are told the rule; 0 turns deletion off; a bad value stops the server | API |
 
+## BK: Encrypted backups
+
+`server/backup-crypto.js` and `scripts/backup.sh` with `BACKUP_PUBLIC_KEY`.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| BK-01 | A backup encrypted to the public key decrypts with the private key, byte for byte | Unit |
+| BK-02 | A wrong key, a changed or cut file, or a bad public key is refused | Unit |
+| BK-03 | The command line makes a key it never overwrites, and encrypts and decrypts streams | Unit |
+| BK-04 | backup.sh with BACKUP_PUBLIC_KEY writes an encrypted copy that restores the database | Unit |
+
 ## IC: App icons
 
 The favicon, the home-screen icons (`scripts/icons.js`) and the manifest.

@@ -45,6 +45,7 @@ server/          index.js (wiring), config.js (env, startup check), db.js (migra
                  sessions.js, allowlist.js, ratelimit.js, routes.js, state.js, scoring.js (pure rules),
                  http.js (body limit, write guard, apiError), web.js (trusted proxies, HTTPS redirect, security headers),
                  demo.js (demo families: in-memory database, made-up history, idle sweep),
+                 backup-crypto.js (encrypts off-site backups to a public key; keygen/encrypt/decrypt),
                  static.js (byte ranges for tour.mp4), messages.js (English server strings; keys are the API error codes), clock.js,
                  i18n/ (languages, Accept-Language, server-rendered pages and starter list per language)
 public/          index.html (shell), app.js, strings.en.js (page strings, English base),
@@ -56,7 +57,7 @@ test/            *.test.js: real server on a temp database, signed in through th
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
                  site (the project page), family-invites (invite mode and the cap on families),
-                 theme (light and dark contrast), icons (favicon and manifest icons), idle (idle families),
+                 theme (light and dark contrast), icons (favicon and manifest icons), idle (idle families), backup (encrypted backups),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh, build-site.sh, icons.js, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
