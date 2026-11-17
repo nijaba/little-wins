@@ -48,7 +48,7 @@ test('SITE-03 no inline styles, scripts or event handlers', () => {
   assert.doesNotMatch(html, /\sstyle\s*=/i);
   assert.doesNotMatch(html, /\son[a-z]+\s*=/i);
   assert.doesNotMatch(html, /href="javascript:/i);
-  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi))
+  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\b[^>]*>/gi))
     assert.equal(m[1].trim(), '', 'inline script');
   assert.doesNotMatch(html, /<style\b/i);
 });
