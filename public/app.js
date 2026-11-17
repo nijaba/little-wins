@@ -907,6 +907,8 @@
       hideToast();
     },
     note: (d) => note(+d.id),
+    'rem-on': () => reminderOn(),
+    'rem-off': () => reminderOff(),
     msg: () => writeMessage(),
     'msg-clear': () => api('message', { child_id: S.childId, text: '' }),
     'toast-note': (d) => {
@@ -1188,6 +1190,60 @@
     return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle)[r ? 'reward' : k]}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
   }
 
+  // ---- Evening reminder (Web Push), per device ----
+
+  const pushOK = () =>
+    'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+  function viewReminder() {
+    const R = STR.reminder;
+    let h = `<small class=hint>${R.help}</small>`;
+    if (!pushOK()) return `${h}<p><small>${R.unsupported}</small></p>`;
+    if (Notification.permission === 'denied') h += `<p class=err>${R.denied}</p>`;
+    const time = S.push.time || '19:30';
+    h += `<div class=card><p class=p0><label for=rem_time>${R.time}</label><br><input id=rem_time type=time value="${time}"></p>`;
+    h += S.push.time
+      ? `<p class=p8>${R.on(S.push.time)}</p><button class=b data-action=rem-on>${R.save}</button> <button class="b g" data-action=rem-off>${R.off}</button>`
+      : `<button class=b data-action=rem-on>${R.turnOn}</button>`;
+    return `${h}</div>`;
+  }
+
+  // The server's public key (base64url) as the bytes PushManager wants.
+  const keyBytes = (b64) => {
+    const raw = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+  };
+
+  // Turn the reminder on (or change its time) for this device.
+  async function reminderOn() {
+    const time = $('rem_time')?.value || '19:30';
+    try {
+      if ((await Notification.requestPermission()) !== 'granted') return toast(STR.reminder.denied);
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      const sub =
+        (await reg.pushManager.getSubscription()) ||
+        (await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: keyBytes(S.push.key),
+        }));
+      const j = sub.toJSON();
+      if (await api('push/subscribe', { endpoint: j.endpoint, keys: j.keys, time }))
+        toast(STR.reminder.on(time));
+    } catch {
+      toast(STR.reminder.failed);
+    }
+  }
+
+  async function reminderOff() {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration('/');
+      const sub = await reg?.pushManager.getSubscription();
+      await sub?.unsubscribe();
+    } catch {}
+    api('push/unsubscribe', {});
+  }
+
   // Owner only: export and delete, at the bottom of the Family section.
   function ownerTools() {
     const st = STR.settings;
@@ -1271,6 +1327,7 @@
         g += `<p class=p0${k === S.children[0] ? ' data-tour=device' : ''}><button class=b ${demo ? 'disabled' : `data-action=pair-dev data-id=${k.id}`}>${st.addDevice(esc(k.name))}</button></p>`;
     }
     h += fold('dev', st.devices, D.length, g);
+    if (S.push && !demo) h += fold('rem', STR.reminder.title, S.push.time || '', viewReminder());
     if (S.operator)
       h += fold(
         'ops',

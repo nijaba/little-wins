@@ -158,6 +158,17 @@ const migrations = [
         family_id INT NOT NULL REFERENCES families(id) ON DELETE CASCADE, PRIMARY KEY(reward_id, child_id));
     `);
   },
+
+  // 9: evening reminders by Web Push: the installation's VAPID keys, and one subscription per
+  // parent device (it goes when the device is logged out).
+  (db) => {
+    db.exec(`
+      CREATE TABLE app_settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+      CREATE TABLE push_subscriptions(session_id INTEGER PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+        family_id INT NOT NULL REFERENCES families(id) ON DELETE CASCADE, endpoint TEXT NOT NULL,
+        p256dh TEXT NOT NULL, auth TEXT NOT NULL, time TEXT NOT NULL, last_day TEXT, created TEXT NOT NULL);
+    `);
+  },
 ];
 
 function migrate(db) {

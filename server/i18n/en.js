@@ -22,6 +22,9 @@ module.exports = {
   },
 
   // The made-up family of a demo (server/demo.js): never a real person.
+  // The evening reminder (server/reminders.js), as the phone shows it.
+  reminder: { title: 'Little Wins', body: "Time to mark today's challenges." },
+
   demo: {
     family: 'Demo family',
     parent: 'Sam (demo)',

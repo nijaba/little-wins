@@ -149,6 +149,20 @@ window.LW_STRINGS.de = {
     pointsPlus: (n) => `+ ${n} Pkt.`,
   },
 
+  reminder: {
+    title: 'Abenderinnerung',
+    help: 'Eine Erinnerung auf diesem Telefon, die Aufgaben des Tages einzutragen, nur wenn noch etwas offen ist. Sie läuft über den Benachrichtigungsdienst des Herstellers (Apple, Google oder Mozilla), der sie nicht lesen kann.',
+    time: 'Erinnern um',
+    turnOn: 'Auf diesem Telefon erinnern',
+    save: 'Uhrzeit speichern',
+    off: 'Ausschalten',
+    on: (t) => `An: jeden Tag um ${t}, auf diesem Telefon.`,
+    denied:
+      'Benachrichtigungen für Little Wins sind blockiert. Erlauben Sie sie in den Einstellungen des Telefons oder Browsers und versuchen Sie es erneut.',
+    unsupported:
+      'Dieser Browser kann keine Erinnerungen anzeigen. Auf dem iPhone fügen Sie Little Wins zuerst zum Home-Bildschirm hinzu (Teilen, dann Zum Home-Bildschirm) und öffnen es von dort.',
+    failed: 'Die Erinnerung konnte nicht eingeschaltet werden. Bitte erneut versuchen.',
+  },
   cheer: {
     from: (who) => `von ${who}`,
     write: (name) => `💬 ${name} eine Nachricht schreiben`,

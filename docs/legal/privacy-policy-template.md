@@ -56,6 +56,11 @@ third-party fonts. Nothing about you or your children is sold or shared for mark
   anything you record in Little Wins. Their own privacy policies apply to your account with them.
 - **Hosting.** Your data is stored on servers run by [hosting provider] in [country or region]. [If off-site
   backups go elsewhere: "Encrypted backups are kept with [provider] in [country or region]."]
+- **Push services, for evening reminders.** If you turn on the evening reminder on a phone, the reminder goes
+  through that phone's push service: Apple (iPhone, Safari), Google (Android, Chrome) or Mozilla (Firefox).
+  It is encrypted so they can't read it, and it says nothing about your children, but they learn that
+  [Service name] sent your device a reminder, and when. Reminders are off unless you turn them on, per device.
+  [Remove this if you set PUSH_REMINDERS=0.]
 - [Anyone else who can access the data, such as a support contractor. If none, say so.]
 
 [If data leaves the EU/UK: say which safeguards apply, such as an adequacy decision or standard contractual

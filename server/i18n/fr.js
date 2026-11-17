@@ -18,6 +18,9 @@ module.exports = {
     tooManyTries: (seconds) => `Trop d’essais. Réessaie dans ${seconds} s.`,
   },
 
+  // The evening reminder (server/reminders.js), as the phone shows it.
+  reminder: { title: 'Little Wins', body: "C'est l'heure de noter les défis du jour." },
+
   demo: {
     family: 'Famille de démo',
     parent: 'Sam (démo)',

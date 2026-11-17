@@ -1,0 +1,4 @@
+# Findings gitleaks reports that are not secrets. One fingerprint per line.
+# test/webpush.test.js: the authentication secret from RFC 8291's published example (appendix A),
+# used to check the Web Push encryption byte for byte. Not a key of this project.
+5b652942480f8d0dddcce454bf3371cfa92ed5fe:test/webpush.test.js:generic-api-key:16

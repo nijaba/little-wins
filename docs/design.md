@@ -86,6 +86,15 @@ These hold in both hosting modes. With several children **(target)**, each rule 
 - **Milestones** the app spots by itself, positive only, on Today for both views: **N perfect days in a row** (3 or more days, up to today or yesterday, with at least one perfect mark each) and **Best week so far** (this week's points earned beat every earlier week's, from the third week with points). Nothing is stored: they are worked out from the entries each time.
 - The demo family has a message from its parent to the first child.
 
+### Evening reminders
+
+- **Opt-in, per device.** A parent turns it on for one phone in Settings → **Evening reminder**, with a time (default 19:30, in the family's time zone). It is off until then, a child's device is never offered it, and a demo can't use it. `PUSH_REMINDERS=0` turns the feature off for the installation.
+- **Once a day, only when needed.** From its time until two hours later (so a server that was down doesn't wake anyone at midnight), the server sends one reminder if some child still has a challenge meant for them without a mark today. The text is the same for every family in its language ("Time to mark today's challenges."): nothing about any child.
+- **Web Push with no dependency** (`server/webpush.js`): the message is encrypted for the device (RFC 8291, aes128gcm) and the request signed with the installation's VAPID key (RFC 8292). The VAPID keys are made on first use and kept in the database (`app_settings`). Subscriptions (`push_subscriptions`, one per parent session, migration 9) go when the device is logged out; one the push service calls gone (404, 410) is deleted.
+- **The exception.** Web Push always goes through the browser maker's push service (Apple, Google or Mozilla). It can't read the message, but it sees that this server sent the device a reminder, and when. The owner allowed this as an exception to "no third parties" because it is opt-in per device and carries nothing about the child. The Settings section says so, and the privacy template names the push services.
+- **No open relay.** A subscription's endpoint must be an `https` URL on a known push service (FCM, Mozilla, Apple, Windows), so a client can't make the server send requests elsewhere.
+- `public/sw.js`, the service worker, only shows the reminder and opens the app when it is tapped; it caches nothing.
+
 ### Weekly review
 
 - Parents open **Weekly review** at the bottom of the Week tab: one child, one week (the week shown, browsable like the Week tab).
@@ -111,6 +120,8 @@ Every table except `users` and `family_invites` has a `family_id`, and every que
 | `family_invites` | id, token_hash, created_by, created, expires, used_by, used_at, family_id (set when the invited parent's family is created). Installation-wide, not family-scoped: only the operator page reaches it. |
 | `children` | id, family_id, name, sort, created |
 | `items` | id, family_id, kind (`target`/`penalty`/`challenge`), name, note, pmin, pmax, sort, active, for_all |
+| `push_subscriptions` | session_id, family_id, endpoint, p256dh, auth, time (HH:MM), last_day, created: a parent device's evening reminder |
+| `app_settings` | key, value: installation-wide values (the VAPID keys) |
 | `item_children`, `reward_children` | item_id or reward_id, child_id, family_id: who a limited item or reward is for |
 | `rewards` | id, family_id, name, stars, points, sort, for_all |
 | `entries` | id, family_id, child_id, item_id, kind (`points`/`warn`/`mark`), points, day, ts, user_id, note, undone |
@@ -205,7 +216,7 @@ Defaults for hosted mode, each overridable by environment variable:
 - **Minimal data.** A child is a first name or nickname. No birthdate, photo, school or contact details.
 - **Children never provide data.** They have no account and can't type anything into the app.
 - **Parents' notes** are visible to parents only and are excluded from the child's view and from logs.
-- **No third parties.** No analytics, trackers or external fonts; the only third parties are the sign-in providers, which see only that someone signed in to this app.
+- **No third parties.** No analytics, trackers or external fonts; the only third parties are the sign-in providers, which see only that someone signed in to this app, and, for a parent who turns on the evening reminder on a device, that device's push service (see "Evening reminders"). The push exception was the owner's decision (2026-11-17).
 - **Idle families** (`DELETE_IDLE_FAMILIES_DAYS`, default 365; `0` turns it off; owner's decision: the operator sets it, on by default). A family that no device, parent's or child's, has used for that many days is deleted with everything it owns, like a family deleted by its owner; its parents' accounts go too unless they belong to another family. Each family keeps `last_active`, updated when any of its devices uses the app (at most every 5 minutes). The server sweeps at startup and every 6 hours and logs only the count. Families without parents (unclaimed, migrated data) are kept for their owner. Settings → Family tells parents the rule. There is no warning before deletion: opening the app is what keeps a family, so a warning shown in the app would never be needed, and the app has no email to send one. The operator page shows the setting.
 - **Export and delete.** The owner can download the family's data as JSON, and delete the family. Deletion removes all its rows at once; backups age out within the stated retention period (30 days by default).
 - **Logs.** The app writes no request log. It logs only startup, warnings (such as a failed sign-in at the provider) and errors, never names, notes or tokens. Request logs, if any, are the reverse proxy's; the operator sets how long they are kept and says so in the privacy policy.
@@ -254,6 +265,7 @@ These hold in both modes.
 | `OPERATOR_ALLOWLIST` | Who sees the operator page | Empty |
 | `PRIVACY_URL`, `TERMS_URL` | Legal pages, hosted mode | Empty |
 | `DELETE_IDLE_FAMILIES_DAYS` | Days without use before a family is deleted (`0`: never; at least 30) | 365 |
+| `PUSH_REMINDERS` | `0` turns off evening reminders (see "Evening reminders") | On |
 | `LIMIT_FAMILIES` | Most families the installation holds (see "Sign-up and abuse") | No cap |
 | `SIGNUP_CONTACT_URL` | "Ask for a place" link on the private and full pages | None |
 | `DATABASE_PATH` | SQLite file | `/data/little-wins.db` |

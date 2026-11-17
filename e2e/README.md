@@ -70,3 +70,4 @@ app is meant to open are handled with `expectDialog`.
 | E2E-131 | the child's view shows the parent's message, with no buttons                      |
 | E2E-140 | a behavior for one child shows on that child's Today only, labelled in Settings  |
 | E2E-141 | with one child the edit form has no "Who is it for?" choice                      |
+| E2E-150 | Settings offers the evening reminder; the service worker registers under the CSP|

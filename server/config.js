@@ -130,6 +130,10 @@ const termsUrl = legalUrl('TERMS_URL');
 const signupContactUrl = env.SIGNUP_CONTACT_URL || '';
 if (signupContactUrl && !/^(https:\/\/|mailto:)\S+$/.test(signupContactUrl))
   problems.push('SIGNUP_CONTACT_URL must be an https:// or mailto: address');
+// Evening reminders by Web Push (opt-in per parent device); PUSH_REMINDERS=0 turns them off.
+if (env.PUSH_REMINDERS && !['0', '1'].includes(env.PUSH_REMINDERS))
+  problems.push('PUSH_REMINDERS must be 0 or 1');
+const push = env.PUSH_REMINDERS !== '0';
 // Families no device has used for this many days are deleted (0: never).
 let idleFamilyDays = 365;
 if (env.DELETE_IDLE_FAMILIES_DAYS !== undefined && env.DELETE_IDLE_FAMILIES_DAYS !== '') {
@@ -204,6 +208,9 @@ module.exports = {
   signupContactUrl,
   familyLimit,
   idleFamilyDays,
+  push,
+  // How often reminders are checked (tests make it shorter).
+  pushIntervalMs: Math.max(100, Number(env.PUSH_INTERVAL_MS) || 60e3),
   limits,
   demo,
   tourVideo: env.TOUR_VIDEO !== '0',

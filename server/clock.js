@@ -12,4 +12,13 @@ function validTimeZone(timeZone) {
   }
 }
 
-module.exports = { today, validTimeZone };
+/** The time of day, HH:MM (24-hour), in the given IANA time zone. */
+const timeOfDay = (timeZone = 'UTC', now = new Date()) =>
+  now.toLocaleTimeString('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  });
+
+module.exports = { today, timeOfDay, validTimeZone };

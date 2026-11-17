@@ -145,6 +145,19 @@ window.LW_STRINGS.zh = {
     pointsPlus: (n) => `+ ${n} 分`,
   },
 
+  reminder: {
+    title: '晚间提醒',
+    help: '在这部手机上提醒你记录今天的挑战，只有还有未记录的内容时才会发送。提醒经由手机厂商的推送服务（Apple、Google 或 Mozilla）发送，它们无法读取内容。',
+    time: '提醒时间',
+    turnOn: '在这部手机上提醒我',
+    save: '保存时间',
+    off: '关闭',
+    on: (t) => `已开启：每天 ${t}，在这部手机上。`,
+    denied: 'Little Wins 的通知已被阻止。请在手机或浏览器设置中允许通知，然后重试。',
+    unsupported:
+      '此浏览器无法显示提醒。在 iPhone 上，请先把 Little Wins 添加到主屏幕（分享 → 添加到主屏幕），再从主屏幕打开。',
+    failed: '无法开启提醒，请重试。',
+  },
   cheer: {
     from: (who) => `来自 ${who}`,
     write: (name) => `💬 给${name}写一句话`,

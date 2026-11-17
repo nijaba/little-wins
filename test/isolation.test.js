@@ -26,6 +26,7 @@ const TABLES = [
   'pairings',
   'memberships',
   'sessions',
+  'push_subscriptions',
 ];
 
 /** Everything stored for a family, as one string. */
@@ -159,6 +160,21 @@ const cases = () => {
     ],
     '/api/undo': [[{ id: ids.entry }, 404]],
     '/api/entry/note': [[{ id: ids.entry, note: 'from B' }, 404]],
+    // Only ever B's own device: nothing of A's to reach.
+    '/api/push/subscribe': [
+      [
+        {
+          endpoint: 'http://localhost:9/push',
+          keys: {
+            p256dh: Buffer.alloc(65, 4).toString('base64url'),
+            auth: Buffer.alloc(16, 1).toString('base64url'),
+          },
+          time: '19:30',
+        },
+        200,
+      ],
+    ],
+    '/api/push/unsubscribe': [[{}, 200]],
     '/api/message': [
       [{ child_id: ids.child, text: 'from B' }, 404],
       [{ child_id: ids.child, text: '' }, 404],
