@@ -160,3 +160,22 @@ test('EM-06 the page, its scripts and styles are revalidated on each load (Cache
     assert.equal(r.headers.get('cache-control'), 'no-cache', file);
   }
 });
+
+test('EM-07 every emoji the edit form offers is accepted as is, and offered once', () => {
+  const fs = require('node:fs');
+  const { emojiOf } = require('../server/routes');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const block = src.match(/const EMOJI = \{([\s\S]*?)\n {2}\};/);
+  assert.ok(block, 'the EMOJI lists are in app.js');
+  const kinds = [...block[1].matchAll(/(\w+): \[([\s\S]*?)\]/g)];
+  assert.deepEqual(
+    kinds.map((k) => k[1]),
+    ['item', 'reward', 'child'],
+  );
+  for (const [, kind, list] of kinds) {
+    const offered = [...list.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    assert.ok(offered.length > 0, kind);
+    assert.equal(new Set(offered).size, offered.length, `${kind}: no emoji twice`);
+    for (const emoji of offered) assert.equal(emojiOf(emoji), emoji, `${kind} ${emoji}`);
+  }
+});

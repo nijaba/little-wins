@@ -687,4 +687,4 @@ function createRouter({
   };
 }
 
-module.exports = { createRouter };
+module.exports = { createRouter, emojiOf };
