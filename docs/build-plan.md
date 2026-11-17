@@ -37,7 +37,7 @@ Tick a box when the item is done and tested.
 - [x] Co-parent invite links; owner can remove parents and hand over ownership
 - [x] Several children: per-child points, stars, marks and history; child picker for parents
 - [x] Device pairing for children (single-use code and link, 10 minutes, rate limited; Share/Copy)
-- [ ] QR code for pairing (needs a dependency or a hand-written encoder; see design.md)
+- ~~QR code for pairing~~: dropped by the owner (2026-11-17). Sharing the link or typing the code is enough, and it would need a dependency or a hand-written encoder.
 - [x] Per-family timezone and week start
 - [x] PINs removed
 - [x] Writes must be JSON from the app's own origin (early part of phase 4)

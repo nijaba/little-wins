@@ -129,7 +129,7 @@ Every table except `users` has a `family_id`, and every query filters on it.
 - A parent picks a child in Settings → Devices and taps **Add a device**. The app shows a one-time code of 10 characters, grouped for reading (`KD7Q-M3XA-PJ`, about 50 bits, no look-alike characters), and a link holding it (`/#pair=…`) with **Share** and **Copy** buttons. The code is single use and expires after 10 minutes; only its hash is stored.
 - On the child's phone, opening the link, or typing the code under "Use a code from a parent" on the sign-in screen, creates a child session bound to that one child.
 - Redeeming codes is rate limited per client. With 50 bits and a 10-minute life, guessing one is not practical.
-- No child ever types a password. A QR code may be added later; it needs either a dependency or a hand-written encoder, so v1 uses sharing and typing.
+- No child ever types a password. Pairing is by sharing the link or typing the code; there is no QR code (the owner decided against it: it would need a dependency or a hand-written encoder for little gain).
 
 ### Sessions
 
