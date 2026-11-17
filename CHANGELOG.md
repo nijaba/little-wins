@@ -17,6 +17,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - A session unused for over a year ends when it is next used, not only when another session is created.
 - Checked sign-in callbacks are rate limited (10 a minute per client), since each one calls the provider.
 - Request timeouts: 15 seconds for headers, 30 for a whole request.
+- Dev tools only: npm `overrides` pin minimatch 11.0.3 and glob 14.0.3 under c8's test-exclude, for two moderate advisories (minimatch pattern DoS, glob AbortSignal bypass), until test-exclude moves to them. Remove the overrides then.
 
 ### Added
 
