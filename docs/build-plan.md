@@ -64,7 +64,7 @@ Tick a box when the item is done and tested.
 - [x] Dependabot, CodeQL, gitleaks, image scan
 - [x] Tagged releases publish a multi-arch image to GHCR
 - [x] Graceful shutdown on SIGTERM (container stop, coverage from server processes)
-- [ ] First CI run on GitHub checked (workflows were reviewed by hand; actionlint couldn't run locally)
+- [x] First CI run on GitHub checked: it caught npm CVEs in the image, a literal test secret and a slow browser test, all fixed
 - [ ] Branch protection on `main` requiring the "CI passed" check
 
 ## Phase 5b: languages
