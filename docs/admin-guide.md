@@ -166,7 +166,7 @@ The same code runs one family or many; the difference is configuration. Before y
 2. **Limits.** With `open`, the hosted defaults apply (8 children, 6 parents, 200 items, 100 rewards, 30 devices and 500 entries a day per family); see [Limits](#limits). Rate limits per client are always on: keep `FORWARDED_ALLOW_IPS` right, or every family shares your proxy's limit.
 3. **Operator page.** Put yourself in `OPERATOR_ALLOWLIST` to see counts and health. You can't see any family's content through the app, by design. See [Operator page](#operator-page).
 4. **Privacy policy and terms.** Publish both and set `PRIVACY_URL` and `TERMS_URL`; the app links to them from the sign-in page and Settings. Start from the templates in [docs/legal/](legal/): [privacy policy](legal/privacy-policy-template.md) and [terms of use](legal/terms-template.md). They describe what the software does, but they are not legal advice: check the GDPR (EU and UK), COPPA (US) and your local rules with someone qualified.
-5. **Backups.** Keep the nightly backups, and an off-site copy encrypted before it leaves the server. Say how long you keep them in your privacy policy: deleted families stay in backups that long. `KEEP_DAYS` in [Automatic backups](#automatic-backups) sets it.
+5. **Backups.** Keep the nightly backups, and an off-site copy encrypted before it leaves the server: see [Encrypted copies for off-site](#encrypted-copies-for-off-site-recommended-when-hosting). Say how long you keep them in your privacy policy: deleted families stay in backups that long. `KEEP_DAYS` in [Automatic backups](#automatic-backups) sets it.
 6. **Logs.** The app writes no request log. Your reverse proxy probably does: decide how long you keep its logs (14 days is plenty) and say so in the privacy policy.
 7. **Demo families (optional).** `DEMO_FAMILIES=1` lets visitors try the app before signing in. Demo families are kept in memory only, apart from real ones. See [Demo families](#demo-families).
 8. **Idle families.** `DELETE_IDLE_FAMILIES_DAYS` (365 by default) deletes families nobody has used for that long, at startup and every 6 hours; the log says how many. State the period in your privacy policy. Self-hosting for one family that uses the app, it never triggers; set `0` if you'd rather it never could.
@@ -249,6 +249,34 @@ Check it is working:
 ```bash
 ssh <user>@<server> 'tail -3 ~/little-wins-backup/backup.log; ls -lt ~/little-wins-backup/daily | head -4'
 ```
+
+### Encrypted copies for off-site (recommended when hosting)
+
+The daily copies are plain SQLite files. Before a copy leaves the server, encrypt it, so that a lost laptop, a leaked cloud folder or the backup machine itself can't read your families' data. `scripts/backup.sh` does it when you give it a public key. Only the matching private key can decrypt, and it never goes on the server.
+
+1. **On your own computer** (Node 22 or newer, in a checkout of this repository), make the key pair:
+
+   ```bash
+   node server/backup-crypto.js keygen ~/little-wins-backup-key.txt
+   ```
+
+   It writes the private key to that file (readable by you only, never overwritten) and prints the public key, `lwpub1-…`. **Keep the private key safe and somewhere other than the server**, for example in your password manager: without it, the encrypted copies can't be restored.
+2. **On the server**, give the cron job the public key (it isn't secret):
+
+   ```bash
+   (crontab -l 2>/dev/null | grep -v little-wins/scripts/backup.sh; echo '0 3 * * * BACKUP_PUBLIC_KEY=lwpub1-… $HOME/little-wins/scripts/backup.sh >> $HOME/little-wins-backup/backup.log 2>&1') | crontab -
+   ```
+
+   Each night the script then also writes `~/little-wins-backup/offsite/little-wins-YYYY-MM-DD.db.lwb` (set `OFFSITE_DIR` to change it) and keeps `KEEP_DAYS` of them. It encrypts with the host's Node 22+ if there is one, otherwise inside the running container.
+3. **Copy the `offsite` folder** to another machine or to cloud storage, for example with the pull below (point it at `offsite` instead of `daily`), `rclone` or `rsync`.
+
+To restore from an encrypted copy, decrypt it on your own computer, then follow [Restore](#restore):
+
+```bash
+node server/backup-crypto.js decrypt ~/little-wins-backup-key.txt < little-wins-2026-11-17.db.lwb > little-wins.db
+```
+
+The format is X25519 + HKDF-SHA256 + AES-256-GCM, written with Node's built-in crypto (see `server/backup-crypto.js`). A changed or truncated file, or the wrong key, fails to decrypt rather than giving wrong data.
 
 ### Pulling backups to another machine (optional)
 

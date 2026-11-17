@@ -211,7 +211,7 @@ Defaults for hosted mode, each overridable by environment variable:
 ### Backups
 
 - Nightly online backups (SQLite backup API) with an integrity check, kept 30 days (`KEEP_DAYS` in `scripts/backup.sh`), plus an off-site copy.
-- In hosted mode, off-site copies are encrypted before they leave the server.
+- In hosted mode, off-site copies are encrypted before they leave the server: `scripts/backup.sh` with `BACKUP_PUBLIC_KEY` encrypts each copy to the operator's public key (X25519 + HKDF-SHA256 + AES-256-GCM, `server/backup-crypto.js`, Node's built-in crypto only), into an `offsite` folder for another machine to pull. The private key never goes on the server.
 - Restoring is tested on a copy before relying on it.
 
 ## Security

@@ -104,7 +104,7 @@ Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided
 Proposed after launch prep and accepted by the owner (2026-11-17). Defaults are the owner's where they answered, otherwise the proposal's, written into design.md.
 
 - [x] Idle families deleted after `DELETE_IDLE_FAMILIES_DAYS` (default 365, `0` turns it off); Settings states the rule (an in-app warning would never be seen: opening the app keeps the family) (owner: operator sets it, on by default)
-- [ ] Encrypted off-site backups: a script that encrypts each nightly copy before it leaves the server
+- [x] Encrypted off-site backups: a script that encrypts each nightly copy before it leaves the server
 - [ ] A weekly review page for parents, printable for a counselor or teacher
 - [ ] Encouragement: a parent's short message on the child's Today, and milestones the app spots (streaks, best week)
 - [ ] Behaviors, challenges and rewards limited to some children (one family list; each item can say who it is for)
