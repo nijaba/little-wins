@@ -250,6 +250,9 @@ Your child's device shows only their own progress, and only the positive parts.
 
 ![A child's Rewards tab: the ring for the next reward and the list of rewards, with the unlocked ones ticked](images/child-rewards.png)
 
+When you've added points since they last looked, their points count up on the screen, and a reward unlocking
+brings a small burst of confetti. The ring glows when the next reward is nearly theirs.
+
 It **never** shows penalties, warnings, Settings, the other parents, or a brother's or sister's progress. It
 can't record anything: a child can look, but only a parent can change things.
 

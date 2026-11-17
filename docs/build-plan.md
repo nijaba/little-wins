@@ -130,7 +130,7 @@ strict CSP, in light and dark mode, and still with reduced motion. Each item get
 - [x] An emoji for each behavior, reward and child, picked by a parent (a short picker, no library), shown large in the
   lists, on reward cards and in the child's header, with defaults for the starter list; helps children who can't read
   well yet
-- [ ] Celebrations: the child's points count up when new ones arrived since they last looked; a reward unlock with CSS
+- [x] Celebrations: the child's points count up when new ones arrived since they last looked; a reward unlock with CSS
   confetti and a bounce; a full ring glows; a small "+5" floats up from the + button
 - [ ] Stars to collect: a perfect day as a tilted gold sticker on the child's Week, a "⭐ won!" stamp on a week that wins,
   and the stars so far filling a jar or row toward the next reward
