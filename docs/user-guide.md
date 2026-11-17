@@ -272,6 +272,8 @@ mistake. Remember the balance never goes below 0: a penalty on a low balance onl
 **Stars changed by themselves.** Someone fixed a mark in a past week (it's in **History**). Stars are always
 counted again from the marks.
 
+**Is there a dark mode?** Yes: Little Wins follows your phone's light or dark setting.
+
 **Can two parents use it at the same time?** Yes. Each phone refreshes every few seconds, so changes from the
 other parent show up on their own.
 

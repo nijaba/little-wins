@@ -257,6 +257,7 @@ These hold in both modes.
 - Bottom tabs with icons: Today, Week, Rewards, History, and Settings for parents.
 - Settings sections fold; each header shows a count.
 - The page polls the state every 5 seconds while visible, keeping the selected week.
+- **Light and dark.** The page follows the device's setting (`prefers-color-scheme`); there is no switch in the app. Every color is a token on `:root` in `style.css`, and a dark palette overrides the tokens (`color-scheme: light dark` lets form controls follow). Every text color reads at 4.5:1 or more on the backgrounds it is used on, in both themes (WCAG AA), and a test checks it. White text on colored buttons, the tour's orange outline and the video's black frame are the same in both.
 
 ## Languages
 

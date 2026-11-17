@@ -62,3 +62,5 @@ app is meant to open are handled with `expectDialog`.
 | E2E-100 | the operator invites a family; the invited parent opens the link and sets it up     |
 | E2E-101 | a link that doesn't work shows the private note with Ask for a place                |
 | E2E-102 | once LIMIT_FAMILIES is reached, a new parent sees the full screen                   |
+| E2E-110 | with a dark device setting the page is dark, with light text                        |
+| E2E-111 | with a light device setting the page stays light                                    |

@@ -100,4 +100,4 @@ Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided
 
 ## Later (not yet scheduled)
 
-- [ ] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons
+- [x] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons
