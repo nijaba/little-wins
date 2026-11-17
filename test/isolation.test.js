@@ -208,7 +208,11 @@ for (const route of parentRouteList()) {
       const r = await srv.api(B.jar, route, body);
       assert.equal(r.status, status, `${route} ${JSON.stringify(body)}: ${r.text}`);
       if (status === 404)
-        assert.deepEqual(r.json, { error: 'not found' }, 'a 404 says nothing about A');
+        assert.deepEqual(
+          r.json,
+          { error: 'not found', code: 'notFound' },
+          'a 404 says nothing about A',
+        );
       assert.ok(!r.text.includes(SECRET_WORD), `${route} reply leaks family A`);
       assert.equal(dump(fidA), beforeDb, `${route} ${JSON.stringify(body)} changed A's data`);
       assert.equal(await aView(), beforeView, `${route} changed what A sees`);

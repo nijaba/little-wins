@@ -151,7 +151,9 @@ function seedStarter(db, familyId, lang = 'en') {
     item.run(familyId, 'penalty', name, note, pts.penalty, pts.penalty, sort++);
   }
   for (const name of names.challenges) item.run(familyId, 'challenge', name, '', 0, 0, sort++);
-  const reward = db.prepare('INSERT INTO rewards(family_id,name,stars,points,sort) VALUES(?,?,?,?,?)');
+  const reward = db.prepare(
+    'INSERT INTO rewards(family_id,name,stars,points,sort) VALUES(?,?,?,?,?)',
+  );
   names.rewards.forEach((name, i) => {
     reward.run(familyId, name, pts.rewards[i][0], pts.rewards[i][1], i + 1);
   });

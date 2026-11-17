@@ -5,22 +5,14 @@
  */
 const config = require('./config');
 const { today, validTimeZone } = require('./clock');
-const { sendJson, readBody, checkWrite } = require('./http');
+const { sendJson, readBody, checkWrite, apiError } = require('./http');
+const i18n = require('./i18n');
 const messages = require('./messages');
 const { validDay } = require('./scoring');
 const { buildState } = require('./state');
 const { clearSessionCookie } = require('./sessions');
 const { allows } = require('./allowlist');
 const crypto = require('node:crypto');
-
-const LIMIT_NAMES = {
-  children: 'children',
-  parents: 'parents',
-  items: 'behaviors, penalties and challenges',
-  rewards: 'rewards',
-  devices: 'devices',
-  entriesPerDay: 'entries today',
-};
 
 // Clamp a request value to a whole number in [lo, hi]; text is trimmed and capped.
 const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+v) || 0));
@@ -35,7 +27,7 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
   /** [409, …] when the family already has as many of `what` as its limit allows, else null. */
   function full(fid, what, day) {
     if (repo.count(fid, what, day) < config.limits[what]) return null;
-    return [409, { error: messages.limitReached(LIMIT_NAMES[what]) }];
+    return [409, apiError('limitReached', { limit: what })];
   }
   const isOperator = (userId) => {
     const who = userId ? repo.identityOf(userId) : null;
@@ -52,7 +44,7 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
     '/api/item/save'({ b, fid, state }) {
       const name = text(b.name);
       if (!name || !['target', 'penalty', 'challenge'].includes(b.kind)) {
-        return [400, { error: messages.nameRequired }];
+        return [400, apiError('nameRequired')];
       }
       let pmin = num(b.pmin, 0, 10000);
       let pmax = num(b.pmax, 0, 10000);
@@ -71,18 +63,18 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
         pmin,
         pmax,
       });
-      return ok ? [200, state()] : [404, { error: messages.notFound }];
+      return ok ? [200, state()] : [404, apiError('notFound')];
     },
     '/api/item/move': ({ b, fid, state }) => {
       repo.move(fid, 'items', id(b.id), +b.dir < 0 ? -1 : 1);
       return [200, state()];
     },
     '/api/item/delete': ({ b, fid, state }) =>
-      repo.deleteItem(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
+      repo.deleteItem(fid, id(b.id)) ? [200, state()] : [404, apiError('notFound')],
 
     '/api/reward/save'({ b, fid, state }) {
       const name = text(b.name);
-      if (!name) return [400, { error: messages.nameRequired }];
+      if (!name) return [400, apiError('nameRequired')];
       if (!b.id) {
         const limited = full(fid, 'rewards');
         if (limited) return limited;
@@ -93,40 +85,42 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
         stars: num(b.stars, 0, 1000),
         points: num(b.points, 0, 100000),
       });
-      return ok ? [200, state()] : [404, { error: messages.notFound }];
+      return ok ? [200, state()] : [404, apiError('notFound')];
     },
     '/api/reward/move': ({ b, fid, state }) => {
       repo.move(fid, 'rewards', id(b.id), +b.dir < 0 ? -1 : 1);
       return [200, state()];
     },
     '/api/reward/delete': ({ b, fid, state }) =>
-      repo.deleteReward(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
+      repo.deleteReward(fid, id(b.id)) ? [200, state()] : [404, apiError('notFound')],
 
     '/api/add': (ctx) => record(ctx, 'add'),
     '/api/warn': (ctx) => record(ctx, 'warn'),
     '/api/mark': (ctx) => record(ctx, 'mark'),
     '/api/undo': ({ b, fid, state }) =>
-      repo.undoEntry(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
+      repo.undoEntry(fid, id(b.id)) ? [200, state()] : [404, apiError('notFound')],
 
     '/api/family/save'({ b, fid, state }) {
       const name = text(b.name, 60);
-      if (!name) return [400, { error: messages.nameRequired }];
-      if (!validTimeZone(b.timezone)) return [400, { error: messages.invalidTimeZone }];
+      if (!name) return [400, apiError('nameRequired')];
+      if (!validTimeZone(b.timezone)) return [400, apiError('invalidTimeZone')];
+      // An older page may not send a language: keep the family's.
+      const language = b.language ?? repo.family(fid).language;
+      if (!i18n.isLanguage(language)) return [400, apiError('invalidLanguage')];
       repo.updateFamily(fid, {
         name,
         timezone: b.timezone,
         weekStart: +b.week_start === 0 ? 0 : 1,
+        language,
       });
       return [200, state()];
     },
 
     '/api/child/save'({ b, fid, state }) {
       const name = text(b.name, 40);
-      if (!name) return [400, { error: messages.nameRequired }];
+      if (!name) return [400, apiError('nameRequired')];
       if (b.id) {
-        return repo.renameChild(fid, id(b.id), name)
-          ? [200, state()]
-          : [404, { error: messages.notFound }];
+        return repo.renameChild(fid, id(b.id), name) ? [200, state()] : [404, apiError('notFound')];
       }
       const limited = full(fid, 'children');
       if (limited) return limited;
@@ -135,8 +129,8 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
     },
     '/api/child/delete'({ b, fid, state }) {
       const cid = id(b.id);
-      if (!repo.child(fid, cid)) return [404, { error: messages.notFound }];
-      if (!repo.deleteChild(fid, cid)) return [400, { error: messages.lastChild }];
+      if (!repo.child(fid, cid)) return [404, apiError('notFound')];
+      if (!repo.deleteChild(fid, cid)) return [400, apiError('lastChild')];
       return [200, state({ child: 0 })];
     },
 
@@ -145,26 +139,24 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
       return [200, { ...state(), issued: { link: `${config.baseUrl}/#invite=${token}`, expires } }];
     },
     '/api/invite/revoke': ({ b, fid, state }) =>
-      repo.revokeInvite(fid, id(b.id)) ? [200, state()] : [404, { error: messages.notFound }],
+      repo.revokeInvite(fid, id(b.id)) ? [200, state()] : [404, apiError('notFound')],
 
     '/api/parent/remove'({ b, s, fid, state }) {
-      if (repo.role(fid, s.userId) !== 'owner') return [403, { error: messages.ownerOnly }];
-      if (id(b.user_id) === s.userId) return [400, { error: messages.notYourself }];
-      return repo.removeParent(fid, id(b.user_id))
-        ? [200, state()]
-        : [404, { error: messages.notFound }];
+      if (repo.role(fid, s.userId) !== 'owner') return [403, apiError('ownerOnly')];
+      if (id(b.user_id) === s.userId) return [400, apiError('notYourself')];
+      return repo.removeParent(fid, id(b.user_id)) ? [200, state()] : [404, apiError('notFound')];
     },
     '/api/owner/transfer'({ b, s, fid, state }) {
-      if (repo.role(fid, s.userId) !== 'owner') return [403, { error: messages.ownerOnly }];
-      if (id(b.user_id) === s.userId) return [400, { error: messages.notYourself }];
+      if (repo.role(fid, s.userId) !== 'owner') return [403, apiError('ownerOnly')];
+      if (id(b.user_id) === s.userId) return [400, apiError('notYourself')];
       return repo.transferOwner(fid, s.userId, id(b.user_id))
         ? [200, state()]
-        : [404, { error: messages.notFound }];
+        : [404, apiError('notFound')];
     },
 
     '/api/pairing/create'({ b, s, fid, state }) {
       const cid = id(b.child_id);
-      if (!repo.child(fid, cid)) return [404, { error: messages.notFound }];
+      if (!repo.child(fid, cid)) return [404, apiError('notFound')];
       const limited = full(fid, 'devices');
       if (limited) return limited;
       const { code, expires } = repo.createPairing(fid, cid, s.userId, config.pairingMs);
@@ -177,9 +169,9 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
       ];
     },
     '/api/family/delete'({ b, s, fid }) {
-      if (repo.role(fid, s.userId) !== 'owner') return [403, { error: messages.ownerOnly }];
+      if (repo.role(fid, s.userId) !== 'owner') return [403, apiError('ownerOnly')];
       if (String(b.confirm ?? '').trim() !== repo.family(fid).name) {
-        return [400, { error: messages.confirmFamilyName }];
+        return [400, apiError('confirmFamilyName')];
       }
       repo.deleteFamily(fid);
       return [200, { ok: true, deleted: true }, { 'Set-Cookie': clearSessionCookie() }];
@@ -187,9 +179,8 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
 
     '/api/session/revoke'({ b, s, fid, state }) {
       const sid = id(b.id);
-      if (!repo.revokeSession(fid, sid)) return [404, { error: messages.notFound }];
-      if (sid === s.id)
-        return [401, { error: messages.login }, { 'Set-Cookie': clearSessionCookie() }];
+      if (!repo.revokeSession(fid, sid)) return [404, apiError('notFound')];
+      if (sid === s.id) return [401, apiError('login'), { 'Set-Cookie': clearSessionCookie() }];
       return [200, state()];
     },
   };
@@ -198,7 +189,7 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
   function record({ b, s, fid, state }, kind) {
     const child = repo.child(fid, id(b.child_id));
     const item = repo.item(fid, id(b.item_id));
-    if (!child || !item) return [404, { error: messages.notFound }];
+    if (!child || !item) return [404, apiError('notFound')];
     const day = today(repo.family(fid).timezone);
     const limited = full(fid, 'entriesPerDay', day);
     if (limited) return limited;
@@ -220,12 +211,12 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
     ) {
       let markDay = day;
       if (b.day) {
-        if (!validDay(b.day) || b.day > day) return [400, { error: messages.invalidDay }];
+        if (!validDay(b.day) || b.day > day) return [400, apiError('invalidDay')];
         markDay = b.day;
       }
       repo.replaceMark(fid, child.id, item.id, markDay, b.mark, s.userId, who);
     } else {
-      return [400, { error: messages.badRequest }];
+      return [400, apiError('badRequest')];
     }
     return [200, state({ child: child.id })];
   }
@@ -247,10 +238,11 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
 
   function pair(req, b) {
     const wait = limiter.hit(`pair:${clientIp(req)}`);
-    if (wait) return [429, { error: messages.tooManyTries(wait) }, { 'Retry-After': String(wait) }];
+    if (wait)
+      return [429, apiError('tooManyTries', { seconds: wait }), { 'Retry-After': String(wait) }];
     // Check the device limit before using the code up, so a refused code still works later.
     const found = repo.redeemPairing(b.code, (fid) => !full(fid, 'devices'));
-    if (!found) return [400, { error: messages.codeInvalid }];
+    if (!found) return [400, apiError('codeInvalid')];
     if (found.refused) return full(found.familyId, 'devices');
     const { cookie } = sessions.create({ kind: 'child', ...found }, req);
     return [200, { ok: true }, { 'Set-Cookie': cookie }];
@@ -258,26 +250,28 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
 
   function inviteInfo(req, b) {
     const wait = limiter.hit(`invite:${clientIp(req)}`);
-    if (wait) return [429, { error: messages.tooManyTries(wait) }, { 'Retry-After': String(wait) }];
+    if (wait)
+      return [429, apiError('tooManyTries', { seconds: wait }), { 'Retry-After': String(wait) }];
     const invite = repo.findInvite(b.token);
-    return invite
-      ? [200, { familyName: invite.family_name }]
-      : [404, { error: messages.inviteInvalid }];
+    return invite ? [200, { familyName: invite.family_name }] : [404, apiError('inviteInvalid')];
   }
 
-  function setup(s, b) {
-    if (s.kind !== 'parent') return [403, { error: messages.viewOnly }];
-    if (s.familyId != null || repo.membershipOf(s.userId))
-      return [409, { error: messages.setupDone }];
-    if (!mayCreate(s.userId)) return [403, { error: messages.privateInstance }];
+  function setup(req, s, b) {
+    if (s.kind !== 'parent') return [403, apiError('viewOnly')];
+    if (s.familyId != null || repo.membershipOf(s.userId)) return [409, apiError('setupDone')];
+    if (!mayCreate(s.userId)) return [403, apiError('privateInstance')];
     const familyName = text(b.family_name, 60);
     const childName = text(b.child_name, 40);
-    if (!familyName || !childName) return [400, { error: messages.nameRequired }];
-    if (!validTimeZone(b.timezone)) return [400, { error: messages.invalidTimeZone }];
+    if (!familyName || !childName) return [400, apiError('nameRequired')];
+    if (!validTimeZone(b.timezone)) return [400, apiError('invalidTimeZone')];
+    // Default: the browser's language.
+    const language = b.language ?? i18n.fromAcceptLanguage(req.headers['accept-language']);
+    if (!i18n.isLanguage(language)) return [400, apiError('invalidLanguage')];
     const fid = repo.createFamily({
       name: familyName,
       timezone: b.timezone,
       weekStart: +b.week_start === 0 ? 0 : 1,
+      language,
       ownerId: s.userId,
       childName,
       starter: b.starter !== false,
@@ -300,34 +294,34 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
     if (req.method === 'GET') {
       if (path === '/api/config') return send(publicConfig());
       if (!['/api/state', '/api/export', '/api/operator'].includes(path)) {
-        return send([404, { error: messages.notFound }]);
+        return send([404, apiError('notFound')]);
       }
     } else if (req.method === 'POST') {
       if (['/api/config', '/api/state', '/api/export', '/api/operator'].includes(path)) {
-        return send([405, { error: messages.badRequest }, { Allow: 'GET' }]);
+        return send([405, apiError('badRequest'), { Allow: 'GET' }]);
       }
       const refused = checkWrite(req);
-      if (refused) return send([refused[0], { error: messages[refused[1]] }]);
+      if (refused) return send([refused[0], apiError(refused[1])]);
     } else {
-      return send([405, { error: messages.badRequest }, { Allow: 'GET, POST' }]);
+      return send([405, apiError('badRequest'), { Allow: 'GET, POST' }]);
     }
 
     const b = await readBody(req);
-    if (b === null) return send([413, { error: messages.tooLarge }, { Connection: 'close' }]);
+    if (b === null) return send([413, apiError('tooLarge'), { Connection: 'close' }]);
     if (path === '/api/pair') return send(pair(req, b));
     if (path === '/api/invite/info') return send(inviteInfo(req, b));
 
     const s = sessions.auth(req);
-    if (!s) return send([401, { error: messages.login }]);
+    if (!s) return send([401, apiError('login')]);
     if (path === '/api/logout') {
       sessions.end(s.id);
       return send([200, { ok: true }, { 'Set-Cookie': clearSessionCookie() }]);
     }
-    if (path === '/api/setup') return send(setup(s, b));
+    if (path === '/api/setup') return send(setup(req, s, b));
 
     const operator = s.kind === 'parent' && isOperator(s.userId);
     if (path === '/api/operator') {
-      if (!operator) return send([403, { error: messages.operatorOnly }]);
+      if (!operator) return send([403, apiError('operatorOnly')]);
       return send([
         200,
         {
@@ -353,7 +347,7 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
           },
         ]);
       }
-      return send([403, { error: messages.setupNotAllowed }]);
+      return send([403, apiError('setupNotAllowed')]);
     }
 
     const state = (extra = {}) => ({
@@ -376,10 +370,9 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
       }
       return send([200, state(), { ETag: tag, 'Cache-Control': 'no-cache' }]);
     }
-    if (s.kind !== 'parent') return send([403, { error: messages.viewOnly }]);
+    if (s.kind !== 'parent') return send([403, apiError('viewOnly')]);
     if (path === '/api/export') {
-      if (repo.role(s.familyId, s.userId) !== 'owner')
-        return send([403, { error: messages.ownerOnly }]);
+      if (repo.role(s.familyId, s.userId) !== 'owner') return send([403, apiError('ownerOnly')]);
       const day = today(repo.family(s.familyId).timezone);
       return send([
         200,
@@ -389,7 +382,7 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
     }
 
     const handler = parentRoutes[path];
-    if (!handler) return send([404, { error: messages.notFound }]);
+    if (!handler) return send([404, apiError('notFound')]);
     const reply = handler({ b, s, fid: s.familyId, state });
     if (reply[0] === 200 && path !== '/api/family/delete') repo.bump(s.familyId);
     send(reply);

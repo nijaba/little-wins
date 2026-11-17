@@ -194,7 +194,7 @@ test('OP-05 /api/operator: a normal parent, a child device and a visitor are ref
     const kid = await srv.pairChild(A.jar, A.childId);
     const parent = await srv.api(A.jar, '/api/operator');
     assert.equal(parent.status, 403);
-    assert.deepEqual(parent.json, { error: 'Only operators can see this' });
+    assert.deepEqual(parent.json, { error: 'Only operators can see this', code: 'operatorOnly' });
     assert.equal((await srv.api(kid.jar, '/api/operator')).status, 403);
     assert.equal((await srv.api(null, '/api/operator')).status, 401);
     const state = (await srv.api(A.jar, '/api/state')).json;

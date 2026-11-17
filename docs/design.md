@@ -249,6 +249,17 @@ These hold in both modes.
 - Settings sections fold; each header shows a count.
 - The page polls the state every 5 seconds while visible, keeping the selected week.
 
+## Languages
+
+- The app speaks English, Chinese (Simplified), Spanish, French and German (`en`, `zh`, `es`, `fr`, `de`). English is the base: a missing translation falls back to it, key by key.
+- **Per family.** `families.language` is chosen at setup (default: the browser's `Accept-Language` / `navigator.languages`, else English) and changed in Settings → Family. Every device of the family, children's included, follows it.
+- **Before a family is known** (sign-in, pairing, setup, the server's sign-in error pages), the browser's language is used.
+- **Dates, day letters and numbers** are formatted with `Intl` in the family's locale; calendar days stay `YYYY-MM-DD` in the API.
+- **The starter list** is seeded in the family's language (`server/i18n/<lang>.js`, same order and points as English). Names a family typed are never translated, and changing the language does not rename them.
+- **Page text** lives in `public/strings.<lang>.js` (`window.LW_STRINGS.<lang>`). The page loads English with itself and fetches another language on demand from its own origin (so the CSP holds).
+- **Server text.** API errors keep an English `error` for logs and old pages, plus a stable `code` (the key in `server/messages.js`) and its parameters (`seconds`, `limit`); the page shows `STR.errors[code]`. The few pages the server renders itself use `server/i18n`. Startup refusals stay English (for the operator).
+- The language choice is a set of radio buttons, each labeled in its own language (a `<select>` inserted as HTML trips WebKit's CSP check).
+
 ## Open questions
 
 Each has a working default; the owner decides.
@@ -258,6 +269,5 @@ Each has a working default; the owner decides.
 | Should rewards be redeemable (spend points, record it)? | No: milestones |
 | Per-child behavior and reward lists? | One list per family |
 | Can a child's device see siblings' progress? | No |
-| Languages | Decided: English, Chinese (Simplified), Spanish, French and German, chosen per family (build plan, phase 5b). Until then English only; strings kept in one place |
 | Passkeys as a sign-in option? | Later |
 | Several families per parent? | One in v1 |

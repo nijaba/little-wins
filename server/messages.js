@@ -1,14 +1,20 @@
-/** Every user-facing string the server sends, in one place. */
+/**
+ * Every user-facing string the server sends, in one place, in English. API errors also carry
+ * their key here as a stable `code`, which the page translates (public/strings.<lang>.js).
+ */
+const LIMIT_NAMES = {
+  children: 'children',
+  parents: 'parents',
+  items: 'behaviors, penalties and challenges',
+  rewards: 'rewards',
+  devices: 'devices',
+  entriesPerDay: 'entries today',
+};
+
 module.exports = {
   appName: 'Little Wins',
-  backToApp: 'Back to Little Wins',
 
-  // Sign-in
-  unknownProvider: "That sign-in provider isn't set up here.",
-  signInExpired: 'The sign-in took too long or started in another browser. Try again.',
-  signInUnchecked: "The sign-in couldn't be checked. Try again.",
-  providerFailed: "The sign-in provider didn't answer as expected. Try again.",
-  emailNotVerified: "Google didn't confirm that this account's email is verified.",
+  // Sign-in (the pages the server renders itself are in server/i18n)
   privateInstance:
     'This Little Wins is private. Ask a parent in the family for an invite link, then sign in from it.',
   tooManyTries: (seconds) => `Too many tries. Try again in ${seconds}s.`,
@@ -25,6 +31,7 @@ module.exports = {
   nameRequired: 'A name is required',
   invalidDay: 'Invalid day',
   invalidTimeZone: 'Unknown time zone',
+  invalidLanguage: 'Unknown language',
   setupDone: 'This account already has a family',
   setupNotAllowed: 'Finish signing in first',
   lastChild: 'A family needs at least one child',
@@ -32,7 +39,7 @@ module.exports = {
   notYourself: "You can't do that to yourself",
   codeInvalid:
     "That code doesn't work. It may have expired or been used. Ask a parent for a new one.",
-  limitReached: (what) => `This family has reached its limit for ${what}.`,
+  limitReached: (limit) => `This family has reached its limit for ${LIMIT_NAMES[limit] || limit}.`,
   confirmFamilyName: 'Type the family name exactly to confirm.',
   operatorOnly: 'Only operators can see this',
   inviteInvalid: "This invite link doesn't work. It may have expired or been used.",

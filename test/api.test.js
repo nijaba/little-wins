@@ -380,7 +380,12 @@ test('ST-03 the family name, time zone and week start are parent settings', asyn
     week_start: 0,
   });
   assert.equal(r.status, 200);
-  assert.deepEqual(r.json.family, { name: 'New name', timezone: 'America/Chicago', weekStart: 0 });
+  assert.deepEqual(r.json.family, {
+    name: 'New name',
+    timezone: 'America/Chicago',
+    weekStart: 0,
+    language: 'en',
+  });
   assert.equal(
     (await srv.api(f.jar, '/api/family/save', { name: '', timezone: 'UTC' })).status,
     400,

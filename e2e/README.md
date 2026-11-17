@@ -43,3 +43,9 @@ app is meant to open are handled with `expectDialog`.
 | E2E-64 | "Not now" on an invite screen goes back to the sign-in screen                        |
 | E2E-70 | the sign-in and setup screens fit phone screens (360x640, 375x667, 390x844, 430x932) |
 | E2E-71 | every main screen and every Settings section fits phone screens                      |
+| E2E-80 | the sign-in screen follows the browser's language (de, zh; unsupported → English)    |
+| E2E-81 | each language (zh, es, fr, de) picked at setup: every main screen and Settings section translated, no English left, no `undefined` |
+| E2E-82 | changing the language in Settings → Family re-renders and survives a reload          |
+| E2E-83 | another device with an English browser shows the family's language                   |
+| E2E-84 | German and Chinese sign-in and setup fit phone screens                               |
+| E2E-85 | German and Chinese main screens and Settings sections fit phone screens              |

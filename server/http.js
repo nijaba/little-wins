@@ -1,5 +1,6 @@
 /** HTTP helpers: JSON replies, request bodies limited to 10 KB, and the guard on writes. */
 const config = require('./config');
+const messages = require('./messages');
 
 /** Sends `payload` as JSON with the given status and extra headers. */
 function sendJson(res, status, payload, headers = {}) {
@@ -10,6 +11,15 @@ function sendJson(res, status, payload, headers = {}) {
     ...headers,
   });
   res.end(JSON.stringify(payload));
+}
+
+/**
+ * The body of an API error: the English text, plus the message key as a stable `code` and any
+ * parameters (e.g. { seconds }), so the page can show it in the family's language.
+ */
+function apiError(code, params = {}) {
+  const m = messages[code];
+  return { error: typeof m === 'function' ? m(...Object.values(params)) : m, code, ...params };
 }
 
 /**
@@ -57,4 +67,4 @@ function checkWrite(req) {
   return null;
 }
 
-module.exports = { sendJson, readBody, checkWrite };
+module.exports = { sendJson, readBody, checkWrite, apiError };

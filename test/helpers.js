@@ -282,6 +282,8 @@ async function newFamily(
     starter = true,
     who,
     provider,
+    language,
+    headers,
   } = {},
 ) {
   const n = ++counter;
@@ -294,13 +296,20 @@ async function newFamily(
   const j = jar();
   const r = await signIn(srv, j, prov, identity);
   if (!r.ok) throw new Error(`sign-in failed: ${r.status} ${r.body}`);
-  const setup = await api(srv, j, '/api/setup', {
-    family_name: name,
-    child_name: child,
-    timezone: tz,
-    week_start: weekStart,
-    starter,
-  });
+  const setup = await api(
+    srv,
+    j,
+    '/api/setup',
+    {
+      family_name: name,
+      child_name: child,
+      timezone: tz,
+      week_start: weekStart,
+      starter,
+      language,
+    },
+    { headers },
+  );
   if (setup.status !== 200) throw new Error(`setup failed: ${setup.status} ${setup.text}`);
   return { jar: j, state: setup.json, childId: setup.json.childId, who: identity };
 }

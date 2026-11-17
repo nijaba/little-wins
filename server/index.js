@@ -2,6 +2,7 @@
 const http = require('node:http');
 const config = require('./config');
 const messages = require('./messages');
+const { apiError } = require('./http');
 
 for (const warning of config.warnings) console.warn(`Warning: ${warning}`);
 if (config.problems.length) {
@@ -55,7 +56,7 @@ const server = http
         const wait = (write ? writeLimiter : readLimiter).hit(clientIp(req));
         if (wait) {
           res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': String(wait) });
-          return res.end(JSON.stringify({ error: messages.tooManyTries(wait) }));
+          return res.end(JSON.stringify(apiError('tooManyTries', { seconds: wait })));
         }
         return await handleApi(req, res);
       }
@@ -66,7 +67,7 @@ const server = http
       console.error(err);
       try {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: messages.serverError }));
+        res.end(JSON.stringify(apiError('serverError')));
       } catch {}
     }
   })

@@ -465,3 +465,8 @@ select {
 .radios label {
   margin-right: 16px;
 }
+
+.langs label {
+  display: inline-block;
+  margin: 2px 16px 2px 0;
+}

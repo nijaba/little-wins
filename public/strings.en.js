@@ -1,7 +1,11 @@
-// Every user-facing string of the page, in one place so it can be translated later.
+// Every user-facing string of the page, in English: the base language. Other languages live in
+// strings.<lang>.js with the same keys; anything a translation leaves out falls back to this file.
 // Entries that depend on a value are functions; the caller escapes user-entered text.
-window.STRINGS = {
+window.LW_STRINGS = window.LW_STRINGS || {};
+window.LW_STRINGS.en = {
   appName: 'Little Wins',
+  // BCP 47 locale for dates and numbers (Intl).
+  locale: 'en',
 
   // Bottom tabs: [icon, label]
   tabs: {
@@ -69,6 +73,7 @@ window.STRINGS = {
     monday: 'Monday',
     sunday: 'Sunday',
     starter: 'Start with a sample list of behaviors and rewards',
+    language: 'Language',
     create: 'Create',
     private:
       'This Little Wins is private. Ask a parent in the family for an invite link, then sign in from it.',
@@ -131,6 +136,8 @@ window.STRINGS = {
     title: 'History',
     warning: '⚠ warning',
     mark: 'mark: ',
+    // Challenge marks, by name
+    markNames: { perfect: 'perfect', ok: 'OK', bad: 'bad' },
   },
 
   // Settings tab
@@ -141,9 +148,9 @@ window.STRINGS = {
     weekStart: 'Week starts on',
     monday: 'Monday',
     sunday: 'Sunday',
+    language: 'Language',
     save: 'Save',
     children: 'Children',
-    child: 'child',
     rename: 'Rename',
     addChild: '+ Add child',
     confirmDeleteChild: (name) => `Delete ${name} and all their history? This can't be undone.`,
@@ -188,10 +195,21 @@ window.STRINGS = {
     up: '▲',
     down: '▼',
 
-    // Edit form
-    formEdit: 'Edit',
-    formAdd: 'Add',
-    reward: 'reward',
+    // Edit form titles, by what is edited
+    editTitle: {
+      target: 'Edit behavior',
+      penalty: 'Edit penalty',
+      challenge: 'Edit challenge',
+      reward: 'Edit reward',
+      child: 'Edit child',
+    },
+    addTitle: {
+      target: 'Add a behavior',
+      penalty: 'Add a penalty',
+      challenge: 'Add a challenge',
+      reward: 'Add a reward',
+      child: 'Add a child',
+    },
     fieldName: 'Name',
     fieldStars: 'Stars needed',
     fieldPoints: 'Points needed',
@@ -226,5 +244,45 @@ window.STRINGS = {
     min: (n) => `${n} min ago`,
     hours: (n) => `${n} h ago`,
     days: (n) => `${n} days ago`,
+  },
+
+  // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
+  errors: {
+    login: 'Please sign in again.',
+    viewOnly: 'This device can only look, not change things.',
+    badRequest: "That didn't work. Try again.",
+    notFound: "That isn't here any more. It may have been removed on another device.",
+    tooLarge: 'That is too long.',
+    jsonOnly: "That didn't work. Reload the page and try again.",
+    foreignOrigin: 'Request from another site refused.',
+    serverError: 'Something went wrong on the server. Try again.',
+    nameRequired: 'A name is required.',
+    invalidDay: 'That day is not valid.',
+    invalidTimeZone: 'Unknown time zone.',
+    invalidLanguage: 'Unknown language.',
+    setupDone: 'This account already has a family.',
+    setupNotAllowed: 'Finish signing in first.',
+    privateInstance:
+      'This Little Wins is private. Ask a parent in the family for an invite link, then sign in from it.',
+    lastChild: 'A family needs at least one child.',
+    ownerOnly: 'Only the owner can do that.',
+    notYourself: "You can't do that to yourself.",
+    codeInvalid:
+      "That code doesn't work. It may have expired or been used. Ask a parent for a new one.",
+    limitReached: ({ limit }) =>
+      `This family has reached its limit for ${
+        {
+          children: 'children',
+          parents: 'parents',
+          items: 'behaviors, penalties and challenges',
+          rewards: 'rewards',
+          devices: 'devices',
+          entriesPerDay: 'entries today',
+        }[limit] || limit
+      }.`,
+    confirmFamilyName: 'Type the family name exactly to confirm.',
+    operatorOnly: 'Only operators can see this.',
+    inviteInvalid: "This invite link doesn't work. It may have expired or been used.",
+    tooManyTries: ({ seconds }) => `Too many tries. Try again in ${seconds}s.`,
   },
 };

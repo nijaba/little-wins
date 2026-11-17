@@ -104,7 +104,7 @@ Client secrets live only in `.env` on the server. If one leaks, generate a new o
 
 1. Register the sign-in apps, fill in `.env` (see [Fresh install on a new server](#fresh-install-on-a-new-server)) and start the container.
 2. Open `APP_BASE_URL` and sign in with Google or GitHub, using an account that is on `PARENT_ALLOWLIST`.
-3. A short setup follows: family name, time zone (filled in from your browser), week start, the first child's name, and the starter list of behaviors and rewards or an empty one. You become the family's **owner**.
+3. A short setup follows: family name, time zone (filled in from your browser), week start, language (your browser's, if the app speaks it), the first child's name, and the starter list of behaviors and rewards (in the family's language) or an empty one. You become the family's **owner**.
 4. **After migrating an old single-family database** (one made before sign-in existed): the data becomes one family with one child and no parents. The first allowlisted parent to sign in *claims* it and becomes its owner, instead of going through setup. Everyone signs in again, because the old PIN sessions are dropped. The family's time zone starts as the server's, so check it under **Settings**.
 5. Anyone who signs in but is not on the allowlist and holds no invite sees "This Little Wins is private" and is signed out.
 
@@ -135,6 +135,17 @@ Only the owner sees these, at the bottom of **Settings → Family**.
 
 - **Download all our data** saves one JSON file with everything the family has: children, history, behaviors, rewards and parents (no session secrets).
 - **Delete this family** removes the children, history, behaviors, rewards and devices for everyone in the family, and signs everybody out. It cannot be undone, and a backup of the whole database is the only way back. The owner types the family name exactly, then confirms once more. Download the data first.
+
+### Languages
+
+Little Wins speaks English, Chinese (Simplified), Spanish, French and German. Each family picks its language at setup (the browser's language by default) and can change it in **Settings → Family**; everyone in the family, children's devices included, then sees the app, dates and day letters in that language. Before a family is known (the sign-in screen, pairing a child's phone, sign-in error pages) the app follows the browser's language. Names the family typed (children, behaviors, rewards) are never translated; changing the language later does not rename the starter list.
+
+**Adding a language** (for contributors):
+
+1. Add its code to `LANGUAGES` in `server/i18n/index.js` and to `LANGS` (with the language's own name) in `public/app.js`.
+2. Copy `server/i18n/en.js` to `server/i18n/<code>.js` and translate `pages` and `starter`, keeping the starter lists' lengths and order (points are shared).
+3. Copy `public/strings.en.js` to `public/strings.<code>.js`, set `window.LW_STRINGS.<code>`, translate every key (functions stay functions with the same parameters) and set `locale` to a BCP 47 tag for `Intl`.
+4. Update the `language` list in `docs/design.md`; the tests check that every translation has the English keys and starter lengths.
 
 ## Operator page
 
