@@ -90,7 +90,7 @@ Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided
 - [x] README with screenshots from demo data; admin guide for self-hosting and for hosted mode
 - [x] `docs/user-guide.md` for families: getting started (sign in, set up, add children and a co-parent, pair a child's phone, add to the home screen), daily use (points, penalties, warnings, weekly marks, undo), rewards and stars explained, past weeks, Settings, what the child sees, tips for running a chart well; with screenshots from the demo data (phase 5c)
 - [x] Project page on GitHub Pages (`<owner>.github.io/little-wins`): what it is, screenshots, the tour video, self-host vs hosted, privacy stance, links to docs; built from `site/` by a Pages workflow, like scrum-poker; self-hosted fonts, no trackers
-- [ ] `docs/why.md`: why Little Wins exists, the story behind it, linked from the README
+- [x] `docs/why.md`: why Little Wins exists, the story behind it, linked from the README
 - [x] `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, issue and PR templates, `CODEOWNERS`
 - [x] Privacy policy and terms templates for hosted operators
 - [x] Security review document, with fixes

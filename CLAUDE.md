@@ -58,7 +58,7 @@ test/            *.test.js: real server on a temp database, signed in through th
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh, build-site.sh, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
 deploy/          caddy/ (dedicated host, automatic TLS) and nginx/ (behind an existing nginx)
-docs/            design.md, build-plan.md, admin-guide.md, user-guide.md (for families), test-plan.md,
+docs/            design.md, build-plan.md, admin-guide.md, user-guide.md (for families), why.md (the story), test-plan.md,
                  security-review.md, legal/ (privacy and terms templates for hosted operators),
                  images/ (guide pictures), video/ (tour voice-over script, silent recording, poster)
 site/            the project page (index.html, style.css), published to GitHub Pages by .github/workflows/pages.yml
