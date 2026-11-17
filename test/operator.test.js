@@ -181,7 +181,12 @@ test('OP-04 /api/operator returns counts and health, and no names or emails', as
       OWNER2.sub,
     ])
       assert.ok(!r.text.includes(secret), `the operator page must not contain "${secret}"`);
-    for (const value of Object.values(r.json)) assert.equal(typeof value === 'object', false);
+    // Flat numbers and words, except the cap (null: none) and the open family invites, which
+    // hold only an id and two dates.
+    const { familyLimit, familyInvites, ...flat } = r.json;
+    assert.equal(familyLimit, null);
+    assert.deepEqual(familyInvites, []);
+    for (const value of Object.values(flat)) assert.equal(typeof value === 'object', false);
   } finally {
     await srv.close();
   }

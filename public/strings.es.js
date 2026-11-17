@@ -21,6 +21,9 @@ window.LW_STRINGS.es = {
 
   // Signed-out screen, invite and setup
   login: {
+    signupTitle: 'Te han invitado a crear una familia',
+    signupHelp:
+      'Inicia sesión para crear tu familia en este Little Wins. La invitación funciona una sola vez.',
     signInWith: { google: 'Entrar con Google', github: 'Entrar con GitHub' },
     parentsOnly: 'Para padres',
     codeTitle: 'Usa un código de un adulto',
@@ -38,6 +41,14 @@ window.LW_STRINGS.es = {
   },
   legal: { privacy: 'Privacidad', terms: 'Condiciones' },
   operator: {
+    ofLimit: (n, max) => `${n} / ${max}`,
+    familyInvites: 'Invitaciones de familias',
+    familyInvitesHelp:
+      'Aquí solo pueden registrarse las familias invitadas. Cada enlace funciona una vez, durante 30 días.',
+    inviteFamily: 'Invitar a una familia',
+    familyInviteTitle: 'Enlace de invitación',
+    familyInviteHelp: 'Envía este enlace a la familia. Funciona una sola vez.',
+    familyInviteExpires: 'Caduca en 30 días',
     title: 'Operador',
     help: 'Cifras de esta instalación. Aquí nunca se muestra el contenido de las familias.',
     loading: 'Cargando…',
@@ -62,6 +73,8 @@ window.LW_STRINGS.es = {
     },
   },
   setup: {
+    full: 'Este Little Wins está completo por ahora: no tiene sitio para familias nuevas.',
+    askForPlace: 'Pedir una plaza',
     title: 'Configura tu familia',
     hello: (name) => `Te damos la bienvenida, ${name}.`,
     familyName: 'Nombre de la familia',
@@ -336,6 +349,7 @@ window.LW_STRINGS.es = {
 
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
+    serviceFull: 'Este Little Wins está completo por ahora: no tiene sitio para familias nuevas.',
     login: 'Entra de nuevo, por favor.',
     viewOnly: 'Este dispositivo solo puede mirar, no cambiar nada.',
     badRequest: 'No funcionó. Inténtalo de nuevo.',

@@ -22,6 +22,9 @@ window.LW_STRINGS.fr = {
 
   // Signed-out screen, invite and setup
   login: {
+    signupTitle: 'Vous êtes invité à créer une famille',
+    signupHelp:
+      "Connectez-vous pour créer votre famille sur ce Little Wins. L'invitation ne fonctionne qu'une fois.",
     signInWith: { google: 'Se connecter avec Google', github: 'Se connecter avec GitHub' },
     parentsOnly: 'Pour les parents',
     codeTitle: 'Utiliser un code d’un parent',
@@ -39,6 +42,14 @@ window.LW_STRINGS.fr = {
   },
   legal: { privacy: 'Confidentialité', terms: 'Conditions' },
   operator: {
+    ofLimit: (n, max) => `${n} / ${max}`,
+    familyInvites: 'Invitations de familles',
+    familyInvitesHelp:
+      "Seules les familles invitées peuvent s'inscrire ici. Chaque lien fonctionne une fois, pendant 30 jours.",
+    inviteFamily: 'Inviter une famille',
+    familyInviteTitle: "Lien d'invitation",
+    familyInviteHelp: "Envoyez ce lien à la famille. Il ne fonctionne qu'une fois.",
+    familyInviteExpires: 'Expire dans 30 jours',
     title: 'Opérateur',
     help: 'Des chiffres sur cette installation. Le contenu des familles n’est jamais affiché ici.',
     loading: 'Chargement…',
@@ -63,6 +74,8 @@ window.LW_STRINGS.fr = {
     },
   },
   setup: {
+    full: "Ce Little Wins est complet pour le moment : il n'a plus de place pour de nouvelles familles.",
+    askForPlace: 'Demander une place',
     title: 'Configure ta famille',
     hello: (name) => `Bienvenue, ${name}.`,
     familyName: 'Nom de la famille',
@@ -345,6 +358,8 @@ window.LW_STRINGS.fr = {
 
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
+    serviceFull:
+      "Ce Little Wins est complet pour le moment : il n'a plus de place pour de nouvelles familles.",
     login: 'Connecte-toi à nouveau.',
     viewOnly: 'Cet appareil peut seulement regarder, pas modifier.',
     badRequest: 'Ça n’a pas fonctionné. Réessaie.',

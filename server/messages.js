@@ -47,6 +47,7 @@ module.exports = {
   demoEnded: 'This demo has ended',
   demoFull:
     'Every demo family is busy right now. Grab a cup of tea and try again in a few minutes.',
+  serviceFull: 'This Little Wins is full for now: it has no room for new families.',
 
   refusingToStart: (problems) =>
     `Refusing to start:\n- ${problems.join('\n- ')}\nSee docs/admin-guide.md.`,

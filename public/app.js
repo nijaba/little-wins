@@ -144,6 +144,12 @@
     });
 
   // Privacy and Terms links, for the pages that are set in the public config.
+  // "Ask for a place": the operator's contact (SIGNUP_CONTACT_URL), on the private and full screens.
+  const contact = () =>
+    cfg.contactUrl
+      ? `<p><a class="b lnk" href="${esc(cfg.contactUrl)}">${STR.setup.askForPlace}</a></p>`
+      : '';
+
   const legal = () => {
     const a = [
       [cfg.privacyUrl, STR.legal.privacy],
@@ -214,13 +220,17 @@
   // ---- Signed-out screens ----
 
   // The signed-out screen. With an invite token it is the "Join <family>" screen instead.
-  function login(invite) {
+  function login(invite, signup) {
     screen = 'out';
     clearInterval(cdTimer);
     const L = STR.login;
     const note = notice ? `<p class=note>${notice}</p>` : '';
     notice = '';
-    const q = invite ? `?invite=${encodeURIComponent(invite.token)}` : '';
+    const q = invite
+      ? `?invite=${encodeURIComponent(invite.token)}`
+      : signup?.ok
+        ? `?signup=${encodeURIComponent(signup.token)}`
+        : '';
     const btns = cfg.providers
       .map(
         (p) =>
@@ -228,7 +238,11 @@
       )
       .join('');
     let h = `<main class=center><h2>${esc(cfg.appName)}</h2>${note}`;
-    if (invite) {
+    if (signup) {
+      h += signup.ok
+        ? `<h3>${signup.full ? STR.setup.full : L.signupTitle}</h3>${signup.full ? contact() : `<p><small>${L.signupHelp}</small></p>${btns}`}<p><button class="b g" data-action=not-now>${L.notNow}</button></p>`
+        : `<p class=err>${L.inviteInvalid}</p>${contact()}<p><button class="b g" data-action=not-now>${L.notNow}</button></p>`;
+    } else if (invite) {
       h += invite.family
         ? `<h3>${L.joinTitle(esc(invite.family))}</h3><p><small>${L.joinHelp}</small></p>${btns}<p><button class="b g" data-action=not-now>${L.notNow}</button></p>`
         : `<p class=err>${L.inviteInvalid}</p><p><button class="b g" data-action=not-now>${L.notNow}</button></p>`;
@@ -455,6 +469,12 @@
     return false;
   }
 
+  async function showSignup(token) {
+    const r = await post('signup/info', { token }).catch(() => null);
+    const j = r?.ok ? await r.json().catch(() => ({})) : {};
+    login(null, { token, ok: !!j.ok, full: !!j.full });
+  }
+
   async function showInvite(token) {
     const r = await post('invite/info', { token }).catch(() => null);
     const j = r?.ok ? await r.json().catch(() => ({})) : {};
@@ -493,7 +513,7 @@
     if (!ops) return `<p><small>${o.loading}</small></p>`;
     const row = (k, v) => `<div class=row><div>${k}</div><div><b>${v}</b></div></div>`;
     return `<div class=card>${[
-      [o.families, ops.families],
+      [o.families, ops.familyLimit ? o.ofLimit(ops.families, ops.familyLimit) : ops.families],
       [o.unclaimedFamilies, ops.unclaimedFamilies],
       [o.parents, ops.parents],
       [o.children, ops.children],
@@ -505,8 +525,34 @@
       [o.uptime, o.duration(ops.uptimeSeconds)],
     ]
       .map(([k, v]) => row(k, v))
-      .join('')}</div>`;
+      .join('')}</div>${opsInvites()}`;
   };
+
+  // Family invites (SIGNUP_MODE=invite): issue a link, list the open ones, cancel one.
+  const opsInvites = () => {
+    if (ops.signupMode !== 'invite') return '';
+    const o = STR.operator;
+    let h = `<h3>${o.familyInvites}</h3><p><small>${o.familyInvitesHelp}</small></p>`;
+    if (iss?.type === 'operator/invite/create') {
+      h += issuedBox(o.familyInviteTitle, o.familyInviteHelp, '', o.familyInviteExpires);
+    } else {
+      h += `<p><button class=b data-action=fam-invite>${o.inviteFamily}</button></p>`;
+    }
+    for (const i of ops.familyInvites || []) {
+      h += `<div class=card><div class="row stk"><div>${STR.settings.inviteSent(fmtTs(i.created, { dateStyle: 'medium' }))}<br><small>${STR.settings.inviteUntil(fmtTs(i.expires, { dateStyle: 'medium' }))}</small></div><div><button class="b g" data-action=fam-invite-cancel data-id=${i.id}>${STR.settings.cancelInvite}</button></div></div></div>`;
+    }
+    return h;
+  };
+
+  // Operator writes answer with the numbers again; show them, and any link just issued.
+  async function opsPost(path, body) {
+    const r = await post(path, body).catch(() => null);
+    const j = r?.ok ? await r.json().catch(() => null) : null;
+    if (!j) return toast(STR.errors.serverError);
+    ops = j;
+    if (j.issued) iss = { ...j.issued, type: path };
+    if ($('ops-body')) $('ops-body').innerHTML = opsHtml();
+  }
 
   // Load the numbers and show them in #ops-body (not a full render: keeps sections open).
   async function loadOps() {
@@ -548,7 +594,7 @@
     }
     if (!S.canCreate) {
       $('app').innerHTML =
-        `<main class=center><h2>${esc(cfg.appName)}</h2><p>${st.private}</p><p><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
+        `<main class=center><h2>${esc(cfg.appName)}</h2><p>${S.full ? st.full : st.private}</p>${contact()}<p><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}</main>`;
       return;
     }
     let tz = '';
@@ -789,6 +835,11 @@
       api('invite/create', {});
     },
     'cancel-invite': (d) => api('invite/revoke', { id: +d.id }),
+    'fam-invite': () => {
+      iss = null;
+      opsPost('operator/invite/create');
+    },
+    'fam-invite-cancel': (d) => opsPost('operator/invite/revoke', { id: +d.id }),
     'pair-dev': (d) => {
       iss = null;
       api('pairing/create', { child_id: +d.id });
@@ -801,8 +852,11 @@
     },
     share: () => navigator.share({ url: iss.link }).catch(() => {}),
     done: () => {
+      // An operator's family invite lives in the operator panel: redraw just that.
+      const operatorLink = iss?.type?.startsWith('operator/');
       iss = null;
-      render();
+      if (operatorLink && $('ops-body')) $('ops-body').innerHTML = opsHtml();
+      else render();
     },
     tab: (d) => {
       tab = d.tab;
@@ -1096,14 +1150,14 @@
   }
 
   // Box showing a freshly issued link (and code); the pairing one counts down.
-  function issuedBox(title, help, code) {
+  function issuedBox(title, help, code, expires) {
     const st = STR.settings;
     const pair = iss.type === 'pairing/create';
     return `<div class="card center"><h3 class=edit-title>${title}</h3><p><small>${help}</small></p>${
       code ? `<p class=code>${esc(code)}</p>` : ''
     }<p><input class=link readonly value="${esc(iss.link)}"></p><p><button class=b data-action=copy>${st.copy}</button>${
       navigator.share ? ` <button class=b data-action=share>${st.share}</button>` : ''
-    }</p><p><small id=cd>${pair ? '' : st.inviteExpires}</small></p><button class="b g" data-action=done>${st.done}</button></div>`;
+    }</p><p><small id=cd>${pair ? '' : expires || st.inviteExpires}</small></p><button class="b g" data-action=done>${st.done}</button></div>`;
   }
 
   // Update the "Expires in m:ss" line once a second; stop at zero.
@@ -1220,12 +1274,14 @@
     if (!(await handleHash())) api('state');
   }
 
-  // A pairing or invite link (#pair=… / #invite=…): on load, or opened while the app is open.
+  // A pairing, invite or family invite link (#pair=… / #invite=… / #signup=…): on load, or
+  // opened while the app is open.
   async function handleHash() {
-    const m = location.hash.match(/^#(pair|invite)=([\w-]+)$/);
+    const m = location.hash.match(/^#(pair|invite|signup)=([\w-]+)$/);
     if (!m) return false;
     history.replaceState(null, '', location.pathname + location.search);
     if (m[1] === 'invite') showInvite(m[2]);
+    else if (m[1] === 'signup') showSignup(m[2]);
     else await redeem(m[2]);
     return true;
   }

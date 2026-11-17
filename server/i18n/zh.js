@@ -6,6 +6,7 @@ module.exports = {
   pages: {
     appName: 'Little Wins',
     backToApp: '返回 Little Wins',
+    askForPlace: '申请名额',
     unknownProvider: '这里没有设置该登录方式。',
     signInExpired: '登录超时，或是在另一个浏览器中开始的。请再试一次。',
     signInUnchecked: '无法验证登录。请再试一次。',

@@ -53,6 +53,11 @@ function failPage(req, res, key, status = 400, arg) {
   const lang = i18n.fromAcceptLanguage(req.headers['accept-language']);
   const text = i18n.pages(lang);
   const message = typeof text[key] === 'function' ? text[key](arg) : text[key];
+  // A private installation may say whom to ask for a place (SIGNUP_CONTACT_URL).
+  const contact =
+    key === 'privateInstance' && config.signupContactUrl
+      ? `<p><a class="b lnk" href="${escapeHtml(config.signupContactUrl)}">${escapeHtml(text.askForPlace)}</a></p>`
+      : '';
   res.writeHead(status, {
     'Content-Type': 'text/html; charset=utf-8',
     'Set-Cookie': stateCookie('', 0),
@@ -60,7 +65,7 @@ function failPage(req, res, key, status = 400, arg) {
     'X-Content-Type-Options': 'nosniff',
   });
   res.end(
-    `<!doctype html><html lang=${lang}><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>${escapeHtml(text.appName)}</title><link rel=stylesheet href=/style.css><main class=center><h2>${escapeHtml(text.appName)}</h2><p>${escapeHtml(message)}</p><p><a href=/>${escapeHtml(text.backToApp)}</a></p></main>`,
+    `<!doctype html><html lang=${lang}><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>${escapeHtml(text.appName)}</title><link rel=stylesheet href=/style.css><main class=center><h2>${escapeHtml(text.appName)}</h2><p>${escapeHtml(message)}</p>${contact}<p><a href=/>${escapeHtml(text.backToApp)}</a></p></main>`,
   );
 }
 
@@ -132,6 +137,7 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
     const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
     const state = b64url(crypto.randomBytes(16));
     const invite = query.get('invite');
+    const signup = query.get('signup'); // a family invite (SIGNUP_MODE=invite)
     const params = new URLSearchParams({
       client_id: provider.clientId,
       redirect_uri: `${config.baseUrl}/auth/${provider.name}/callback`,
@@ -142,7 +148,13 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
     });
     if (provider.scope) params.set('scope', provider.scope);
     if (provider.name === 'google') params.set('prompt', 'select_account');
-    const cookie = sign({ p: provider.name, s: state, v: verifier, i: invite || null });
+    const cookie = sign({
+      p: provider.name,
+      s: state,
+      v: verifier,
+      i: invite || null,
+      f: signup || null,
+    });
     redirect(res, `${provider.authorizeUrl}?${params}`, [
       stateCookie(cookie, config.cookies.stateMaxAge),
     ]);
@@ -171,7 +183,7 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
       return failPage(req, res, 'providerFailed', 502);
     }
 
-    const owner = decide(identity, saved.i);
+    const owner = decide(identity, saved.i, saved.f);
     if (!owner) return failPage(req, res, 'privateInstance', 403);
     const { cookie } = sessions.create({ kind: 'parent', ...owner }, req);
     redirect(res, '/', [stateCookie('', 0), cookie]);
@@ -181,7 +193,7 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
    * Which family a signed-in parent lands in: { userId, familyId|null } (null = set one up),
    * or null when they may not use this installation.
    */
-  function decide(identity, inviteToken) {
+  function decide(identity, inviteToken, familyToken) {
     const user = repo.upsertUser(identity);
     const membership = repo.membershipOf(user.id);
     if (membership) return { userId: user.id, familyId: membership.family_id };
@@ -198,6 +210,15 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
     }
 
     const allowlisted = allows(config.allowlist, identity);
+    // Invite mode: a family invite lets this parent set up a family. It is used up now, unless
+    // the installation is full (then it still works later), and stays theirs until setup.
+    if (!allowlisted && config.signupMode === 'invite') {
+      const familyInvite = familyToken ? repo.findFamilyInvite(familyToken) : null;
+      if (familyInvite && (repo.familiesFull() || repo.useFamilyInvite(familyInvite.id, user.id))) {
+        return { userId: user.id, familyId: null };
+      }
+      if (repo.holdsFamilyInvite(user.id)) return { userId: user.id, familyId: null };
+    }
     if (!allowlisted && config.signupMode !== 'open') {
       // An operator may sign in to see the operator page without a family.
       return allows(config.operatorAllowlist, identity)

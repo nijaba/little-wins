@@ -22,6 +22,8 @@ window.LW_STRINGS.zh = {
 
   // Signed-out screen, invite and setup
   login: {
+    signupTitle: '你受邀创建一个家庭',
+    signupHelp: '登录以在此 Little Wins 上创建你的家庭。邀请只能使用一次。',
     signInWith: { google: '使用 Google 登录', github: '使用 GitHub 登录' },
     parentsOnly: '家长登录',
     codeTitle: '使用家长给的代码',
@@ -38,6 +40,13 @@ window.LW_STRINGS.zh = {
   },
   legal: { privacy: '隐私', terms: '条款' },
   operator: {
+    ofLimit: (n, max) => `${n} / ${max}`,
+    familyInvites: '家庭邀请',
+    familyInvitesHelp: '只有受邀的家庭才能在此注册。每个链接只能使用一次，有效期 30 天。',
+    inviteFamily: '邀请一个家庭',
+    familyInviteTitle: '家庭邀请链接',
+    familyInviteHelp: '把这个链接发给对方家庭。只能使用一次。',
+    familyInviteExpires: '30 天后过期',
     title: '运营',
     help: '这里只显示本站的统计数字，不会显示任何家庭的内容。',
     loading: '加载中…',
@@ -62,6 +71,8 @@ window.LW_STRINGS.zh = {
     },
   },
   setup: {
+    full: '此 Little Wins 暂时已满：没有新家庭的名额。',
+    askForPlace: '申请名额',
     title: '设置你的家庭',
     hello: (name) => `欢迎，${name}。`,
     familyName: '家庭名称',
@@ -326,6 +337,7 @@ window.LW_STRINGS.zh = {
 
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
+    serviceFull: '此 Little Wins 暂时已满：没有新家庭的名额。',
     login: '请重新登录。',
     viewOnly: '这台设备只能查看，不能修改。',
     badRequest: '没有成功，请再试一次。',

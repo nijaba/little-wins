@@ -33,7 +33,7 @@ Tick a box when the item is done and tested.
 - [x] Family-scoped data layer; a cross-family test for every endpoint
 - [x] Google and GitHub sign-in (OAuth code flow with PKCE); fake provider on localhost only
 - [x] `SIGNUP_MODE` (`closed`, `open`), `PARENT_ALLOWLIST`; family setup (name, timezone, first child, starter list or empty)
-- [ ] `SIGNUP_MODE=invite` with operator-issued family invites (behaves like `closed` until then; needs the operator page, phase 4)
+- [x] `SIGNUP_MODE=invite` with operator-issued family invites, plus `LIMIT_FAMILIES` and `SIGNUP_CONTACT_URL` (owner's decisions, 2026-11-17: both, 30-day single-use links, a calm note with a contact link)
 - [x] Co-parent invite links; owner can remove parents and hand over ownership
 - [x] Several children: per-child points, stars, marks and history; child picker for parents
 - [x] Device pairing for children (single-use code and link, 10 minutes, rate limited; Share/Copy)

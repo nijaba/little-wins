@@ -105,9 +105,13 @@ function keep(j, res) {
 const SESSION = 'lw_session';
 
 /** Parent or child sign-in names for the fake provider (see server/fake-sso.js). */
-async function signIn(srv, j, provider, who, { invite } = {}) {
+async function signIn(srv, j, provider, who, { invite, signup } = {}) {
   srv.logins++;
-  const q = invite ? `?invite=${encodeURIComponent(invite)}` : '';
+  const q = invite
+    ? `?invite=${encodeURIComponent(invite)}`
+    : signup
+      ? `?signup=${encodeURIComponent(signup)}`
+      : '';
   let res = await fetch(`${srv.base}/auth/${provider}/login${q}`, {
     redirect: 'manual',
     headers: { cookie: j.header },

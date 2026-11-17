@@ -37,7 +37,9 @@ All of these are environment variables, normally set in `.env`.
 | `SESSION_SECRET` | Signs the short-lived sign-in state cookie. At least 32 characters and not a placeholder. Generate with `openssl rand -hex 32`. | Random on localhost (sign-ins in progress end on restart); required elsewhere |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in. Set both or neither. | Off |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub sign-in. Set both or neither. | Off |
-| `SIGNUP_MODE` | Who may create a family: `closed` (only people on `PARENT_ALLOWLIST`), `invite` or `open` (anyone who signs in). `invite` is meant for hosting, where an operator issues family invites. Those do not exist yet, so for now `invite` behaves like `closed`. | `closed` |
+| `SIGNUP_MODE` | Who may create a family: `closed` (only people on `PARENT_ALLOWLIST`), `invite` (people with a family invite from the operator page, or on the allowlist) or `open` (anyone who signs in). See [Hosting for other families](#hosting-for-other-families). | `closed` |
+| `LIMIT_FAMILIES` | The most families the installation holds, in any mode. Past it, new parents see "full for now"; co-parents can still join. Demo families don't count. | No cap |
+| `SIGNUP_CONTACT_URL` | An `https://` page or `mailto:` address shown as **Ask for a place** on the private and full screens. The app collects no email itself. | None |
 | `PARENT_ALLOWLIST` | Comma-separated list of who may create a family (or claim a migrated one) when sign-up is not `open`. Entries: `*`, `google:you@example.com`, `github:<login>`, `google-domain:example.com`. See below. | Empty |
 | `FORWARDED_ALLOW_IPS` | Comma-separated proxy addresses whose `X-Forwarded-For` and `X-Forwarded-Proto` the app trusts. Exact IPs, or `*` for any peer (only safe when the app's port is reachable by the proxy alone). Outside localhost the app redirects plain HTTP to `APP_BASE_URL`, and it learns the original scheme from `X-Forwarded-Proto`, so behind a proxy this must be set. See [FORWARDED_ALLOW_IPS](#forwarded_allow_ips). | Empty (forwarded headers ignored) |
 | `SITE_HOST` | Caddy setup only: the host name Caddy serves, the host part of `APP_BASE_URL`. | None |
@@ -155,7 +157,11 @@ Little Wins speaks English, Chinese (Simplified), Spanish, French and German. Ea
 
 The same code runs one family or many; the difference is configuration. Before you open an installation to other families, set it up as below, then follow the rest of this guide as usual (backups matter even more).
 
-1. **Sign-up.** `SIGNUP_MODE=open` lets anyone who signs in with Google or GitHub create a family. There is no sign-up form, so no passwords, emails or bots to deal with. (`invite`, for operator-issued family invites, is not built yet and behaves like `closed`.) `PARENT_ALLOWLIST` doesn't matter in `open` mode.
+1. **Sign-up.** Pick one:
+   - `SIGNUP_MODE=invite`: only families you invite. On the operator page, **Invite a family** makes a link (single use, 30 days) to send them; open invites are listed with **Cancel**. The family opens it, signs in with Google or GitHub, and sets up. Without a link, people see "This Little Wins is private".
+   - `SIGNUP_MODE=open`: anyone who signs in with Google or GitHub can create a family. There is no sign-up form, so no passwords, emails or bots to deal with.
+
+   Either way, `LIMIT_FAMILIES` caps how many families the installation holds: past it, new parents see "This Little Wins is full for now" (co-parents can still join an existing family, and an unused invite keeps working for later). Set `SIGNUP_CONTACT_URL` (an `https://` page or a `mailto:` address) to add **Ask for a place** to the private and full screens. You can start with `invite` and a small cap, and raise them as you go.
 2. **Limits.** With `open`, the hosted defaults apply (8 children, 6 parents, 200 items, 100 rewards, 30 devices and 500 entries a day per family); see [Limits](#limits). Rate limits per client are always on: keep `FORWARDED_ALLOW_IPS` right, or every family shares your proxy's limit.
 3. **Operator page.** Put yourself in `OPERATOR_ALLOWLIST` to see counts and health. You can't see any family's content through the app, by design. See [Operator page](#operator-page).
 4. **Privacy policy and terms.** Publish both and set `PRIVACY_URL` and `TERMS_URL`; the app links to them from the sign-in page and Settings. Start from the templates in [docs/legal/](legal/): [privacy policy](legal/privacy-policy-template.md) and [terms of use](legal/terms-template.md). They describe what the software does, but they are not legal advice: check the GDPR (EU and UK), COPPA (US) and your local rules with someone qualified.
