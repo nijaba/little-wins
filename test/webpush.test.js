@@ -8,13 +8,14 @@ const { isDue } = require('../server/reminders');
 test('WP-01 encryption matches the example in RFC 8291, byte for byte', () => {
   const server = crypto.createECDH('prime256v1');
   server.setPrivateKey(Buffer.from('yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw', 'base64url'));
+  // The browser's public key and authentication secret from RFC 8291, appendix A (published).
+  const [uaPublic, uaSecret] = [
+    'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4',
+    'BTBZMqHH6r4Tts7J_aSIgg',
+  ];
   const out = w.encrypt(
     'When I grow up, I want to be a watermelon',
-    {
-      p256dh:
-        'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4',
-      auth: 'BTBZMqHH6r4Tts7J_aSIgg',
-    },
+    { p256dh: uaPublic, auth: uaSecret },
     { salt: Buffer.from('DGv6ra1nlYgDCS1FRnbzlw', 'base64url'), server },
   );
   assert.equal(
