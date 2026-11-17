@@ -49,7 +49,7 @@ window.LW_STRINGS.fr = {
       ['🌈', "Que des bonnes nouvelles sur l'écran de votre enfant"],
     ],
   },
-  legal: { privacy: 'Confidentialité', terms: 'Conditions' },
+  legal: { about: 'À propos de Little Wins', privacy: 'Confidentialité', terms: 'Conditions' },
   operator: {
     idleAfter: 'Familles inactives supprimées après',
     days: (n) => `${n} jours`,

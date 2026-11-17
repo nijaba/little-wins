@@ -74,6 +74,7 @@ app is meant to open are handled with `expectDialog`.
 | E2E-151 | a parent turns notices on and off for a child in Settings -> Children          |
 | E2E-160 | the sign-in page opens with the welcome: star, name, tagline, three reasons   |
 | E2E-161 | the welcome stays still when the device asks for reduced motion               |
+| E2E-162 | the footer links to the project page, before Privacy and Terms               |
 | E2E-170 | a parent picks an emoji for a behavior and a child, and Today shows them     |
 | E2E-180 | a reward unlocking brings confetti, and + makes "+10" float up              |
 | E2E-181 | with reduced motion the reward still shows, with no confetti or floating points|

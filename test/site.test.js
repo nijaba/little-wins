@@ -21,7 +21,9 @@ before(() => {
 
 after(() => fs.rmSync(out, { recursive: true, force: true }));
 
-const ALLOWED = /^https:\/\/(github\.com\/nijaba\/little-wins|nijaba\.github\.io)(\/|#|$)/;
+// The project's own places: the repository, the project page, and the author's hosted service.
+const ALLOWED =
+  /^https:\/\/(github\.com\/nijaba\/little-wins|nijaba\.github\.io|little-wins\.nijalabs\.com)(\/|#|$)/;
 
 test('SITE-01 every local href, src and poster in index.html exists in the built folder', () => {
   const refs = [...html.matchAll(/\b(?:href|src|poster)="([^"]*)"/g)].map((m) => m[1]);

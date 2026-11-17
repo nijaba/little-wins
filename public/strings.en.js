@@ -49,7 +49,7 @@ window.LW_STRINGS.en = {
       ['🌈', "Only good news on your child's screen"],
     ],
   },
-  legal: { privacy: 'Privacy', terms: 'Terms' },
+  legal: { about: 'About Little Wins', privacy: 'Privacy', terms: 'Terms' },
   operator: {
     idleAfter: 'Idle families deleted after',
     days: (n) => `${n} days`,

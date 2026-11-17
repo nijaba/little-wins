@@ -16,6 +16,8 @@ Parents record good behavior and day-by-day marks on a few weekly challenges. Ch
 - **A guided tour** for parents and children, and optional **demo families** anyone can try with no sign-in
 - One small container, one SQLite file, no third-party scripts or trackers
 
+**Try it:** open the [demo](https://little-wins.nijalabs.com/) and tap **Try a demo**: a made-up family, no sign-in, deleted after 30 minutes unused. A free hosted service runs there too, with a limited number of places.
+
 Project page: [nijaba.github.io/little-wins](https://nijaba.github.io/little-wins/). New to Little Wins? The [user guide](docs/user-guide.md) walks a family through it. [Why Little Wins?](docs/why.md) tells the story behind it.
 
 <p>

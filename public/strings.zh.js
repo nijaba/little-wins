@@ -47,7 +47,7 @@ window.LW_STRINGS.zh = {
       ['🌈', '孩子的屏幕上只有好消息'],
     ],
   },
-  legal: { privacy: '隐私', terms: '条款' },
+  legal: { about: '关于 Little Wins', privacy: '隐私', terms: '条款' },
   operator: {
     idleAfter: '闲置家庭删除时间',
     days: (n) => `${n} 天后`,
