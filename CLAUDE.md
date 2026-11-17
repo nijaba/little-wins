@@ -15,7 +15,7 @@ Decided by the owner. Ask before trading one away.
 - HTTPS only when deployed; `localhost` is the one exception.
 - No analytics, trackers, third-party scripts or third-party fonts.
 - The same code serves self-hosted and hosted modes; the difference is configuration.
-- No personal data in the repository: no real names, hostnames, accounts or family details in code, docs, tests or commit messages. Personal deployment notes go in `*.local.md` files, which git ignores.
+- No personal data in the repository: no real names, hostnames, accounts or family details in code, docs, tests or commit messages. Personal deployment notes go in `*.local.md` files, which git ignores. One exception, approved by the owner: the repository's GitHub handle (`nijaba`) in repository and project-page links and `CODEOWNERS`.
 
 ## Commands
 
@@ -28,6 +28,7 @@ npm run e2e:install && npm run test:e2e         # browser tests (Playwright, Chr
 SKIP_IMAGE_TESTS=1 npm test                     # skip the Docker image test (it needs Docker)
 npm run format                                  # apply Biome formatting
 npm run dev                                     # local server on :3000 with fake sign-in and demo families
+scripts/build-site.sh                           # project page (site/ + pictures + video) into _site/
 node scripts/guide-pictures.js                  # guide pictures (docs/images/) from a demo family
 node scripts/tour-video.js                      # silent tour video (docs/video/tour.webm); then
 ~/.venvs/voice/bin/python scripts/tour-voiceover.py  # narrated public/tour.mp4 + poster (Kokoro, see the script)
@@ -52,12 +53,15 @@ test/            *.test.js: real server on a temp database, signed in through th
                  (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
+                 site (the project page),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
-scripts/         backup.sh, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
+scripts/         backup.sh, build-site.sh, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
 deploy/          caddy/ (dedicated host, automatic TLS) and nginx/ (behind an existing nginx)
-docs/            design.md, build-plan.md, admin-guide.md, test-plan.md, images/ (guide pictures),
-                 video/ (tour voice-over script, silent recording, poster)
+docs/            design.md, build-plan.md, admin-guide.md, user-guide.md (for families), test-plan.md,
+                 security-review.md, legal/ (privacy and terms templates for hosted operators),
+                 images/ (guide pictures), video/ (tour voice-over script, silent recording, poster)
+site/            the project page (index.html, style.css), published to GitHub Pages by .github/workflows/pages.yml
 ```
 
 ## Rules that must always hold

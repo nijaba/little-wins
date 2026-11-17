@@ -1,8 +1,8 @@
 # Little Wins admin guide
 
-How to deploy, update, back up and restore a self-hosted Little Wins.
+How to deploy, update, back up and restore Little Wins: for your own family (self-hosted), or for other families too ([hosting for other families](#hosting-for-other-families)). For using the app, see the [user guide](user-guide.md).
 
-> **Internet-facing.** Once phase 4 of docs/build-plan.md is complete, Little Wins is meant to face the internet, behind HTTPS. HTTPS is required everywhere except localhost. A private network (Tailscale, a VPN or your LAN) is still a fine extra layer, but you no longer need it. Ready-made setups are in `deploy/`: [Caddy on a dedicated host](#option-a-caddy-on-a-dedicated-host) and [behind an existing nginx](#option-b-behind-an-existing-nginx).
+> **Internet-facing.** Little Wins is meant to face the internet, behind HTTPS. HTTPS is required everywhere except localhost. A private network (Tailscale, a VPN or your LAN) is still a fine extra layer, but you don't need it. Ready-made setups are in `deploy/`: [Caddy on a dedicated host](#option-a-caddy-on-a-dedicated-host) and [behind an existing nginx](#option-b-behind-an-existing-nginx).
 
 ## Where things live
 
@@ -150,6 +150,21 @@ Little Wins speaks English, Chinese (Simplified), Spanish, French and German. Ea
 2. Copy `server/i18n/en.js` to `server/i18n/<code>.js` and translate `pages` and `starter`, keeping the starter lists' lengths and order (points are shared).
 3. Copy `public/strings.en.js` to `public/strings.<code>.js`, set `window.LW_STRINGS.<code>`, translate every key (functions stay functions with the same parameters) and set `locale` to a BCP 47 tag for `Intl`.
 4. Update the `language` list in `docs/design.md`; the tests check that every translation has the English keys and starter lengths.
+
+## Hosting for other families
+
+The same code runs one family or many; the difference is configuration. Before you open an installation to other families, set it up as below, then follow the rest of this guide as usual (backups matter even more).
+
+1. **Sign-up.** `SIGNUP_MODE=open` lets anyone who signs in with Google or GitHub create a family. There is no sign-up form, so no passwords, emails or bots to deal with. (`invite`, for operator-issued family invites, is not built yet and behaves like `closed`.) `PARENT_ALLOWLIST` doesn't matter in `open` mode.
+2. **Limits.** With `open`, the hosted defaults apply (8 children, 6 parents, 200 items, 100 rewards, 30 devices and 500 entries a day per family); see [Limits](#limits). Rate limits per client are always on: keep `FORWARDED_ALLOW_IPS` right, or every family shares your proxy's limit.
+3. **Operator page.** Put yourself in `OPERATOR_ALLOWLIST` to see counts and health. You can't see any family's content through the app, by design. See [Operator page](#operator-page).
+4. **Privacy policy and terms.** Publish both and set `PRIVACY_URL` and `TERMS_URL`; the app links to them from the sign-in page and Settings. Start from the templates in [docs/legal/](legal/): [privacy policy](legal/privacy-policy-template.md) and [terms of use](legal/terms-template.md). They describe what the software does, but they are not legal advice: check the GDPR (EU and UK), COPPA (US) and your local rules with someone qualified.
+5. **Backups.** Keep the nightly backups, and an off-site copy encrypted before it leaves the server. Say how long you keep them in your privacy policy: deleted families stay in backups that long. `KEEP_DAYS` in [Automatic backups](#automatic-backups) sets it.
+6. **Logs.** The app writes no request log. Your reverse proxy probably does: decide how long you keep its logs (14 days is plenty) and say so in the privacy policy.
+7. **Demo families (optional).** `DEMO_FAMILIES=1` lets visitors try the app before signing in. Demo families are kept in memory only, apart from real ones. See [Demo families](#demo-families).
+8. **Security reports.** Point people who find a problem in the software to the project's [security policy](../SECURITY.md); problems with your own deployment come to you.
+
+What families can do for themselves, with no help from you: invite a co-parent, hand over ownership, log out lost devices, download all their data, and delete their family (it is gone at once, and from the backups once they age out).
 
 ## Demo families
 

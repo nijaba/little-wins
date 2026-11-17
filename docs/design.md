@@ -31,7 +31,7 @@ Decided by the owner. Ask before trading one away.
 | Families | One, created by the first allowed parent | Many, each created at sign-up |
 | Who may create a family | `PARENT_ALLOWLIST` only (`SIGNUP_MODE=closed`) | Anyone who signs in (`SIGNUP_MODE=open`), or only people holding an invite (`SIGNUP_MODE=invite`) |
 | Default limits | Generous | Enforced (see "Limits") |
-| Legal pages | Not needed | Operator publishes a privacy policy and terms (`PRIVACY_URL`, `TERMS_URL`) |
+| Legal pages | Not needed | Operator publishes a privacy policy and terms (`PRIVACY_URL`, `TERMS_URL`), starting from the templates in `docs/legal/` |
 
 The default is self-hosted, with sign-up closed. A hosted operator turns on the rest.
 
@@ -134,7 +134,7 @@ Every table except `users` has a `family_id`, and every query filters on it.
 ### Sessions
 
 - The cookie `lw_session` holds a random 256-bit token; the database stores its SHA-256 hash. HttpOnly, SameSite=Lax (the sign-in provider returns by redirect, which a Strict cookie would not survive), Secure outside `localhost`. Because Lax cookies ride along on top-level navigations from other sites, every write must also be JSON from the app's own `Origin` (see "Security").
-- Sessions unused for a year are deleted. Settings → Devices lists a family's sessions with device type, who, and last use; any can be logged out, including "this device".
+- Sessions unused for a year end: one is refused and deleted when it is next used, and the rest are cleared whenever a session is created. Settings → Devices lists a family's sessions with device type, who, and last use; any can be logged out, including "this device".
 - Signing out deletes the session.
 
 ### Development
@@ -156,7 +156,7 @@ What changes when one installation serves many families, and how the design hand
 
 - Sign-up through Google or GitHub means no passwords to store, no email to send, and no bot sign-up form.
 - `SIGNUP_MODE`: `closed` (default), `invite`, `open`.
-- Rate limits per client IP (behind a trusted proxy): sign-in and pairing 10 a minute; writes 120 a minute; reads 600 a minute. 429 with `Retry-After` when exceeded.
+- Rate limits per client IP (behind a trusted proxy): sign-in starts, checked sign-in callbacks (each one calls the provider) and pairing 10 a minute; writes 120 a minute; reads 600 a minute. 429 with `Retry-After` when exceeded.
 
 ### Limits
 
@@ -218,7 +218,7 @@ These hold in both modes.
 - **Headers.** HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` with everything off, and a Content Security Policy of `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'`. The page therefore has no inline scripts, inline styles or inline event handlers.
 - **Writes** must be JSON and come from the app's own `Origin`.
 - **Output.** Every user-entered string is escaped before it reaches the page.
-- **Requests.** Bodies over 10 KB are refused. Static files are served only from `public/` by plain file name.
+- **Requests.** Bodies over 10 KB are refused. A client has 15 seconds to send its headers and 30 for the whole request. Static files are served only from `public/` by plain file name.
 - **Container.** Runs as a non-root user with a read-only root filesystem, no capabilities and `no-new-privileges`; the data volume is the only writable path. A `/healthz` endpoint backs the Docker healthcheck.
 - **Dependencies.** Each runtime dependency needs a reason in this document. Dependabot, CodeQL, gitleaks and an image scan run in CI.
 

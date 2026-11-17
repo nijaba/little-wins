@@ -76,6 +76,10 @@ const server = http
     }
   })
   .listen(config.port, () => console.log('up'));
+// A client gets 15 seconds to send its headers and 30 for the whole request (bodies are 10 KB
+// at most), so slow connections can't hold the process's sockets open for minutes.
+server.headersTimeout = 15e3;
+server.requestTimeout = 30e3;
 
 // Graceful shutdown (docker stop, Ctrl-C): stop taking requests, close the database, exit
 // normally (which also lets coverage tools write their data). Give up after 5 seconds.

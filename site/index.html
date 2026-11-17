@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f3a5f" />
+    <title>Little Wins: points, stars and rewards for families</title>
+    <meta
+      name="description"
+      content="A points, stars and rewards tracker for families, made for phones. Positive first, private by default, one small container to run. Open source."
+    />
+    <meta property="og:title" content="Little Wins" />
+    <meta
+      property="og:description"
+      content="Parents record the good moments. Children watch their points and stars grow toward rewards."
+    />
+    <meta property="og:image" content="images/tour-poster.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to the content</a>
+
+    <header class="hero">
+      <nav class="top" aria-label="Site">
+        <span class="brand">Little Wins</span>
+        <span class="top-links">
+          <a href="#tour">Tour</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#run">Run it</a>
+          <a href="https://github.com/nijaba/little-wins">GitHub</a>
+        </span>
+      </nav>
+
+      <div class="hero-body">
+        <div class="hero-text">
+          <h1>Celebrate the small wins, one star at a time.</h1>
+          <p class="lead">
+            Little Wins is a points, stars and rewards tracker for families, made for phones.
+            Parents record good moments and a few weekly challenges. Children watch their points
+            and stars grow toward rewards the family agreed on.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#tour">Watch the tour</a>
+            <a class="btn btn-ghost" href="#run">Self-host it</a>
+            <a class="btn btn-ghost" href="https://github.com/nijaba/little-wins">Source</a>
+          </div>
+        </div>
+        <img
+          class="hero-shot"
+          src="images/child-today.png"
+          width="390"
+          height="844"
+          alt="A child's phone screen: 715 points and 5 stars, a ring showing 92 percent of the way to the next reward, and the ways to earn points"
+        />
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="tour" class="band">
+        <h2>The tour in 30 seconds</h2>
+        <p class="sub">
+          A parent opens a demo family and walks through the app's built-in tour, with a
+          voice-over. Everyone in it is made up.
+        </p>
+        <video
+          class="tour"
+          controls
+          preload="none"
+          poster="images/tour-poster.png"
+          width="1280"
+          height="720"
+        >
+          <source src="tour.mp4" type="video/mp4" />
+          Your browser cannot play this video. <a href="tour.mp4">Download the MP4</a>.
+        </video>
+      </section>
+
+      <section class="band alt" id="how">
+        <h2>For parents: a few taps a day</h2>
+        <p class="sub">
+          Tap <b>+</b> when something good happens. Mark each weekly challenge perfect, OK or bad
+          by tapping the day. A challenge wins a star in a week with at least two perfect days and
+          no bad day. Fix a mark later and the stars follow.
+        </p>
+        <div class="shots">
+          <figure>
+            <img
+              src="images/parent-today.png"
+              width="390"
+              height="844"
+              loading="lazy"
+              alt="The parent's Today tab: behaviors to record, each with a plus button and a warning counter"
+            />
+            <figcaption>Today: record a behavior, with undo.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="images/parent-week.png"
+              width="390"
+              height="844"
+              loading="lazy"
+              alt="The Week tab: weekly challenges with a mark for each day"
+            />
+            <figcaption>Week: mark challenges, browse past weeks.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="images/parent-rewards.png"
+              width="390"
+              height="844"
+              loading="lazy"
+              alt="The Rewards tab: milestones of stars and points"
+            />
+            <figcaption>Rewards: milestones of stars and points.</figcaption>
+          </figure>
+        </div>
+        <ul class="ticks">
+          <li>Several children, each with their own points, stars and history.</li>
+          <li>Co-parents join with an invite link; each signs in with Google or GitHub.</li>
+          <li>The balance never goes below zero, and every entry can be undone.</li>
+        </ul>
+      </section>
+
+      <section class="band">
+        <h2>For children: only the good news</h2>
+        <p class="sub">
+          The child's view shows points, stars, the next reward and a celebration when one
+          unlocks. It never shows penalties, warnings or parents' notes, and no other child's
+          data. A child's phone joins with a one-time code or link: no account, no password.
+        </p>
+        <div class="shots two">
+          <figure>
+            <img
+              src="images/child-today.png"
+              width="390"
+              height="844"
+              loading="lazy"
+              alt="The child's Today tab with progress toward the next reward"
+            />
+            <figcaption>Today: progress toward the next reward.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="images/child-rewards.png"
+              width="390"
+              height="844"
+              loading="lazy"
+              alt="The child's Rewards tab"
+            />
+            <figcaption>Rewards: what is unlocked and what is next.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="band alt" id="privacy">
+        <h2>Private by default</h2>
+        <div class="cards">
+          <div class="card">
+            <h3>No trackers, no third parties</h3>
+            <p>
+              No analytics, no third-party scripts, no external fonts. The only outsiders are the
+              sign-in providers, which learn only that someone signed in to this app.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Minimal data about children</h3>
+            <p>
+              A child is a first name or a nickname. No birthdate, photo, school or contact
+              details, and children cannot type anything into the app.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Yours to take or delete</h3>
+            <p>
+              The owner can export the family's data as JSON and delete the family, which removes
+              every row at once.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Careful with the rest</h3>
+            <p>
+              Session tokens are stored only as hashes, logs never hold names or notes, and the
+              app refuses to start with weak secrets.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="run">
+        <h2>Self-hosted or hosted</h2>
+        <p class="sub">
+          One container, one process, one SQLite file on a mounted volume, and no runtime
+          dependencies. The same code serves both modes; the difference is configuration. There
+          is no public hosted instance: you run your own.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col"></th>
+                <th scope="col">Self-hosted</th>
+                <th scope="col">Hosted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Who runs it</th>
+                <td>A family, on their own server</td>
+                <td>An operator, for many families</td>
+              </tr>
+              <tr>
+                <th scope="row">Families</th>
+                <td>One, created by the first allowed parent</td>
+                <td>Many, each created at sign-up</td>
+              </tr>
+              <tr>
+                <th scope="row">Who may sign up</th>
+                <td>Only parents on the allowlist</td>
+                <td>Anyone who signs in, or only people holding an invite</td>
+              </tr>
+              <tr>
+                <th scope="row">Limits</th>
+                <td>Generous</td>
+                <td>Enforced</td>
+              </tr>
+              <tr>
+                <th scope="row">Legal pages</th>
+                <td>Not needed</td>
+                <td>The operator publishes a privacy policy and terms</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="sub">
+          To look around first, run it on your own machine with <code>npm run dev</code> and click
+          <b>Try a demo</b> for a made-up family. Nothing leaves your computer.
+        </p>
+      </section>
+
+      <section class="band alt">
+        <h2>In your language</h2>
+        <p class="sub">
+          English, Chinese, Spanish, French and German, picked from the browser's language and
+          changeable in Settings.
+        </p>
+      </section>
+
+      <section class="band" id="docs">
+        <h2>Read more</h2>
+        <ul class="links">
+          <li>
+            <a href="https://github.com/nijaba/little-wins#readme">README</a>
+            <span>What it is and how to try it locally.</span>
+          </li>
+          <li>
+            <a href="https://github.com/nijaba/little-wins/blob/main/docs/user-guide.md">User guide</a>
+            <span>For parents and children, with pictures.</span>
+          </li>
+          <li>
+            <a href="https://github.com/nijaba/little-wins/blob/main/docs/admin-guide.md">Admin guide</a>
+            <span>Deploying, updating, backups and troubleshooting.</span>
+          </li>
+          <li>
+            <a href="https://github.com/nijaba/little-wins/blob/main/docs/design.md">Design</a>
+            <span>The rules, the data and the reasons behind them.</span>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>
+        Little Wins is open source under the Apache-2.0 license.
+        <a href="https://github.com/nijaba/little-wins">Source on GitHub</a>.
+        This page loads nothing from anywhere else: no trackers, no external fonts.
+      </p>
+    </footer>
+  </body>
+</html>

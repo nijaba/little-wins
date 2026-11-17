@@ -84,6 +84,12 @@ function createSessions(
     if (!token || !/^[\w-]{43}$/.test(token)) return null;
     const s = db.prepare('SELECT * FROM sessions WHERE token_hash=?').get(sha(token));
     if (!s) return null;
+    // Unused for a year: ended now, not only when the next session is created.
+    if (Date.now() - Date.parse(s.last_seen) > config.sessionIdleMs) {
+      db.prepare('DELETE FROM sessions WHERE id=?').run(s.id);
+      bump(s.family_id);
+      return null;
+    }
     if (s.kind === 'parent' && s.family_id != null) {
       const member = db
         .prepare('SELECT 1 FROM memberships WHERE family_id=? AND user_id=?')
