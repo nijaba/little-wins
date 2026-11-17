@@ -24,6 +24,8 @@ window.LW_STRINGS.en = {
 
   // Signed-out screen, invite and setup
   login: {
+    signupTitle: "You're invited to start a family",
+    signupHelp: 'Sign in to set up your family on this Little Wins. The invite works once.',
     signInWith: { google: 'Sign in with Google', github: 'Sign in with GitHub' },
     parentsOnly: 'For parents',
     codeTitle: 'Use a code from a parent',
@@ -40,6 +42,14 @@ window.LW_STRINGS.en = {
   },
   legal: { privacy: 'Privacy', terms: 'Terms' },
   operator: {
+    ofLimit: (n, max) => `${n} / ${max}`,
+    familyInvites: 'Family invites',
+    familyInvitesHelp:
+      'Only families with an invite can sign up here. Each link works once, for 30 days.',
+    inviteFamily: 'Invite a family',
+    familyInviteTitle: 'Family invite link',
+    familyInviteHelp: 'Send this link to the family. It works once.',
+    familyInviteExpires: 'Expires in 30 days',
     title: 'Operator',
     help: 'Numbers about this installation. Family content is never shown here.',
     loading: 'Loading…',
@@ -64,6 +74,8 @@ window.LW_STRINGS.en = {
     },
   },
   setup: {
+    full: 'This Little Wins is full for now: it has no room for new families.',
+    askForPlace: 'Ask for a place',
     title: 'Set up your family',
     hello: (name) => `Welcome, ${name}.`,
     familyName: 'Family name',
@@ -332,6 +344,7 @@ window.LW_STRINGS.en = {
   // API errors, by their code
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
+    serviceFull: 'This Little Wins is full for now: it has no room for new families.',
     login: 'Please sign in again.',
     viewOnly: 'This device can only look, not change things.',
     badRequest: "That didn't work. Try again.",

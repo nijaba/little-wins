@@ -125,6 +125,20 @@ const legalUrl = (name) => {
 const privacyUrl = legalUrl('PRIVACY_URL');
 const termsUrl = legalUrl('TERMS_URL');
 
+// --- Room for new families (hosted mode) -------------------------------------------------
+// Whom a family without a place can ask: shown on the private and full pages.
+const signupContactUrl = env.SIGNUP_CONTACT_URL || '';
+if (signupContactUrl && !/^(https:\/\/|mailto:)\S+$/.test(signupContactUrl))
+  problems.push('SIGNUP_CONTACT_URL must be an https:// or mailto: address');
+// The most families this installation holds (null: no cap). Demo families never count.
+let familyLimit = null;
+if (env.LIMIT_FAMILIES !== undefined && env.LIMIT_FAMILIES !== '') {
+  const n = Number(env.LIMIT_FAMILIES);
+  if (!Number.isInteger(n) || n < 1)
+    problems.push('LIMIT_FAMILIES must be a whole number of at least 1');
+  else familyLimit = n;
+}
+
 // --- Per-family limits: generous for a self-hosted family, tighter when sign-up is open ---
 const LIMIT_DEFAULTS = {
   closed: { children: 20, parents: 10, items: 500, rewards: 200, devices: 50, entriesPerDay: 2000 },
@@ -179,6 +193,8 @@ module.exports = {
   forwardedAllow,
   privacyUrl,
   termsUrl,
+  signupContactUrl,
+  familyLimit,
   limits,
   demo,
   tourVideo: env.TOUR_VIDEO !== '0',
@@ -209,6 +225,7 @@ module.exports = {
   sessionIdleMs: 365 * 864e5, // sessions unused this long are deleted
   lastSeenThrottleMs: 5 * 60e3,
   inviteMs: 7 * 864e5,
+  familyInviteMs: 30 * 864e5,
   pairingMs: 10 * 60e3,
 
   // Per-client limits for sign-in and code redemption: max requests per window.

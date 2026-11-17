@@ -88,7 +88,7 @@ These hold in both hosting modes. With several children **(target)**, each rule 
 
 ## Data model (target)
 
-Every table except `users` has a `family_id`, and every query filters on it.
+Every table except `users` and `family_invites` has a `family_id`, and every query filters on it.
 
 | Table | Columns (main ones) |
 |---|---|
@@ -96,6 +96,7 @@ Every table except `users` has a `family_id`, and every query filters on it.
 | `users` | id, provider (`google`/`github`), subject (stable provider ID), email, login, display name, created, last_seen. Unique on (provider, subject). |
 | `memberships` | family_id, user_id, role (`owner`/`parent`), created |
 | `invites` | id, family_id, token_hash, role, created_by, expires, used_at |
+| `family_invites` | id, token_hash, created_by, created, expires, used_by, used_at, family_id (set when the invited parent's family is created). Installation-wide, not family-scoped: only the operator page reaches it. |
 | `children` | id, family_id, name, sort, created |
 | `items` | id, family_id, kind (`target`/`penalty`/`challenge`), name, note, pmin, pmax, sort, active |
 | `rewards` | id, family_id, name, stars, points, sort |
@@ -156,6 +157,9 @@ What changes when one installation serves many families, and how the design hand
 
 - Sign-up through Google or GitHub means no passwords to store, no email to send, and no bot sign-up form.
 - `SIGNUP_MODE`: `closed` (default), `invite`, `open`.
+- **Family invites** (`SIGNUP_MODE=invite`). An operator creates a link on the operator page (**Invite a family**) and sends it to a family any way they like. It works once, for 30 days, and only its SHA-256 is stored. Opening it (`/#signup=…`) says "You're invited to start a family" and offers sign-in; the token rides through sign-in inside the signed state cookie, like a co-parent invite. A parent who signs in with a valid invite and has no family uses it up and goes to setup; the invite then belongs to them until their family is created, so they can finish setup later, from another device too. Open invites are listed on the operator page, with **Cancel**. Without a valid invite, a new parent sees the private page. `PARENT_ALLOWLIST` still works in invite mode.
+- **A cap on families** (`LIMIT_FAMILIES`, optional, in every mode). When the installation holds that many families (demo families never count), a new parent without a family sees "This Little Wins is full for now" instead of setup, and setup is refused (`409`, `serviceFull`). Joining an existing family as a co-parent still works. An invite that meets a full installation is not used up. The operator page shows the families against the cap.
+- **Who to ask.** `SIGNUP_CONTACT_URL` (optional, `https://` or `mailto:`) adds "Ask for a place" to the private and full pages, so a family knows whom to ask. The app itself collects no email and has no waiting list.
 - Rate limits per client IP (behind a trusted proxy): sign-in starts, checked sign-in callbacks (each one calls the provider) and pairing 10 a minute; writes 120 a minute; reads 600 a minute. 429 with `Retry-After` when exceeded.
 
 ### Limits
@@ -234,6 +238,8 @@ These hold in both modes.
 | `PARENT_ALLOWLIST` | Who may create a family when sign-up is closed | Empty |
 | `OPERATOR_ALLOWLIST` | Who sees the operator page | Empty |
 | `PRIVACY_URL`, `TERMS_URL` | Legal pages, hosted mode | Empty |
+| `LIMIT_FAMILIES` | Most families the installation holds (see "Sign-up and abuse") | No cap |
+| `SIGNUP_CONTACT_URL` | "Ask for a place" link on the private and full pages | None |
 | `DATABASE_PATH` | SQLite file | `/data/little-wins.db` |
 | `FORWARDED_ALLOW_IPS` | Proxies trusted for client IP and scheme | Empty |
 | `PORT` | Listening port | `3000` |
@@ -243,7 +249,7 @@ These hold in both modes.
 | `DEMO_MAX`, `DEMO_IDLE_SECONDS` | How many demo families at once; how long one lasts unused | 20; 1800 |
 | `TOUR_VIDEO` | `0` hides **Watch the video** | On |
 
-`DB` is still read as a fallback for `DATABASE_PATH`. `SIGNUP_MODE=invite` behaves like `closed` until operator-issued family invites exist (phase 4, operator page).
+`DB` is still read as a fallback for `DATABASE_PATH`.
 
 ## Front end
 

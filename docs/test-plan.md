@@ -298,6 +298,25 @@ Operator page, allowlist and counts.
 | OP-07 | An operator in open or invite mode who has no family sees the operator flag next to setup | API |
 | OP-08 | /api/setup tells an operator so, and not an ordinary parent | API |
 
+## FI: Family invites and the cap on families
+
+Operator-issued family invites (`SIGNUP_MODE=invite`), `LIMIT_FAMILIES` and `SIGNUP_CONTACT_URL`.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| FI-01 | The operator issues a 30-day invite link, sees it listed and stores only its hash | API |
+| FI-02 | A parent with an invite signs in, sets up a family, and the invite is spent | API |
+| FI-03 | An invite works once: a second parent with the same link gets the private page | API |
+| FI-04 | An invited parent can finish setup later, from another device | API |
+| FI-05 | Without an invite a new parent sees the private page with the contact link | API |
+| FI-06 | An expired or cancelled invite does not work, and a used one cannot be cancelled | API |
+| FI-07 | Only operators issue, list or cancel family invites | API |
+| FI-08 | The allowlist still lets its parents create a family in invite mode | API |
+| FI-09 | When the cap is reached a new parent sees the full screen and setup is refused | API |
+| FI-10 | The operator page shows the families against the cap | API |
+| FI-11 | An invite that meets a full installation is not used up, and works once there is room | API |
+| FI-12 | A bad LIMIT_FAMILIES or SIGNUP_CONTACT_URL stops the server at startup | API |
+
 ## ET: ETag
 
 Conditional reads of `/api/state`.

@@ -5,6 +5,7 @@ module.exports = {
   pages: {
     appName: 'Little Wins',
     backToApp: 'Volver a Little Wins',
+    askForPlace: 'Pedir una plaza',
     unknownProvider: 'Ese proveedor de acceso no está configurado aquí.',
     signInExpired: 'El acceso tardó demasiado o empezó en otro navegador. Inténtalo de nuevo.',
     signInUnchecked: 'No se pudo comprobar el acceso. Inténtalo de nuevo.',

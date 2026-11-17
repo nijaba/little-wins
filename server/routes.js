@@ -33,6 +33,9 @@ const formatCode = (code) => code.replace(/(.{4})(.{4})(.{2})/, '$1-$2-$3');
 const DEMO_OFF = new Set([
   '/api/pair',
   '/api/invite/info',
+  '/api/signup/info',
+  '/api/operator/invite/create',
+  '/api/operator/invite/revoke',
   '/api/setup',
   '/api/logout',
   '/api/operator',
@@ -62,7 +65,11 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
   };
   const mayCreate = (userId) => {
     const who = repo.identityOf(userId);
-    return config.signupMode === 'open' || (!!who && allows(config.allowlist, who));
+    return (
+      config.signupMode === 'open' ||
+      (!!who && allows(config.allowlist, who)) ||
+      (config.signupMode === 'invite' && repo.holdsFamilyInvite(userId))
+    );
   };
 
   // Each handler gets ctx = { b (body), s (session), fid, state(extra?) } and returns
@@ -261,6 +268,7 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
         signupMode: config.signupMode,
         privacyUrl: config.privacyUrl || null,
         termsUrl: config.termsUrl || null,
+        contactUrl: config.signupContactUrl || null,
         demo: config.demo.on,
         tourVideo: config.tourVideo && hasTourVideo(),
       },
@@ -298,10 +306,36 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     return invite ? [200, { familyName: invite.family_name }] : [404, apiError('inviteInvalid')];
   }
 
+  /** Whether a family invite (#signup=…) still works, before its holder signs in. */
+  function signupInfo(req, b) {
+    const wait = limiter.hit(`invite:${clientIp(req)}`);
+    if (wait)
+      return [429, apiError('tooManyTries', { seconds: wait }), { 'Retry-After': String(wait) }];
+    if (config.signupMode !== 'invite' || !repo.findFamilyInvite(b.token)) {
+      return [404, apiError('inviteInvalid')];
+    }
+    return [200, { ok: true, full: repo.familiesFull() }];
+  }
+
+  /** The operator's numbers, with the open family invites and the cap on families. */
+  const operatorReply = (extra = {}) => [
+    200,
+    {
+      ...repo.operatorStats(),
+      familyLimit: config.familyLimit,
+      signupMode: config.signupMode,
+      familyInvites: repo.familyInvites(),
+      version: config.version,
+      uptimeSeconds: Math.round(process.uptime()),
+      ...extra,
+    },
+  ];
+
   function setup(req, s, b) {
     if (s.kind !== 'parent') return [403, apiError('viewOnly')];
     if (s.familyId != null || repo.membershipOf(s.userId)) return [409, apiError('setupDone')];
     if (!mayCreate(s.userId)) return [403, apiError('privateInstance')];
+    if (repo.familiesFull()) return [409, apiError('serviceFull')];
     const familyName = text(b.family_name, 60);
     const childName = text(b.child_name, 40);
     if (!familyName || !childName) return [400, apiError('nameRequired')];
@@ -318,6 +352,7 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
       childName,
       starter: b.starter !== false,
     });
+    repo.spendFamilyInvite(s.userId, fid);
     sessions.joinFamily(s.id, fid);
     const operator = isOperator(s.userId);
     return [
@@ -358,6 +393,7 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     }
     if (!demo && path === '/api/pair') return send(pair(req, b));
     if (!demo && path === '/api/invite/info') return send(inviteInfo(req, b));
+    if (!demo && path === '/api/signup/info') return send(signupInfo(req, b));
 
     const s = sessions.auth(req);
     if (!s && demo) {
@@ -391,16 +427,21 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     if (path === '/api/setup') return send(setup(req, s, b));
 
     const operator = !demo && s.kind === 'parent' && isOperator(s.userId);
-    if (path === '/api/operator') {
+    if (path === '/api/operator' || path.startsWith('/api/operator/')) {
       if (!operator) return send([403, apiError('operatorOnly')]);
-      return send([
-        200,
-        {
-          ...repo.operatorStats(),
-          version: config.version,
-          uptimeSeconds: Math.round(process.uptime()),
-        },
-      ]);
+      if (path === '/api/operator') return send(operatorReply());
+      if (path === '/api/operator/invite/create') {
+        const { token, expires } = repo.createFamilyInvite(s.userId, config.familyInviteMs);
+        return send(
+          operatorReply({ issued: { link: `${config.baseUrl}/#signup=${token}`, expires } }),
+        );
+      }
+      if (path === '/api/operator/invite/revoke') {
+        return send(
+          repo.revokeFamilyInvite(id(b.id)) ? operatorReply() : [404, apiError('notFound')],
+        );
+      }
+      return send([404, apiError('notFound')]);
     }
 
     // A parent still setting up a family (or an operator without one) can only see that.
@@ -413,7 +454,8 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
             setup: true,
             role: 'parent',
             me: { userId: s.userId, name },
-            canCreate: mayCreate(s.userId),
+            canCreate: mayCreate(s.userId) && !repo.familiesFull(),
+            full: repo.familiesFull(),
             operator,
           },
         ]);
