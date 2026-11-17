@@ -264,14 +264,15 @@ p > .b {
   font-size: 22px;
 }
 
-#party div {
+#party .party-card {
+  animation: lw-bounce 0.7s ease-out both;
   background: var(--surface);
   border-radius: 18px;
   padding: 28px 36px;
   font-size: 24px;
 }
 
-#party span {
+#party .party-card > span {
   font-size: 64px;
   display: block;
   animation: pop 0.6s ease infinite alternate;
@@ -968,4 +969,99 @@ select {
 .emj.on {
   border-color: var(--accent);
   background: var(--l);
+}
+
+/* Celebrations: confetti for a reward, the child's points counting up, an almost-full ring, "+5" */
+#party .confetti {
+  position: absolute;
+  top: -16px;
+  width: 9px;
+  height: 15px;
+  border-radius: 2px;
+  animation: lw-fall 2.6s linear both;
+}
+
+#party .c0 {
+  background: var(--gold);
+}
+
+#party .c1 {
+  background: var(--t);
+}
+
+#party .c2 {
+  background: var(--good);
+}
+
+#party .c3 {
+  background: var(--warn);
+}
+
+#party .c4 {
+  background: var(--accent);
+}
+
+@keyframes lw-fall {
+  to {
+    transform: translateY(110vh) rotate(540deg);
+  }
+}
+
+@keyframes lw-bounce {
+  0% {
+    transform: scale(0.5);
+  }
+
+  60% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+#hdr.counting {
+  color: var(--gold);
+}
+
+.ringcard.near .ring-value {
+  animation: lw-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes lw-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 var(--gold));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 6px var(--gold));
+  }
+}
+
+.plus-float {
+  position: fixed;
+  z-index: 20;
+  transform: translate(-50%, 0);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--good);
+  pointer-events: none;
+  animation: lw-float 0.9s ease-out forwards;
+}
+
+@keyframes lw-float {
+  to {
+    transform: translate(-50%, -48px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #party .party-card,
+  #party .party-card > span,
+  .ringcard.near .ring-value {
+    animation: none;
+  }
 }

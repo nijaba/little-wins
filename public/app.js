@@ -669,13 +669,53 @@
     toastTimer = setTimeout(hideToast, 6000);
   }
 
+  // Does the device ask for less motion? Celebrations then show without moving.
+  const still = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
   function party(name) {
     const p = $('party');
-    p.innerHTML = `<div><span>🎉</span>${STR.party.unlocked}<br><b>${esc(name)}</b></div>`;
+    p.innerHTML = `<div class=party-card><span>🎉</span>${STR.party.unlocked}<br><b>${esc(name)}</b></div>`;
+    // Confetti: pieces placed and timed at random (through the DOM: the CSP allows no style=).
+    if (!still()) {
+      for (let k = 0; k < 28; k++) {
+        const c = document.createElement('i');
+        c.className = `confetti c${k % 5}`;
+        c.style.left = `${Math.random() * 100}%`;
+        c.style.animationDelay = `${Math.random() * 0.6}s`;
+        c.style.animationDuration = `${2 + Math.random() * 1.4}s`;
+        p.appendChild(c);
+      }
+    }
     p.style.display = 'flex';
     setTimeout(() => {
       p.style.display = 'none';
     }, 7000);
+  }
+
+  // On a child's device: when points arrived since the child last looked, count up to the new
+  // balance in the header (remembered per child on this device; still with reduced motion).
+  function countUp() {
+    if (P() || !S.childId) return;
+    const key = `bal_${S.demo ? 'demo_' : ''}${S.childId}`;
+    let from = null;
+    try {
+      from = localStorage.getItem(key);
+      localStorage.setItem(key, String(S.balance));
+    } catch {}
+    from = from === null ? null : Number(from);
+    if (from === null || !(from < S.balance) || still()) return;
+    const to = S.balance;
+    const start = performance.now();
+    const step = (now) => {
+      const el = $('hdr');
+      if (!el) return;
+      const t = Math.min(1, (now - start) / 900);
+      const v = Math.round(from + (to - from) * (1 - (1 - t) ** 3));
+      el.textContent = STR.header(fmtNum(v), fmtNum(S.stars));
+      el.classList.toggle('counting', t < 1);
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   // Celebrate rewards unlocked since the last render on this device (remembered per role).
@@ -750,7 +790,22 @@
       p = prompt(STR.today.promptPoints(i.pmin, i.pmax), i.pmin);
       if (p === null) return;
     }
+    floatPoints(id, i.pmin === i.pmax ? i.pmin : Math.min(i.pmax, Math.max(i.pmin, +p || i.pmin)));
     act('add', { child_id: S.childId, item_id: id, points: p });
+  }
+
+  // A small "+5" that floats up from the + button a parent tapped.
+  function floatPoints(id, n) {
+    const btn = document.querySelector(`[data-action=add][data-id="${id}"]`);
+    if (!btn || still()) return;
+    const r = btn.getBoundingClientRect();
+    const f = document.createElement('span');
+    f.className = 'plus-float';
+    f.textContent = `+${fmtNum(n)}`;
+    f.style.left = `${r.left + r.width / 2}px`;
+    f.style.top = `${r.top}px`;
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 1000);
   }
 
   function pen(id) {
@@ -1001,7 +1056,8 @@
     const b = r.points ? Math.min(1, S.balance / r.points) : a;
     const pc = Math.round(100 * (r.stars && r.points ? (a + b) / 2 : r.points ? b : a));
     const C = 264;
-    return `<div class="card ringcard" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle class=ring-track cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle class=ring-value cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text class=ring-text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${named(r)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
+    // Almost there (90% or more): the ring glows.
+    return `<div class="card ringcard${pc >= 90 ? ' near' : ''}" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle class=ring-track cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle class=ring-value cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text class=ring-text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${named(r)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
   }
 
   // A parent's message and the milestones the app spotted: at the top of Today, for both views.
@@ -1513,7 +1569,7 @@
             .join('')}</div>`
         : '';
     const day = fmtDay(S.today, { weekday: 'short', month: 'short', day: 'numeric' });
-    let h = `<header><b>${STR.header(fmtNum(S.balance), fmtNum(S.stars))}</b>${esc(day)}${
+    let h = `<header><b id=hdr>${STR.header(fmtNum(S.balance), fmtNum(S.stars))}</b>${esc(day)}${
       P()
         ? ''
         : `<div class=who>${emo(S.children.find((c) => c.id === S.childId))}${esc(S.childName)}</div>`
@@ -1532,6 +1588,7 @@
     applyWidths();
     tickCountdown();
     celebrate();
+    countUp();
     drawTour();
   }
 
