@@ -286,27 +286,33 @@ function createRepo(db) {
   // --- Children -----------------------------------------------------------------------------
   const children = (fid) =>
     db
-      .prepare('SELECT id, name, notify FROM children WHERE family_id=? ORDER BY sort, id')
+      .prepare('SELECT id, name, emoji, notify FROM children WHERE family_id=? ORDER BY sort, id')
       .all(fid);
 
   const child = (fid, cid) =>
-    db.prepare('SELECT id, name, notify FROM children WHERE family_id=? AND id=?').get(fid, cid) ??
-    null;
+    db
+      .prepare('SELECT id, name, emoji, notify FROM children WHERE family_id=? AND id=?')
+      .get(fid, cid) ?? null;
 
-  function addChild(fid, name) {
+  function addChild(fid, name, emoji = '') {
     const sort = db
       .prepare('SELECT COALESCE(MAX(sort),0)+1 s FROM children WHERE family_id=?')
       .get(fid).s;
     return Number(
       db
-        .prepare('INSERT INTO children(family_id,name,sort,created) VALUES(?,?,?,?)')
-        .run(fid, name, sort, now()).lastInsertRowid,
+        .prepare('INSERT INTO children(family_id,name,sort,created,emoji) VALUES(?,?,?,?,?)')
+        .run(fid, name, sort, now(), emoji).lastInsertRowid,
     );
   }
 
-  const renameChild = (fid, cid, name) =>
-    db.prepare('UPDATE children SET name=? WHERE family_id=? AND id=?').run(name, fid, cid)
-      .changes > 0;
+  /** Renames a child; `emoji` (when given) changes theirs too ('' removes it). */
+  const renameChild = (fid, cid, name, emoji) =>
+    (emoji === undefined
+      ? db.prepare('UPDATE children SET name=? WHERE family_id=? AND id=?').run(name, fid, cid)
+      : db
+          .prepare('UPDATE children SET name=?, emoji=? WHERE family_id=? AND id=?')
+          .run(name, emoji, fid, cid)
+    ).changes > 0;
 
   /** Deletes a child with their history, devices and codes. Never the last child. */
   function deleteChild(fid, cid) {
@@ -380,7 +386,7 @@ function createRepo(db) {
   const item = (fid, id) =>
     db.prepare('SELECT * FROM items WHERE family_id=? AND id=?').get(fid, id) ?? null;
 
-  function saveItem(fid, { id, kind, name, note, pmin, pmax, children }) {
+  function saveItem(fid, { id, kind, name, note, pmin, pmax, children, emoji }) {
     if (id) {
       const ok =
         db
@@ -389,6 +395,8 @@ function createRepo(db) {
           )
           .run(name, note, pmin, pmax, fid, id, kind).changes > 0;
       if (ok && children !== undefined) setFor(fid, 'item', id, children);
+      if (ok && emoji !== undefined)
+        db.prepare('UPDATE items SET emoji=? WHERE family_id=? AND id=?').run(emoji, fid, id);
       return ok;
     }
     const sort = db
@@ -399,6 +407,8 @@ function createRepo(db) {
     ).run(fid, kind, name, note, pmin, pmax, sort);
     const newId = Number(db.prepare('SELECT last_insert_rowid() id').get().id);
     if (children !== undefined) setFor(fid, 'item', newId, children);
+    if (emoji)
+      db.prepare('UPDATE items SET emoji=? WHERE family_id=? AND id=?').run(emoji, fid, newId);
     return true;
   }
 
@@ -413,18 +423,20 @@ function createRepo(db) {
       'reward',
       db
         .prepare(
-          'SELECT id, name, stars, points, sort, for_all FROM rewards WHERE family_id=? ORDER BY sort, id',
+          'SELECT id, name, emoji, stars, points, sort, for_all FROM rewards WHERE family_id=? ORDER BY sort, id',
         )
         .all(fid),
     );
 
-  function saveReward(fid, { id, name, stars, points, children }) {
+  function saveReward(fid, { id, name, stars, points, children, emoji }) {
     if (id) {
       const ok =
         db
           .prepare('UPDATE rewards SET name=?,stars=?,points=? WHERE family_id=? AND id=?')
           .run(name, stars, points, fid, id).changes > 0;
       if (ok && children !== undefined) setFor(fid, 'reward', id, children);
+      if (ok && emoji !== undefined)
+        db.prepare('UPDATE rewards SET emoji=? WHERE family_id=? AND id=?').run(emoji, fid, id);
       return ok;
     }
     const sort = db
@@ -439,6 +451,8 @@ function createRepo(db) {
     );
     const newId = Number(db.prepare('SELECT last_insert_rowid() id').get().id);
     if (children !== undefined) setFor(fid, 'reward', newId, children);
+    if (emoji)
+      db.prepare('UPDATE rewards SET emoji=? WHERE family_id=? AND id=?').run(emoji, fid, newId);
     return true;
   }
 
@@ -478,7 +492,7 @@ function createRepo(db) {
   const entries = (fid, cid) =>
     db
       .prepare(
-        `SELECT e.*, i.name AS iname FROM entries e LEFT JOIN items i ON i.id=e.item_id AND i.family_id=e.family_id
+        `SELECT e.*, i.name AS iname, i.emoji AS iemoji FROM entries e LEFT JOIN items i ON i.id=e.item_id AND i.family_id=e.family_id
          WHERE e.family_id=? AND e.child_id=? AND e.undone=0 ORDER BY e.ts, e.id`,
       )
       .all(fid, cid);
@@ -702,16 +716,18 @@ function createRepo(db) {
         role: p.role,
       })),
       children: db
-        .prepare('SELECT id, name, created FROM children WHERE family_id=? ORDER BY sort, id')
+        .prepare(
+          'SELECT id, name, emoji, created FROM children WHERE family_id=? ORDER BY sort, id',
+        )
         .all(fid),
       items: db
         .prepare(
-          'SELECT id, kind, name, note, pmin, pmax, active, for_all FROM items WHERE family_id=? ORDER BY sort, id',
+          'SELECT id, kind, name, note, emoji, pmin, pmax, active, for_all FROM items WHERE family_id=? ORDER BY sort, id',
         )
         .all(fid),
       rewards: db
         .prepare(
-          'SELECT id, name, stars, points, for_all FROM rewards WHERE family_id=? ORDER BY sort, id',
+          'SELECT id, name, emoji, stars, points, for_all FROM rewards WHERE family_id=? ORDER BY sort, id',
         )
         .all(fid),
       entries: db

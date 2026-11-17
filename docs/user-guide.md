@@ -214,7 +214,9 @@ Everything in **Settings** is in folding sections. Each header shows a count; ta
   keeps at least one child).
 - **Parents:** who's in the family, invites, and for the owner, **Make owner** and **Remove**.
 - **Behaviors, Penalties, Weekly challenges, Rewards:** **Edit** changes one, **+ Add** creates one, ▲ and ▼
-  change the order, ✕ removes one. With more than one child, **Who is it for?** lets you keep one for some
+  change the order, ✕ removes one. Each can have an **emoji**, such as 🧹 for "Tidy room" or 🍦 for a treat: tap one
+  in the form or paste your own. Children get one too (Settings → Children → Rename), shown next to their name. It
+  makes the lists easier to read, especially for younger children. With more than one child, **Who is it for?** lets you keep one for some
   children only, such as piano practice for one and swimming for another: the others don't see it on their
   Today, Week or Rewards. Settings shows "For: …" under those. A behavior has a name, a short note (such as "per day") and its points: the
   same number twice for a fixed amount, or a minimum and a maximum for a range. Removing a behavior, penalty or

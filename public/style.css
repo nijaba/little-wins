@@ -935,3 +935,37 @@ select {
     animation: none;
   }
 }
+
+/* Emoji: before a behavior's, reward's or child's name, and the picker in the edit form */
+.emo {
+  margin-right: 6px;
+  font-size: 1.15em;
+}
+
+.emoji-input {
+  width: 4em;
+  font-size: 26px;
+  padding: 4px;
+}
+
+.emoji-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+
+.emj {
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px 7px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.emj.on {
+  border-color: var(--accent);
+  background: var(--l);
+}

@@ -125,13 +125,13 @@ Every table except `users` and `family_invites` has a `family_id`, and every que
 | `memberships` | family_id, user_id, role (`owner`/`parent`), created |
 | `invites` | id, family_id, token_hash, role, created_by, expires, used_at |
 | `family_invites` | id, token_hash, created_by, created, expires, used_by, used_at, family_id (set when the invited parent's family is created). Installation-wide, not family-scoped: only the operator page reaches it. |
-| `children` | id, family_id, name, sort, created, notify (notices on their device allowed) |
-| `items` | id, family_id, kind (`target`/`penalty`/`challenge`), name, note, pmin, pmax, sort, active, for_all |
+| `children` | id, family_id, name, emoji, sort, created, notify (notices on their device allowed) |
+| `items` | id, family_id, kind (`target`/`penalty`/`challenge`), name, note, pmin, pmax, sort, active, for_all, emoji |
 | `push_subscriptions` | session_id, family_id, endpoint, p256dh, auth, time (HH:MM), last_day, kind (`parent`: evening reminder; `child`: notices), created |
 | `app_settings` | key, value: installation-wide values (the VAPID keys) |
 | `child_notices` | child_id, family_id, key, sent: notices already sent to a child's devices (each once) |
 | `item_children`, `reward_children` | item_id or reward_id, child_id, family_id: who a limited item or reward is for |
-| `rewards` | id, family_id, name, stars, points, sort, for_all |
+| `rewards` | id, family_id, name, emoji, stars, points, sort, for_all |
 | `entries` | id, family_id, child_id, item_id, kind (`points`/`warn`/`mark`), points, day, ts, user_id, note, undone |
 | `sessions` | id, token_hash, family_id, kind (`parent`/`child`), user_id or child_id, device, created, last_seen |
 | `pairings` | id, family_id, child_id, token_hash, created_by, expires, used_at |
@@ -293,6 +293,8 @@ These hold in both modes.
 - Bottom tabs with icons: Today, Week, Rewards, History, and Settings for parents.
 - Settings sections fold; each header shows a count.
 - The page polls the state every 5 seconds while visible, keeping the selected week.
+- **Emoji** (phase 8). Each behavior, penalty, challenge, reward and child can have one emoji (`emoji` column, migration 11; empty means none). The edit form offers a row to pick from, by kind, plus a field to paste any other; the server takes exactly one emoji (one grapheme that is an emoji) or none. They show before the name on Today, Week, Rewards, the ring, History, the Settings lists, the child chips and the child's header, which helps children who can't read well yet. The starter list has emoji in every language (`STARTER_EMOJI`, by position), and existing rows that still carry a starter name, in any language, got that name's emoji when migrated. The demo children are 🦊 and 🐻.
+- **Caching.** The page, its scripts and styles are sent with `Cache-Control: no-cache`: a browser may keep them but asks first, so an update shows on the next load.
 - **The welcome.** The sign-in page opens with the star logo, the name, a tagline ("Celebrate the small wins, one star at a time.") and three reasons, on the app's navy-to-teal colors with a warm glow and a few twinkling stars. **Try a demo** is the gold button. The stars and the logo's pop stay still with reduced motion. Invite and family-invite links keep the plain page.
 - **Icon.** A gold star on the app's navy: `public/icon.svg` (the favicon) and `icon-maskable.svg` (full bleed, for Android's maskable icon and iOS), drawn by hand; `scripts/icons.js` makes the PNG sizes the manifest and iOS need, and `favicon.ico`. The project page uses the same icon.
 - **Light and dark.** The page follows the device's setting (`prefers-color-scheme`); there is no switch in the app. Every color is a token on `:root` in `style.css`, and a dark palette overrides the tokens (`color-scheme: light dark` lets form controls follow). Every text color reads at 4.5:1 or more on the backgrounds it is used on, in both themes (WCAG AA), and a test checks it. White text on colored buttons, the tour's orange outline and the video's black frame are the same in both.

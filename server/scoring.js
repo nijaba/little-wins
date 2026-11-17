@@ -247,6 +247,7 @@ function history(entries, role) {
       who: e.who,
       note: parent ? e.note : '',
       name: e.iname,
+      emoji: e.iemoji || '',
     }));
 }
 

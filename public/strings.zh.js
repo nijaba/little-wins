@@ -214,6 +214,8 @@ window.LW_STRINGS.zh = {
 
   // Settings tab
   settings: {
+    fieldEmoji: '表情',
+    noEmoji: '不用表情',
     forLabel: (names) => `适用：${names}`,
     forNobody: '暂无',
     forWho: '适用于谁？',

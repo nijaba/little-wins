@@ -228,6 +228,7 @@ test('SC-15 history: parents see everything, the child only positive points with
     who: 'Parent',
     note: 'b',
     name: 'item2',
+    emoji: '',
   });
   const child = s.history(entries, 'child');
   assert.deepEqual(
