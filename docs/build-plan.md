@@ -97,7 +97,7 @@ Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided
 - [x] Repository made public (early, before the rest of phase 6, to enable branch protection and CodeQL)
 - [x] Apply `.github/rulesets/main.json` (branch protection) right after the repository goes public
 - [x] App icon: favicon, home-screen icons and manifest icons, also on the project page
-- [ ] Launch announcement (blog post), linked from the README and the project page
+- Launch announcement: moved to Later by the owner (2026-11-17)
 
 ## Phase 7: families in the long run
 
@@ -141,4 +141,6 @@ strict CSP, in light and dark mode, and still with reduced motion. Each item get
 
 ## Later (not yet scheduled)
 
+- [ ] Launch announcement (blog post), linked from the README and the project page; a draft for parents is in the
+  owner's git-ignored notes, waiting for the go-ahead (moved from phase 6, 2026-11-17)
 - [x] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons
