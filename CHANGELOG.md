@@ -62,6 +62,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- On iPhones, saving after a while in an edit form could say "Can't reach the server": Safari sent the save on a connection the server had already closed. The page now sends a failed write once more, with a request ID the server applies only once.
 - Static files are served from an allowlist and device codes look uniform (CodeQL findings).
 - Radio buttons keep their natural width.
 - A lone button on a line wraps, so German text fits 360 px.

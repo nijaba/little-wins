@@ -184,14 +184,33 @@
     render();
   }
 
+  const requestId = () => {
+    try {
+      return crypto.randomUUID();
+    } catch {
+      return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    }
+  };
+
   // Call the API; on success store the new state and redraw. Returns true on success.
   async function api(path, body) {
     const key = wq();
-    const r = await fetch(`/api/${path}${key}`, {
-      method: body ? 'POST' : 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : undefined,
-    }).catch(() => null);
+    const headers = { 'Content-Type': 'application/json' };
+    // A write carries an ID, so it can be sent again safely: Safari on iPhones can fail a POST
+    // on a connection the server closed while the page sat idle (an open edit form stops the
+    // polling) without sending it. The server applies each ID once.
+    if (body) headers['X-Request-Id'] = requestId();
+    const send = () =>
+      fetch(`/api/${path}${key}`, {
+        method: body ? 'POST' : 'GET',
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      }).catch(() => null);
+    let r = await send();
+    if (!r) {
+      await new Promise((ok) => setTimeout(ok, 400));
+      r = await send();
+    }
     if (!r) {
       alert(STR.login.networkError);
       return false;

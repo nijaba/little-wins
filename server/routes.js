@@ -101,6 +101,26 @@ function createRouter({
     );
   };
 
+  // Writes the page may send twice: on iPhones, Safari can fail a POST on a connection the
+  // server already closed (after the page sat idle in an edit form) without sending it. The
+  // page then retries once with the same X-Request-Id; a write already applied here is only
+  // answered, never applied again. In memory: the retry comes within seconds.
+  const writes = new Map(); // `${familyId}:${requestId}` -> expiry (ms)
+  const WRITE_TTL = 10 * 60 * 1000;
+  const requestId = (req) => {
+    const v = req.headers['x-request-id'];
+    return typeof v === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(v) ? v : null;
+  };
+  const seenWrite = (fid, rid) => (writes.get(`${fid}:${rid}`) || 0) > Date.now();
+  function rememberWrite(fid, rid) {
+    const now = Date.now();
+    if (writes.size >= 5000) {
+      for (const [k, exp] of writes) if (exp <= now) writes.delete(k);
+      if (writes.size >= 5000) writes.delete(writes.keys().next().value);
+    }
+    writes.set(`${fid}:${rid}`, now + WRITE_TTL);
+  }
+
   // Each handler gets ctx = { b (body), s (session), fid, state(extra?) } and returns
   // [status, json, headers?]. Handlers here are for parents of a family.
   const parentRoutes = {
@@ -657,8 +677,12 @@ function createRouter({
 
     const handler = parentRoutes[path];
     if (!handler) return send([404, apiError('notFound')]);
+    // A write the page sent again after a network failure: already done, so only reply.
+    const rid = requestId(req);
+    if (rid && seenWrite(s.familyId, rid)) return send([200, state()]);
     const reply = handler({ b, s, fid: s.familyId, state });
     if (reply[0] === 200 && path !== '/api/family/delete') repo.bump(s.familyId);
+    if (reply[0] === 200 && rid) rememberWrite(s.familyId, rid);
     send(reply);
   };
 }

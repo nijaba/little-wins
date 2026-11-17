@@ -534,6 +534,16 @@ The favicon, the home-screen icons (`scripts/icons.js`) and the manifest.
 | IC-03 | favicon.ico holds one 32 x 32 PNG image | Unit |
 | IC-04 | The manifest makes Little Wins installable: id, scope, screenshots at their sizes, shortcuts | Unit |
 
+## RT: Writes sent twice
+
+The page retries a write once after a network failure, with the same request ID.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| RT-01 | A write repeated with the same X-Request-Id is applied once; a new, missing or malformed ID applies | API |
+| RT-02 | The same X-Request-Id in another family is that family's own write | API |
+| RT-03 | A failed write is not remembered, so its retry is applied | API |
+
 ## TH: Themes
 
 Light and dark, following the device (`prefers-color-scheme`).
