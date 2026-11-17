@@ -11,8 +11,9 @@ const now = () => new Date().toISOString();
 // One-time device codes: 10 characters from an alphabet without look-alikes (no 0/O, 1/I/L).
 const CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 function newCode() {
-  const bytes = require('node:crypto').randomBytes(10);
-  return [...bytes].map((b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('');
+  // randomInt is uniform (no modulo bias, which `byte % 31` would have).
+  const { randomInt } = require('node:crypto');
+  return Array.from({ length: 10 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
 }
 /** Normalizes a typed code: upper case, no spaces or dashes. */
 const normalizeCode = (code) =>
