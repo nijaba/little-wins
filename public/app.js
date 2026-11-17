@@ -151,8 +151,12 @@
       ? `<p><a class="b lnk" href="${esc(cfg.contactUrl)}">${STR.setup.askForPlace}</a></p>`
       : '';
 
+  // The footer: the project page (the open-source project behind every Little Wins), then the
+  // installation's privacy policy and terms when it has them.
+  const PROJECT_PAGE = 'https://nijaba.github.io/little-wins/';
   const legal = () => {
     const a = [
+      [PROJECT_PAGE, STR.legal.about],
       [cfg.privacyUrl, STR.legal.privacy],
       [cfg.termsUrl, STR.legal.terms],
     ]

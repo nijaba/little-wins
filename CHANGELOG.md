@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- The app's footer links to the project page; the project page and README link to the demo and the hosted service.
 - History grouped by day, with each day's points and its best moment on top.
 - Friendly touches: a greeting and today's points on the child's Today, "N more ★ to go!" on every locked reward with a sparkle on unlocked ones, and kind words where a list is empty.
 - Stars to collect on the child's screens: perfect days as gold stickers, a "⭐ won!" stamp on weeks that win, and a star jar on Rewards.

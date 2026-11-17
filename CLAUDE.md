@@ -15,7 +15,7 @@ Decided by the owner. Ask before trading one away.
 - HTTPS only when deployed; `localhost` is the one exception.
 - No analytics, trackers, third-party scripts or third-party fonts. One exception, approved by the owner: the opt-in evening reminder (Web Push) goes through the device's push service (Apple, Google, Mozilla), encrypted and saying nothing about the child; and, where a parent allows it per child, notices of a reward or milestone on that child's device (encrypted).
 - The same code serves self-hosted and hosted modes; the difference is configuration.
-- No personal data in the repository: no real names, hostnames, accounts or family details in code, docs, tests or commit messages. Personal deployment notes go in `*.local.md` files, which git ignores. One exception, approved by the owner: the repository's GitHub handle (`nijaba`) in repository and project-page links and `CODEOWNERS`.
+- No personal data in the repository: no real names, hostnames, accounts or family details in code, docs, tests or commit messages. Personal deployment notes go in `*.local.md` files, which git ignores. Approved exceptions: the repository's GitHub handle (`nijaba`) in repository and project-page links and `CODEOWNERS`; the project page's address in the app's footer; and the owner's hosted service and demo, `https://little-wins.nijalabs.com/`, on the project page and in the README.
 
 ## Commands
 

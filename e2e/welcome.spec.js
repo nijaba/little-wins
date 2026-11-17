@@ -32,3 +32,10 @@ test.describe('with reduced motion', () => {
     expect(names.every((n) => n === 'none')).toBe(true);
   });
 });
+
+test('E2E-162 the footer links to the project page, before Privacy and Terms', async ({ page }) => {
+  await page.goto('/');
+  const about = page.locator('.legal').getByRole('link', { name: 'About Little Wins' });
+  await expect(about).toHaveAttribute('href', 'https://nijaba.github.io/little-wins/');
+  await expect(about).toHaveAttribute('rel', 'noopener noreferrer');
+});
