@@ -30,7 +30,7 @@ const freePort = () =>
   });
 
 /** Starts server/index.js on a free port with a temporary database; resolves at "up". */
-async function startApp({ allowlist = '*', signup = 'open' } = {}) {
+async function startApp({ allowlist = '*', signup = 'open', env: extra = {} } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'little-wins-e2e-'));
   const port = await freePort();
   const base = `http://localhost:${port}`;
@@ -43,6 +43,7 @@ async function startApp({ allowlist = '*', signup = 'open' } = {}) {
     LITTLE_WINS_FAKE_SSO: '1',
     PARENT_ALLOWLIST: allowlist,
     SIGNUP_MODE: signup,
+    ...extra,
   };
   const child = spawn(process.execPath, ['server/index.js'], {
     cwd: ROOT,

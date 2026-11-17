@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "node server/index.js",
-    "dev": "LITTLE_WINS_FAKE_SSO=1 PARENT_ALLOWLIST='*' DATABASE_PATH=/tmp/little-wins-dev.db node server/index.js",
+    "dev": "LITTLE_WINS_FAKE_SSO=1 DEMO_FAMILIES=1 PARENT_ALLOWLIST='*' DATABASE_PATH=/tmp/little-wins-dev.db node server/index.js",
     "test": "node --test test/*.test.js",
     "lint": "biome check .",
     "format": "biome format --write .",

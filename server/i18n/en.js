@@ -20,6 +20,9 @@ module.exports = {
     tooManyTries: (seconds) => `Too many tries. Try again in ${seconds}s.`,
   },
 
+  // The made-up family of a demo (server/demo.js): never a real person.
+  demo: { family: 'Demo family', parent: 'Sam (demo)', children: ['Mia', 'Leo'] },
+
   starter: {
     // [name, note] — points come from STARTER_POINTS in index.js, in the same order.
     targets: [

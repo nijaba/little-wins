@@ -49,3 +49,12 @@ app is meant to open are handled with `expectDialog`.
 | E2E-83 | another device with an English browser shows the family's language                   |
 | E2E-84 | German and Chinese sign-in and setup fit phone screens                               |
 | E2E-85 | German and Chinese main screens and Settings sections fit phone screens              |
+| E2E-90 | Try a demo opens a made-up family with a banner on every screen, and fits phones     |
+| E2E-91 | the child's view shows what that child would see, and the parent's view returns      |
+| E2E-92 | Settings in a demo: invites and devices off, no export or delete, Leave the demo     |
+| E2E-93 | when every demo family is busy, a calm note says to come back                        |
+| E2E-94 | the tour is offered once per device; No thanks sticks, and Settings offers it again  |
+| E2E-95 | the parent tour switches tabs, outlines each part, goes back, and Escape closes it   |
+| E2E-96 | the child tour from the demo banner walks its five steps                             |
+| E2E-97 | Watch the video plays over the sign-in page and Escape closes it                     |
+| E2E-98 | TOUR_VIDEO=0 hides Watch the video                                                   |

@@ -78,10 +78,12 @@ Tick a box when the item is done and tested.
 
 ## Phase 5c: demo, tour and video (modeled on scrum-poker)
 
-- [ ] Demo families (`DEMO_FAMILIES=1`, off by default): **Try a demo** on the sign-in page opens a private demo family with no sign-in, two children and a few weeks of made-up history (points, marks, stars, an unlocked reward). Switch between the parent's and the child's view. Clearly marked as a demo everywhere; never mixed with real families; deleted after an idle time and capped in number (`DEMO_MAX`, `DEMO_IDLE_SECONDS`), with a friendly message when full
-- [ ] Guided tour drawn by the page alone (no library, nothing sent to the server): offered once per device (kept in `localStorage`), on demand from Settings, and every time in a demo; steps by role (parent: earning points, penalties, weekly marks, rewards, Settings, adding a child's device; child: points, stars, next reward); outlines the part it explains, Back/Next/Done, Escape closes, respects reduced motion
-- [ ] Guide pictures and a 30-second narrated tour video, recorded with Playwright from the demo data (`scripts/guide-pictures.js`, `scripts/tour-video.js`, voiceover script in `docs/video/`); only made-up people and data; served at `/tour.mp4` with byte ranges (for Safari); **Watch the video** on the sign-in page (`TOUR_VIDEO=0` hides it)
-- [ ] README "The tour in 30 seconds" with a poster image linking to the video
+Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided by the owner on 2026-11-16: demo families in a second SQLite database held in memory; the voice-over made with Kokoro, like scrum-poker; the README poster links to a placeholder address until there is a public installation.
+
+- [x] Demo families (`DEMO_FAMILIES=1`, off by default): **Try a demo** on the sign-in page opens a private demo family with no sign-in, two children and a few weeks of made-up history (points, marks, stars, an unlocked reward). Switch between the parent's and the child's view. Clearly marked as a demo everywhere; never mixed with real families; deleted after an idle time and capped in number (`DEMO_MAX`, `DEMO_IDLE_SECONDS`), with a friendly message when full
+- [x] Guided tour drawn by the page alone (no library, nothing sent to the server): offered once per device (kept in `localStorage`), on demand from Settings, and every time in a demo; steps by role (parent: earning points, penalties, weekly marks, rewards, Settings, adding a child's device; child: points, stars, next reward); outlines the part it explains, Back/Next/Done, Escape closes, respects reduced motion
+- [x] Guide pictures and a 30-second narrated tour video, recorded with Playwright from the demo data (`scripts/guide-pictures.js`, `scripts/tour-video.js`, voiceover script in `docs/video/`); only made-up people and data; served at `/tour.mp4` with byte ranges (for Safari); **Watch the video** on the sign-in page (`TOUR_VIDEO=0` hides it)
+- [x] README "The tour in 30 seconds" with a poster image linking to the video
 
 ## Phase 6: documentation and launch
 

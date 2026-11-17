@@ -246,6 +246,87 @@ window.LW_STRINGS.en = {
     days: (n) => `${n} days ago`,
   },
 
+  // Demo families (DEMO_FAMILIES=1) and the tour video
+  demo: {
+    tryTitle: 'Try it first',
+    tryHelp: 'Open a made-up family, with no sign-in. Nothing you do there is kept.',
+    tryButton: 'Try a demo',
+    videoTitle: 'See it in 30 seconds',
+    videoHelp: 'A short narrated tour of the app.',
+    watchButton: 'Watch the video',
+    videoLabel: 'Tour video',
+    closeVideo: 'Close',
+    bannerLabel: 'Demo',
+    banner: (minutes) =>
+      `Demo family: made-up people and data, deleted after ${minutes} minutes unused.`,
+    childView: (name) => `${name}'s view`,
+    parentView: "Parent's view",
+    leave: 'Leave the demo',
+    off: "This is a demo: inviting a co-parent, adding a child's device, logging devices out, export and delete are turned off.",
+    ended: 'The demo ended after a while unused. Start a new one any time.',
+  },
+
+  // The guided tour: a title (t) and a sentence or two (b) per step, by role
+  tour: {
+    offer: 'New here? A quick tour shows the main parts.',
+    offerLabel: 'Tour offer',
+    take: 'Take the tour',
+    noThanks: 'No thanks',
+    step: (n, total) => `Step ${n} of ${total}`,
+    back: 'Back',
+    next: 'Next',
+    done: 'Done',
+    close: 'Close',
+    parent: {
+      earn: {
+        t: 'Earning points',
+        b: 'Tap + when your child does one of these. A behavior with a range asks how many points.',
+      },
+      warn: {
+        t: 'Warnings',
+        b: 'A warning is a gentle heads-up, counted per day (1/2). It costs no points.',
+      },
+      penalties: {
+        t: 'Penalties',
+        b: 'A penalty takes points away after you confirm. The balance never drops below zero, and children never see penalties.',
+      },
+      marks: {
+        t: 'Weekly challenges',
+        b: 'Tap a day to mark it perfect, OK or bad. Two perfect days and no bad day win a star for the week.',
+      },
+      rewards: {
+        t: 'Rewards',
+        b: 'Rewards unlock with stars and points. The ring shows how close the next one is; nothing is spent.',
+      },
+      history: {
+        t: 'History and undo',
+        b: 'Everything recorded, newest first. Undo fixes a mistake, and the balance is worked out again.',
+      },
+      settings: {
+        t: 'Settings',
+        b: 'Change behaviors, penalties, challenges and rewards, add children, and invite a co-parent.',
+      },
+      device: {
+        t: "Your child's phone",
+        b: "Under Devices, add a device to get a one-time code for your child's phone. It shows only their progress: no penalties, warnings or notes.",
+      },
+    },
+    child: {
+      header: { t: 'Your points and stars', b: 'Your points and stars are always at the top.' },
+      ring: { t: 'Your next reward', b: 'The ring shows how close you are to your next reward.' },
+      earn: {
+        t: 'Ways to earn',
+        b: 'These earn points. A parent adds them when you do them.',
+      },
+      marks: {
+        t: 'This week',
+        b: 'Your challenges day by day. Two perfect days and no bad day win a star.',
+      },
+      rewards: { t: 'Rewards', b: 'Every reward and what it needs. Keep going!' },
+    },
+  },
+
+  // API errors, by their code
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
     login: 'Please sign in again.',
@@ -284,5 +365,9 @@ window.LW_STRINGS.en = {
     operatorOnly: 'Only operators can see this.',
     inviteInvalid: "This invite link doesn't work. It may have expired or been used.",
     tooManyTries: ({ seconds }) => `Too many tries. Try again in ${seconds}s.`,
+    demoOff: "That isn't available in the demo.",
+    demoEnded: 'The demo ended after a while unused. Start a new one any time.',
+    demoFull:
+      'Every demo family is busy right now. Grab a cup of tea and try again in a few minutes.',
   },
 };

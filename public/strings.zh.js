@@ -242,6 +242,85 @@ window.LW_STRINGS.zh = {
     days: (n) => `${n} 天前`,
   },
 
+  // Demo families (DEMO_FAMILIES=1) and the tour video
+  demo: {
+    tryTitle: '先试试看',
+    tryHelp: '打开一个虚构的家庭，无需登录。你在里面做的一切都不会保存。',
+    tryButton: '试用演示',
+    videoTitle: '30 秒看懂',
+    videoHelp: '一段简短的语音导览。',
+    watchButton: '观看视频',
+    videoLabel: '导览视频',
+    closeVideo: '关闭',
+    bannerLabel: '演示',
+    banner: (minutes) => `演示家庭：虚构的人物和数据，闲置 ${minutes} 分钟后删除。`,
+    childView: (name) => `${name}的视图`,
+    parentView: '家长视图',
+    leave: '退出演示',
+    off: '这是演示：邀请另一位家长、为孩子添加设备、让设备退出登录、导出和删除都已关闭。',
+    ended: '演示因闲置一段时间已结束。随时可以重新开始。',
+  },
+
+  // The guided tour: a title (t) and a sentence or two (b) per step, by role
+  tour: {
+    offer: '第一次使用？快速导览带你认识主要功能。',
+    offerLabel: '导览邀请',
+    take: '开始导览',
+    noThanks: '不用了',
+    step: (n, total) => `第 ${n} 步，共 ${total} 步`,
+    back: '上一步',
+    next: '下一步',
+    done: '完成',
+    close: '关闭',
+    parent: {
+      earn: {
+        t: '赚积分',
+        b: '孩子做到其中一项时，点 +。带范围的行为会问你给多少积分。',
+      },
+      warn: {
+        t: '警告',
+        b: '警告是一次温和的提醒，按天计数（1/2），不扣积分。',
+      },
+      penalties: {
+        t: '扣分',
+        b: '确认后，扣分会减少积分。余额不会低于零，孩子也看不到扣分。',
+      },
+      marks: {
+        t: '每周挑战',
+        b: '点一下某天，可标为完美、还行或糟糕。有 2 天完美且没有糟糕的一天，就能赢得本周的一颗星。',
+      },
+      rewards: {
+        t: '奖励',
+        b: '奖励凭星星和积分解锁。圆环显示离下一个奖励还有多近，不会花掉任何积分。',
+      },
+      history: {
+        t: '记录和撤销',
+        b: '所有记录按时间从新到旧排列。撤销可以纠正错误，余额会重新计算。',
+      },
+      settings: {
+        t: '设置',
+        b: '修改行为、扣分、挑战和奖励，添加孩子，邀请另一位家长。',
+      },
+      device: {
+        t: '孩子的手机',
+        b: '在设备里添加设备，可得到给孩子手机用的一次性代码。孩子只能看到自己的进度：没有扣分、警告或备注。',
+      },
+    },
+    child: {
+      header: { t: '你的积分和星星', b: '你的积分和星星一直在最上面。' },
+      ring: { t: '你的下一个奖励', b: '圆环显示你离下一个奖励还有多近。' },
+      earn: {
+        t: '赚积分的方法',
+        b: '做到这些就能赚积分。你做到时，由家长帮你加上。',
+      },
+      marks: {
+        t: '本周',
+        b: '你每天的挑战。有 2 天完美且没有糟糕的一天，就能赢得一颗星。',
+      },
+      rewards: { t: '奖励', b: '每个奖励和它的条件。继续加油！' },
+    },
+  },
+
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
     login: '请重新登录。',
@@ -278,5 +357,8 @@ window.LW_STRINGS.zh = {
     operatorOnly: '只有运营人员才能查看。',
     inviteInvalid: '这个邀请链接不能用，可能已过期或已被使用。',
     tooManyTries: ({ seconds }) => `尝试次数太多，请 ${seconds} 秒后再试。`,
+    demoOff: '这在演示中不可用。',
+    demoEnded: '演示因闲置一段时间已结束。随时可以重新开始。',
+    demoFull: '现在所有演示家庭都在使用中。先喝杯茶，几分钟后再试。',
   },
 };

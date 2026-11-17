@@ -480,3 +480,137 @@ select {
   display: inline-block;
   margin: 2px 16px 2px 0;
 }
+
+/* Demo banner and the once-only tour offer */
+.demo-bar,
+.tour-offer {
+  padding: 8px 12px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.demo-bar {
+  background: #fff4d6;
+  border-bottom: 1px solid #e8d49a;
+}
+
+.tour-offer {
+  background: var(--l);
+  border-bottom: 1px solid #c9dde3;
+}
+
+.demo-bar p,
+.tour-offer p {
+  margin: 0 0 6px;
+}
+
+.demo-bar .btns,
+.tour-offer .btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.demo-bar .b,
+.tour-offer .b {
+  padding: 6px 10px;
+  font-size: 14px;
+  white-space: normal;
+}
+
+.try {
+  text-align: center;
+}
+
+/* Guided tour: an outline around the part a step explains (the rest dimmed), and a caption */
+.tour-ring {
+  position: absolute;
+  z-index: 40;
+  border: 3px solid #f5a623;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(15, 30, 50, 0.35);
+  pointer-events: none;
+  transition:
+    top 0.25s,
+    left 0.25s,
+    width 0.25s,
+    height 0.25s;
+}
+
+.tour-ring.fixed {
+  position: fixed;
+}
+
+.tour-caption {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  z-index: 41;
+  max-width: 460px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 14px 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.tour-caption.top {
+  bottom: auto;
+  top: calc(12px + env(safe-area-inset-top));
+}
+
+.tour-caption:focus {
+  outline: none;
+}
+
+.tour-caption h3 {
+  margin: 2px 0 4px;
+}
+
+.tour-caption p {
+  margin: 0 0 10px;
+}
+
+.tour-caption .tour-n {
+  margin: 0;
+  color: #667;
+}
+
+.tour-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-ring {
+    transition: none;
+  }
+}
+
+/* The tour video, over the page */
+.player {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.player-box {
+  width: 100%;
+  max-width: 960px;
+}
+
+.player video {
+  display: block;
+  width: 100%;
+  max-height: 80vh;
+  background: #000;
+}

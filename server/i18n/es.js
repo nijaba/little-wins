@@ -15,6 +15,8 @@ module.exports = {
     tooManyTries: (seconds) => `Demasiados intentos. Inténtalo de nuevo en ${seconds} s.`,
   },
 
+  demo: { family: 'Familia de demostración', parent: 'Sam (demo)', children: ['Mía', 'Leo'] },
+
   starter: {
     targets: [
       ['Rutina de la mañana hecha', 'por rutina'],

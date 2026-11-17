@@ -339,19 +339,20 @@ function createRepo(db) {
   const firstEntryDay = (fid, cid) =>
     db.prepare('SELECT MIN(day) d FROM entries WHERE family_id=? AND child_id=?').get(fid, cid).d;
 
-  function addEntry(fid, cid, { itemId, kind, points, note, day, userId, who }) {
+  /** Records an entry; `ts` defaults to now (the demo's made-up history passes past times). */
+  function addEntry(fid, cid, { itemId, kind, points, note, day, userId, who, ts }) {
     db.prepare(
       'INSERT INTO entries(family_id,child_id,item_id,kind,points,note,day,ts,user_id,who) VALUES(?,?,?,?,?,?,?,?,?,?)',
-    ).run(fid, cid, itemId, kind, points, note || '', day, now(), userId ?? null, who);
+    ).run(fid, cid, itemId, kind, points, note || '', day, ts || now(), userId ?? null, who);
   }
 
   /** Replaces a child's mark for an item and day. */
-  function replaceMark(fid, cid, itemId, day, mark, userId, who) {
+  function replaceMark(fid, cid, itemId, day, mark, userId, who, ts) {
     tx(() => {
       db.prepare(
         "UPDATE entries SET undone=1 WHERE family_id=? AND child_id=? AND kind='mark' AND item_id=? AND day=?",
       ).run(fid, cid, itemId, day);
-      addEntry(fid, cid, { itemId, kind: 'mark', points: 0, note: mark, day, userId, who });
+      addEntry(fid, cid, { itemId, kind: 'mark', points: 0, note: mark, day, userId, who, ts });
     });
   }
 

@@ -249,6 +249,94 @@ window.LW_STRINGS.de = {
     days: (n) => `vor ${n} Tagen`,
   },
 
+  // Demo families (DEMO_FAMILIES=1) and the tour video
+  demo: {
+    tryTitle: 'Erst mal ausprobieren',
+    tryHelp:
+      'Öffne eine ausgedachte Familie, ganz ohne Anmeldung. Nichts, was du dort machst, wird gespeichert.',
+    tryButton: 'Demo testen',
+    videoTitle: 'In 30 Sekunden erklärt',
+    videoHelp: 'Eine kurze Tour durch die App mit Erzählstimme.',
+    watchButton: 'Video ansehen',
+    videoLabel: 'Tour-Video',
+    closeVideo: 'Schließen',
+    bannerLabel: 'Demo',
+    banner: (minutes) =>
+      `Demo-Familie: ausgedachte Personen und Daten, nach ${minutes} Minuten ohne Nutzung gelöscht.`,
+    childView: (name) => `Ansicht von ${name}`,
+    parentView: 'Elternansicht',
+    leave: 'Demo verlassen',
+    off: 'Das ist eine Demo: Ein weiteres Elternteil einladen, ein Gerät für ein Kind hinzufügen, Geräte abmelden, Export und Löschen sind ausgeschaltet.',
+    ended:
+      'Die Demo wurde nach einer Weile ohne Nutzung beendet. Du kannst jederzeit eine neue starten.',
+  },
+
+  // The guided tour: a title (t) and a sentence or two (b) per step, by role
+  tour: {
+    offer: 'Neu hier? Eine kurze Tour zeigt dir das Wichtigste.',
+    offerLabel: 'Tour-Angebot',
+    take: 'Tour starten',
+    noThanks: 'Nein danke',
+    step: (n, total) => `Schritt ${n} von ${total}`,
+    back: 'Zurück',
+    next: 'Weiter',
+    done: 'Fertig',
+    close: 'Schließen',
+    parent: {
+      earn: {
+        t: 'Punkte sammeln',
+        b: 'Tippe auf +, wenn dein Kind eines davon macht. Bei einem Verhalten mit Spanne wirst du nach den Punkten gefragt.',
+      },
+      warn: {
+        t: 'Verwarnungen',
+        b: 'Eine Verwarnung ist ein sanfter Hinweis, pro Tag gezählt (1/2). Sie kostet keine Punkte.',
+      },
+      penalties: {
+        t: 'Abzüge',
+        b: 'Ein Abzug nimmt Punkte weg, sobald du bestätigst. Das Guthaben fällt nie unter null, und Kinder sehen Abzüge nie.',
+      },
+      marks: {
+        t: 'Wochenchallenges',
+        b: 'Tippe auf einen Tag: perfekt, okay oder schlecht. Zwei perfekte Tage und kein schlechter Tag bringen einen Stern für die Woche.',
+      },
+      rewards: {
+        t: 'Belohnungen',
+        b: 'Belohnungen werden mit Sternen und Punkten freigeschaltet. Der Ring zeigt, wie nah die nächste ist; es wird nichts ausgegeben.',
+      },
+      history: {
+        t: 'Verlauf und Rückgängig',
+        b: 'Alles Eingetragene, das Neueste zuerst. Mit Rückgängig korrigierst du einen Fehler, und das Guthaben wird neu berechnet.',
+      },
+      settings: {
+        t: 'Einstellungen',
+        b: 'Ändere Verhalten, Abzüge, Challenges und Belohnungen, füge Kinder hinzu und lade ein weiteres Elternteil ein.',
+      },
+      device: {
+        t: 'Das Handy deines Kindes',
+        b: 'Füge unter Geräte ein Gerät hinzu, um einen Einmalcode für das Handy deines Kindes zu bekommen. Es zeigt nur den Fortschritt deines Kindes: keine Abzüge, Verwarnungen oder Notizen.',
+      },
+    },
+    child: {
+      header: {
+        t: 'Deine Punkte und Sterne',
+        b: 'Deine Punkte und Sterne stehen immer ganz oben.',
+      },
+      ring: {
+        t: 'Deine nächste Belohnung',
+        b: 'Der Ring zeigt, wie nah du deiner nächsten Belohnung bist.',
+      },
+      earn: {
+        t: 'So sammelst du',
+        b: 'Dafür gibt es Punkte. Ein Elternteil trägt sie ein, wenn du sie schaffst.',
+      },
+      marks: {
+        t: 'Diese Woche',
+        b: 'Deine Challenges, Tag für Tag. Zwei perfekte Tage und kein schlechter Tag bringen einen Stern.',
+      },
+      rewards: { t: 'Belohnungen', b: 'Jede Belohnung und was dafür nötig ist. Weiter so!' },
+    },
+  },
+
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
     login: 'Bitte melde dich neu an.',
@@ -288,5 +376,10 @@ window.LW_STRINGS.de = {
     inviteInvalid:
       'Dieser Einladungslink funktioniert nicht. Er ist vielleicht abgelaufen oder wurde schon benutzt.',
     tooManyTries: ({ seconds }) => `Zu viele Versuche. Versuch es in ${seconds} s noch einmal.`,
+    demoOff: 'Das ist in der Demo nicht verfügbar.',
+    demoEnded:
+      'Die Demo wurde nach einer Weile ohne Nutzung beendet. Du kannst jederzeit eine neue starten.',
+    demoFull:
+      'Alle Demo-Familien sind gerade belegt. Hol dir einen Tee und versuch es in ein paar Minuten noch einmal.',
   },
 };

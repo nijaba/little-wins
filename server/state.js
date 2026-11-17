@@ -8,8 +8,14 @@ const scoring = require('./scoring');
 /**
  * `session` is { id, kind, familyId, userId, childId }. Parents pick a child with
  * `requestedChild` (default: the first); a child's device always shows its own child.
+ * `demo` is set for a demo family (server/demo.js).
  */
-function buildState(repo, session, { week: requestedWeek, child: requestedChild } = {}) {
+function buildState(
+  repo,
+  session,
+  { week: requestedWeek, child: requestedChild } = {},
+  demo = null,
+) {
   const fid = session.familyId;
   const family = repo.family(fid);
   const parent = session.kind === 'parent';
@@ -58,6 +64,9 @@ function buildState(repo, session, { week: requestedWeek, child: requestedChild 
     hist: scoring.history(entries, role),
     today: td,
   };
+
+  // A demo family: the banner gives its idle time.
+  if (demo) state.demo = { idleSeconds: demo.idleSeconds };
 
   if (parent) {
     const myRole = repo.role(fid, session.userId);

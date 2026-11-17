@@ -13,6 +13,12 @@ const { buildState } = require('./state');
 const { clearSessionCookie } = require('./sessions');
 const { allows } = require('./allowlist');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path_ = require('node:path');
+
+// The tour video is optional (made by scripts/tour-voiceover.py); hide its button without it.
+const TOUR_VIDEO = path_.join(__dirname, '..', 'public', 'tour.mp4');
+const hasTourVideo = () => fs.existsSync(TOUR_VIDEO);
 
 // Clamp a request value to a whole number in [lo, hi]; text is trimmed and capped.
 const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+v) || 0));
@@ -23,7 +29,28 @@ const text = (v, max = 120) =>
 const id = (v) => num(v, 0, 1e12);
 const formatCode = (code) => code.replace(/(.{4})(.{4})(.{2})/, '$1-$2-$3');
 
-function createRouter({ repo, sessions, limiter, clientIp }) {
+// In a demo family these answer 403 demoOff (see docs/design.md, "Demo families").
+const DEMO_OFF = new Set([
+  '/api/pair',
+  '/api/invite/info',
+  '/api/setup',
+  '/api/logout',
+  '/api/operator',
+  '/api/export',
+  '/api/invite/create',
+  '/api/invite/revoke',
+  '/api/parent/remove',
+  '/api/owner/transfer',
+  '/api/pairing/create',
+  '/api/family/delete',
+  '/api/session/revoke',
+]);
+
+/**
+ * `demo` is set only for the demo families' router (server/demo.js): their own repo and
+ * sessions, plus { idleSeconds, sweep, full, create, touch, leave }.
+ */
+function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
   /** [409, …] when the family already has as many of `what` as its limit allows, else null. */
   function full(fid, what, day) {
     if (repo.count(fid, what, day) < config.limits[what]) return null;
@@ -232,8 +259,21 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
         signupMode: config.signupMode,
         privacyUrl: config.privacyUrl || null,
         termsUrl: config.termsUrl || null,
+        demo: config.demo.on,
+        tourVideo: config.tourVideo && hasTourVideo(),
       },
     ];
+  }
+
+  /** A new demo family, opened as its parent. */
+  function demoStart(req, b) {
+    const wait = limiter.hit(`demo:${clientIp(req)}`);
+    if (wait)
+      return [429, apiError('tooManyTries', { seconds: wait }), { 'Retry-After': String(wait) }];
+    if (demo.full()) return [503, apiError('demoFull'), { 'Retry-After': '300' }];
+    const { familyId, userId } = demo.create(b);
+    const { cookie } = sessions.create({ kind: 'parent', userId, familyId }, req);
+    return [200, { ok: true }, { 'Set-Cookie': cookie }];
   }
 
   function pair(req, b) {
@@ -308,18 +348,47 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
 
     const b = await readBody(req);
     if (b === null) return send([413, apiError('tooLarge'), { Connection: 'close' }]);
-    if (path === '/api/pair') return send(pair(req, b));
-    if (path === '/api/invite/info') return send(inviteInfo(req, b));
+    if (demo) {
+      demo.sweep(); // idle demo families go before their sessions are looked at
+      if (path === '/api/demo/start') return send(demoStart(req, b));
+    } else if (path.startsWith('/api/demo/')) {
+      return send([404, apiError('notFound')]);
+    }
+    if (!demo && path === '/api/pair') return send(pair(req, b));
+    if (!demo && path === '/api/invite/info') return send(inviteInfo(req, b));
 
     const s = sessions.auth(req);
+    if (!s && demo) {
+      return send([401, apiError('demoEnded'), { 'Set-Cookie': sessions.clearCookie() }]);
+    }
     if (!s) return send([401, apiError('login')]);
+    if (demo) {
+      demo.touch(s.familyId);
+      if (DEMO_OFF.has(path)) return send([403, apiError('demoOff')]);
+      if (path === '/api/demo/leave') {
+        demo.leave(s.familyId);
+        return send([200, { ok: true }, { 'Set-Cookie': sessions.clearCookie() }]);
+      }
+      if (path === '/api/demo/view') {
+        if (b.as === 'child') {
+          const child = repo.child(s.familyId, id(b.child_id));
+          if (!child) return send([404, apiError('notFound')]);
+          sessions.setView(s.id, 'child', child.id);
+          Object.assign(s, { kind: 'child', childId: child.id });
+        } else {
+          sessions.setView(s.id, 'parent');
+          Object.assign(s, { kind: 'parent', childId: null });
+        }
+        return send([200, buildState(repo, s, view, demo)]);
+      }
+    }
     if (path === '/api/logout') {
       sessions.end(s.id);
       return send([200, { ok: true }, { 'Set-Cookie': clearSessionCookie() }]);
     }
     if (path === '/api/setup') return send(setup(req, s, b));
 
-    const operator = s.kind === 'parent' && isOperator(s.userId);
+    const operator = !demo && s.kind === 'parent' && isOperator(s.userId);
     if (path === '/api/operator') {
       if (!operator) return send([403, apiError('operatorOnly')]);
       return send([
@@ -351,7 +420,7 @@ function createRouter({ repo, sessions, limiter, clientIp }) {
     }
 
     const state = (extra = {}) => ({
-      ...buildState(repo, s, { ...view, ...extra }),
+      ...buildState(repo, s, { ...view, ...extra }, demo),
       ...(operator ? { operator: true } : {}),
     });
     if (path === '/api/state') {
