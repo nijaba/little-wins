@@ -35,6 +35,14 @@ const bundles = Object.fromEntries(LANGUAGES.map((l) => [l, l === 'en' ? EN : lo
 const pages = (lang) => ({ ...EN.pages, ...(bundles[lang]?.pages || {}) });
 
 // Points and stars of the starter list (same in every language), in the order of the names.
+// Emoji of the starter list, in the same order as its names (the same in every language).
+const STARTER_EMOJI = {
+  targets: ['🌅', '🧽', '🧹', '📚', '📖', '💛', '🎹', '📱', '🧘'],
+  penalties: ['✋', '🗯️', '📵'],
+  challenges: ['🌅', '💬', '✏️', '🛏️'],
+  rewards: ['🎬', '🍝', '🎮', '🌳', '📕', '🎡'],
+};
+
 const STARTER_POINTS = {
   targets: [
     [5, 5],
@@ -84,4 +92,5 @@ module.exports = {
   reminder,
   notice,
   STARTER_POINTS,
+  STARTER_EMOJI,
 };

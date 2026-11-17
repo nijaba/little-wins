@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Emoji for behaviors, penalties, challenges, rewards and children, picked in the edit form and shown on every screen; the starter list comes with them. The page's files are revalidated on each load (`Cache-Control: no-cache`), so updates show right away.
 - A brighter sign-in page: the star logo, a tagline, three reasons to use Little Wins and a few twinkling stars, with Try a demo in gold.
 - Notices on a child's device: once a parent allows them for that child, a reward unlocked or a milestone reached sends a Web Push to the child's device, once each.
 - Evening reminder, opt-in per parent phone: one Web Push a day at the chosen time when a challenge is still unmarked (encrypted, no dependency; `PUSH_REMINDERS=0` turns it off).

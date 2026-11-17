@@ -501,6 +501,19 @@ Families no device has used for `DELETE_IDLE_FAMILIES_DAYS` are deleted.
 | BK-03 | The command line makes a key it never overwrites, and encrypts and decrypts streams | Unit |
 | BK-04 | backup.sh with BACKUP_PUBLIC_KEY writes an encrypted copy that restores the database | Unit |
 
+## EM: Emoji
+
+An emoji for each behavior, penalty, challenge, reward and child.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| EM-01 | The starter list comes with emoji, in every language | API |
+| EM-02 | A parent sets, changes and removes an emoji on a behavior, a reward and a child | API |
+| EM-03 | Anything but one emoji is refused | API |
+| EM-04 | History shows the emoji, and the export keeps it | API |
+| EM-05 | Old data gets the starter emoji for names that match the starter list | Unit |
+| EM-06 | The page, its scripts and styles are revalidated on each load (Cache-Control: no-cache) | API |
+
 ## IC: App icons
 
 The favicon, the home-screen icons (`scripts/icons.js`) and the manifest.

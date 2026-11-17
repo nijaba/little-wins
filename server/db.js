@@ -181,6 +181,31 @@ const migrations = [
         sent TEXT NOT NULL, PRIMARY KEY(child_id, key));
     `);
   },
+
+  // 11: an emoji for each behavior, penalty, challenge, reward and child (empty: none). Rows
+  // that still have a starter-list name, in any language, get that name's emoji.
+  (db) => {
+    for (const table of ['items', 'rewards', 'children'])
+      addColumn(db, table, 'emoji', "TEXT NOT NULL DEFAULT ''");
+    const emo = i18n.STARTER_EMOJI;
+    const setItem = db.prepare("UPDATE items SET emoji=? WHERE kind=? AND name=? AND emoji=''");
+    const setReward = db.prepare("UPDATE rewards SET emoji=? WHERE name=? AND emoji=''");
+    for (const lang of i18n.LANGUAGES) {
+      const names = i18n.starter(lang);
+      names.targets.forEach(([name], i) => {
+        setItem.run(emo.targets[i], 'target', name);
+      });
+      names.penalties.forEach(([name], i) => {
+        setItem.run(emo.penalties[i], 'penalty', name);
+      });
+      names.challenges.forEach((name, i) => {
+        setItem.run(emo.challenges[i], 'challenge', name);
+      });
+      names.rewards.forEach((name, i) => {
+        setReward.run(emo.rewards[i], name);
+      });
+    }
+  },
 ];
 
 function migrate(db) {
@@ -206,22 +231,26 @@ const i18n = require('./i18n');
 function seedStarter(db, familyId, lang = 'en') {
   const names = i18n.starter(lang);
   const pts = i18n.STARTER_POINTS;
+  const emo = i18n.STARTER_EMOJI;
   const item = db.prepare(
-    'INSERT INTO items(family_id,kind,name,note,pmin,pmax,sort,active) VALUES(?,?,?,?,?,?,?,1)',
+    'INSERT INTO items(family_id,kind,name,note,pmin,pmax,sort,active,emoji) VALUES(?,?,?,?,?,?,?,1,?)',
   );
   let sort = 0;
   names.targets.forEach(([name, note], i) => {
-    item.run(familyId, 'target', name, note, pts.targets[i][0], pts.targets[i][1], sort++);
+    const [lo, hi] = pts.targets[i];
+    item.run(familyId, 'target', name, note, lo, hi, sort++, emo.targets[i]);
   });
-  for (const [name, note] of names.penalties) {
-    item.run(familyId, 'penalty', name, note, pts.penalty, pts.penalty, sort++);
-  }
-  for (const name of names.challenges) item.run(familyId, 'challenge', name, '', 0, 0, sort++);
+  names.penalties.forEach(([name, note], i) => {
+    item.run(familyId, 'penalty', name, note, pts.penalty, pts.penalty, sort++, emo.penalties[i]);
+  });
+  names.challenges.forEach((name, i) => {
+    item.run(familyId, 'challenge', name, '', 0, 0, sort++, emo.challenges[i]);
+  });
   const reward = db.prepare(
-    'INSERT INTO rewards(family_id,name,stars,points,sort) VALUES(?,?,?,?,?)',
+    'INSERT INTO rewards(family_id,name,stars,points,sort,emoji) VALUES(?,?,?,?,?,?)',
   );
   names.rewards.forEach((name, i) => {
-    reward.run(familyId, name, pts.rewards[i][0], pts.rewards[i][1], i + 1);
+    reward.run(familyId, name, pts.rewards[i][0], pts.rewards[i][1], i + 1, emo.rewards[i]);
   });
 }
 

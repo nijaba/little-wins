@@ -65,7 +65,9 @@ function seedDemo(repo, { timezone, language, now = Date.now() }) {
     childName: names.children[0],
     starter: true,
   });
-  repo.addChild(familyId, names.children[1]);
+  repo.addChild(familyId, names.children[1], '🐻');
+  // The first child gets a fox, the second a bear (set with addChild above).
+  repo.renameChild(familyId, repo.children(familyId)[0].id, names.children[0], '🦊');
   const kids = repo.children(familyId);
   const items = repo.items(familyId);
   const targets = items.filter((i) => i.kind === 'target');

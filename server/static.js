@@ -77,6 +77,9 @@ function serveStatic(req, res) {
   };
   if (ext === 'html') headers['Content-Security-Policy'] = CSP;
   if (ext === 'mp4') return serveRanges(req, res, file, headers);
+  // The page's own files: a browser may keep them, but checks for a newer one first, so an
+  // update shows on the next load instead of mixing old scripts with a new server.
+  headers['Cache-Control'] = 'no-cache';
   res.writeHead(200, headers);
   res.end(fs.readFileSync(file));
 }

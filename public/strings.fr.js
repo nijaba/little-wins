@@ -221,6 +221,8 @@ window.LW_STRINGS.fr = {
 
   // Settings tab
   settings: {
+    fieldEmoji: 'Émoji',
+    noEmoji: 'Sans émoji',
     forLabel: (names) => `Pour : ${names}`,
     forNobody: "personne pour l'instant",
     forWho: 'Pour qui ?',

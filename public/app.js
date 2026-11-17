@@ -693,6 +693,10 @@
     } catch {}
   }
 
+  // A behavior's, reward's or child's emoji, before its name (none: nothing).
+  const emo = (x) => (x?.emoji ? `<span class=emo aria-hidden=true>${esc(x.emoji)}</span>` : '');
+  const named = (x) => `${emo(x)}${esc(x.name)}`;
+
   // Items and rewards can be for some children only (`for`: null = everyone).
   const mine = (r) => r.for == null || r.for.includes(S.childId);
   const myRewards = () => S.rewards.filter(mine);
@@ -796,6 +800,7 @@
         children: body.children,
       };
     }
+    body.emoji = $('f_emoji') ? $('f_emoji').value : undefined;
     if (await api(path, body)) {
       ed = null;
       render();
@@ -922,6 +927,12 @@
     },
     note: (d) => note(+d.id),
     'rem-on': () => reminderOn(),
+    // Pick an emoji in the edit form without redrawing it (keeps what was typed).
+    'pick-emoji': (d) => {
+      $('f_emoji').value = d.e;
+      for (const b of document.querySelectorAll('.emj'))
+        b.classList.toggle('on', b.dataset.e === d.e);
+    },
     'child-notices': () => childNoticesOn(),
     notify: (d) => api('child/notify', { child_id: +d.id, on: d.on === '1' }),
     'rem-off': () => reminderOff(),
@@ -990,7 +1001,7 @@
     const b = r.points ? Math.min(1, S.balance / r.points) : a;
     const pc = Math.round(100 * (r.stars && r.points ? (a + b) / 2 : r.points ? b : a));
     const C = 264;
-    return `<div class="card ringcard" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle class=ring-track cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle class=ring-value cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text class=ring-text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${esc(r.name)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
+    return `<div class="card ringcard" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle class=ring-track cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle class=ring-value cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text class=ring-text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${named(r)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
   }
 
   // A parent's message and the milestones the app spotted: at the top of Today, for both views.
@@ -1034,7 +1045,7 @@
       .filter((x) => x.kind === 'target' && mine(x))
       .forEach((i, n) => {
         const t = (name) => (n ? '' : ` data-tour=${name}`); // the tour points at the first one
-        h += `<div class=card${t('earn')}><div class=row><div>${esc(i.name)}<br><small>${i.note ? `${esc(i.note)} · ` : ''}${range(i)}</small></div>${
+        h += `<div class=card${t('earn')}><div class=row><div>${named(i)}<br><small>${i.note ? `${esc(i.note)} · ` : ''}${range(i)}</small></div>${
           P()
             ? `<div><button class=b data-action=add data-id=${i.id}>+</button> <button class="b w" data-action=warn data-id=${i.id}${t('warn')}>${STR.today.warnButton(S.warn[i.id] || 0)}</button></div>`
             : ''
@@ -1043,7 +1054,7 @@
     if (P()) {
       h += `<div data-tour=penalties><h3>${STR.today.penalties}</h3>`;
       for (const i of S.items.filter((x) => x.kind === 'penalty' && mine(x))) {
-        h += `<div class=card><div class=row><div>${esc(i.name)}<br><small>${esc(i.note)}</small></div><button class="b r" data-action=pen data-id=${i.id}>-${i.pmin}</button></div></div>`;
+        h += `<div class=card><div class=row><div>${named(i)}<br><small>${esc(i.note)}</small></div><button class="b r" data-action=pen data-id=${i.id}>-${i.pmin}</button></div></div>`;
       }
       h += '</div>';
     }
@@ -1089,7 +1100,7 @@
               `<span class="d ${m || ''}">${fd(rev.days[k], { weekday: 'narrow' })}<br>${wk.marks[m] || wk.marks.none}</span>`,
           )
           .join('');
-        h += `<div class=card><div class=row><div>${esc(c.name)}</div>${c.won ? `<b>${wk.won}</b>` : ''}</div><div class=strip>${strip}</div></div>`;
+        h += `<div class=card><div class=row><div>${named(c)}</div>${c.won ? `<b>${wk.won}</b>` : ''}</div><div class=strip>${strip}</div></div>`;
       }
     }
     const list = (title, rows, fmt) =>
@@ -1140,7 +1151,7 @@
             : `<span class="d ${v || ''}${fut ? ' fut' : ''}">${label}</span>`;
         })
         .join('');
-      h += `<div class=card${n ? '' : ' data-tour=marks'}><div class=row><div>${esc(i.name)}<br><small>${
+      h += `<div class=card${n ? '' : ' data-tour=marks'}><div class=row><div>${named(i)}<br><small>${
         S.won[i.id] ? '' : wk.perfectDays(pf) + (bd ? wk.aBadDay : '')
       }</small></div>${S.won[i.id] ? `<b>${wk.won}</b>` : ''}</div><div class=strip>${days}</div></div>`;
     }
@@ -1153,7 +1164,7 @@
     let h = `${ring()}<h3>${STR.rewards.title}</h3>`;
     for (const [n, r] of myRewards().entries()) {
       const ok = S.stars >= r.stars && S.balance >= r.points;
-      h += `<div class=card${n ? '' : ' data-tour=rewards'}><div class=row><b>${esc(r.name)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}</div>`;
+      h += `<div class=card${n ? '' : ' data-tour=rewards'}><div class=row><b>${named(r)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}</div>`;
     }
     return h;
   }
@@ -1161,7 +1172,7 @@
   function viewHistory() {
     let h = `<h3>${STR.history.title}</h3>`;
     for (const [n, e] of S.hist.entries()) {
-      h += `<div class=card${n ? '' : ' data-tour=hist'}><div class=row><div>${esc(e.name)} ${
+      h += `<div class=card${n ? '' : ' data-tour=hist'}><div class=row><div>${named(e)} ${
         e.kind === 'warn'
           ? STR.history.warning
           : e.kind === 'mark'
@@ -1180,13 +1191,87 @@
     return h;
   }
 
+  // Emoji to pick from in the edit form, by what is edited (any other can be typed or pasted).
+  const EMOJI = {
+    item: [
+      '⭐',
+      '🌟',
+      '💛',
+      '😊',
+      '🧹',
+      '🧽',
+      '🛏️',
+      '🦷',
+      '📚',
+      '📖',
+      '✏️',
+      '🎹',
+      '⚽',
+      '🚴',
+      '🍎',
+      '🥦',
+      '🐶',
+      '🌅',
+      '🧘',
+      '💬',
+    ],
+    reward: [
+      '🎁',
+      '🏆',
+      '🍦',
+      '🍕',
+      '🍝',
+      '🎬',
+      '🎮',
+      '📕',
+      '🌳',
+      '🎡',
+      '🧸',
+      '🎨',
+      '🏊',
+      '🚲',
+      '⛺',
+      '🎟️',
+    ],
+    child: [
+      '🦊',
+      '🐻',
+      '🐼',
+      '🦁',
+      '🐯',
+      '🐰',
+      '🦄',
+      '🐸',
+      '🐙',
+      '🦖',
+      '🐱',
+      '🐶',
+      '🚀',
+      '🌈',
+      '⚽',
+      '🌸',
+    ],
+  };
+  const emojiField = (list) => {
+    const st = STR.settings;
+    const cur = ed.emoji || '';
+    return `<div class=emoji-field><p class=p0><label for=f_emoji>${st.fieldEmoji}</label><br><input id=f_emoji class=emoji-input maxlength=16 autocomplete=off value="${esc(cur)}"></p><div class=emoji-pick>${list
+      .map(
+        (e) =>
+          `<button type=button class="emj${e === cur ? ' on' : ''}" data-action=pick-emoji data-e="${e}" aria-label="${e}">${e}</button>`,
+      )
+      .join(
+        '',
+      )}<button type=button class="emj${cur ? '' : ' on'}" data-action=pick-emoji data-e="" aria-label="${st.noEmoji}">∅</button></div></div>`;
+  };
+
   // The edit form for an item or reward.
   function viewEdit() {
     const st = STR.settings;
     const r = ed.t === 'r';
     const k = ed.kind;
     if (ed.t === 'c')
-      return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle).child}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name maxlength=40 value="${esc(ed.name)}"></p><button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
+      return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle).child}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name maxlength=40 value="${esc(ed.name)}"></p>${emojiField(EMOJI.child)}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
     const num = (id, label, v) =>
       `<p><label for=${id}>${label}</label><br><input id=${id} type=number inputmode=numeric value="${v}"></p>`;
     let fields = '';
@@ -1208,7 +1293,7 @@
         )
         .join('')}<small>${st.forHelp}</small></fieldset>`;
     }
-    return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle)[r ? 'reward' : k]}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
+    return `<div class=card><h3 class=edit-title>${(ed.id ? st.editTitle : st.addTitle)[r ? 'reward' : k]}</h3><p><label for=f_name>${st.fieldName}</label><br><input id=f_name value="${esc(ed.name)}"></p>${emojiField(r ? EMOJI.reward : EMOJI.item)}${fields}<button class=b data-action=save-ed>${st.save}</button> <button class="b g" data-action=cancel-ed>${st.cancel}</button></div>`;
   }
 
   // ---- Evening reminder (Web Push), per device ----
@@ -1310,7 +1395,7 @@
         S.push && !demo
           ? `<br><button class="b g bell" data-action=notify data-id=${k.id} data-on=${k.notify ? 0 : 1} aria-pressed=${k.notify ? 'true' : 'false'}>${k.notify ? STR.notices.on : STR.notices.off}</button>`
           : '';
-      c += `<div class=card><div class="row stk"><div>${esc(k.name)}${bell}</div><div><button class=b data-action=edit data-t=c data-id=${k.id}>${st.rename}</button>${S.children.length > 1 ? ` <button class="b r" data-action=del-child data-id=${k.id}>${st.remove}</button>` : ''}</div></div></div>`;
+      c += `<div class=card><div class="row stk"><div>${named(k)}${bell}</div><div><button class=b data-action=edit data-t=c data-id=${k.id}>${st.rename}</button>${S.children.length > 1 ? ` <button class="b r" data-action=del-child data-id=${k.id}>${st.remove}</button>` : ''}</div></div></div>`;
     }
     c += `<button class=b data-action=edit data-t=c data-id=0>${st.addChild}</button>`;
     h += fold('kids', st.children, S.children.length, c);
@@ -1343,14 +1428,14 @@
       let g = '';
       list.forEach((i, x) => {
         const sub = (k === 'challenge' ? '' : range(i)) + forLabel(i);
-        g += `<div class=card><div class="row stk"><div>${esc(i.name)}<br><small>${sub}</small></div><div>${mvb('item', i.id, x, list.length)}<button class=b data-action=edit data-t=i data-id=${i.id} data-kind=${k}>${st.edit}</button> <button class="b r" data-action=del-item data-id=${i.id}>${st.remove}</button></div></div></div>`;
+        g += `<div class=card><div class="row stk"><div>${named(i)}<br><small>${sub}</small></div><div>${mvb('item', i.id, x, list.length)}<button class=b data-action=edit data-t=i data-id=${i.id} data-kind=${k}>${st.edit}</button> <button class="b r" data-action=del-item data-id=${i.id}>${st.remove}</button></div></div></div>`;
       });
       g += `<button class=b data-action=edit data-t=i data-id=0 data-kind=${k}>${st.add}</button>`;
       h += fold(k, t, list.length, g);
     }
     let g = '';
     S.rewards.forEach((r, x, L) => {
-      g += `<div class=card><div class="row stk"><div>${esc(r.name)}<br><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}${forLabel(r)}</small></div><div>${mvb('reward', r.id, x, L.length)}<button class=b data-action=edit data-t=r data-id=${r.id}>${st.edit}</button> <button class="b r" data-action=del-rew data-id=${r.id}>${st.remove}</button></div></div></div>`;
+      g += `<div class=card><div class="row stk"><div>${named(r)}<br><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}${forLabel(r)}</small></div><div>${mvb('reward', r.id, x, L.length)}<button class=b data-action=edit data-t=r data-id=${r.id}>${st.edit}</button> <button class="b r" data-action=del-rew data-id=${r.id}>${st.remove}</button></div></div></div>`;
     });
     g += `<button class=b data-action=edit data-t=r data-id=0>${st.add}</button>`;
     h += fold('rew', st.rewards, S.rewards.length, g);
@@ -1423,13 +1508,15 @@
         ? `<div class=chips>${S.children
             .map(
               (c) =>
-                `<button class="chip${c.id === S.childId ? ' on' : ''}" data-action=child data-id=${c.id}>${esc(c.name)}</button>`,
+                `<button class="chip${c.id === S.childId ? ' on' : ''}" data-action=child data-id=${c.id}>${named(c)}</button>`,
             )
             .join('')}</div>`
         : '';
     const day = fmtDay(S.today, { weekday: 'short', month: 'short', day: 'numeric' });
     let h = `<header><b>${STR.header(fmtNum(S.balance), fmtNum(S.stars))}</b>${esc(day)}${
-      P() ? '' : `<div class=who>${esc(S.childName)}</div>`
+      P()
+        ? ''
+        : `<div class=who>${emo(S.children.find((c) => c.id === S.childId))}${esc(S.childName)}</div>`
     }</header>${demoBar()}${tourOffer()}${chips}<main>`;
     if (tab === 'today') h += viewToday();
     if (tab === 'week') h += rev ? viewReview() : viewWeek();

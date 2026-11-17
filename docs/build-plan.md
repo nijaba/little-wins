@@ -127,7 +127,7 @@ Proposed and accepted by the owner (2026-11-17), after the brighter sign-in page
 the parents' recording and Settings stay quick and calm. Everything stays positive-only, with no dependency, under the
 strict CSP, in light and dark mode, and still with reduced motion. Each item gets its design in design.md first.
 
-- [ ] An emoji for each behavior, reward and child, picked by a parent (a short picker, no library), shown large in the
+- [x] An emoji for each behavior, reward and child, picked by a parent (a short picker, no library), shown large in the
   lists, on reward cards and in the child's header, with defaults for the starter list; helps children who can't read
   well yet
 - [ ] Celebrations: the child's points count up when new ones arrived since they last looked; a reward unlock with CSS

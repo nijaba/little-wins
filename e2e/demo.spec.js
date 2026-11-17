@@ -32,7 +32,7 @@ test.describe('demo families', () => {
     await tryDemo(page);
     await expect(banner(page)).toContainText('made-up people and data');
     await expect(banner(page)).toContainText('30 minutes');
-    await expect(page.locator('.chip')).toHaveText(['Mia', 'Leo']);
+    await expect(page.locator('.chip')).toHaveText(['🦊Mia', '🐻Leo']);
     await expect(header(page)).not.toHaveText(/^0 pts/);
     // No once-only offer in a demo: the banner offers the tour instead.
     await expect(page.getByRole('region', { name: 'Tour offer' })).toHaveCount(0);
@@ -49,7 +49,7 @@ test.describe('demo families', () => {
     await tryDemo(page);
     await page.locator('.chip', { hasText: 'Leo' }).click();
     await banner(page).getByRole('button', { name: "Leo's view" }).click();
-    await expect(page.locator('.who')).toHaveText('Leo');
+    await expect(page.locator('.who')).toHaveText('🐻Leo');
     await expect(tabButton(page, '⚙️Settings')).toHaveCount(0);
     await expect(page.locator('.tabs button')).toHaveCount(4);
     await expect(page.locator('.ringcard')).toBeVisible();
@@ -57,7 +57,7 @@ test.describe('demo families', () => {
     await expect(page.locator('main button')).toHaveCount(0);
     await banner(page).getByRole('button', { name: "Parent's view" }).click();
     await expect(page.locator('.who')).toHaveCount(0);
-    await expect(page.locator('.chip')).toHaveText(['Mia', 'Leo']);
+    await expect(page.locator('.chip')).toHaveText(['🦊Mia', '🐻Leo']);
   });
 
   test('E2E-92 Settings in a demo: invites and devices off, no export or delete, Leave the demo', async ({

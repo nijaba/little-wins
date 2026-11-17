@@ -33,6 +33,16 @@ const id = (v) => num(v, 0, 1e12);
 // Who an item or reward is for, from a request: undefined (unchanged), null (everyone) or IDs.
 const forChildren = (v) =>
   v === undefined ? undefined : Array.isArray(v) ? v.slice(0, 50).map(id) : null;
+// An emoji from a request: undefined (unchanged), '' (none), one emoji, or null (refused). One
+// grapheme, and an emoji: a family's picture for a behavior, reward or child, nothing longer.
+const graphemes = new Intl.Segmenter('en', { granularity: 'grapheme' });
+function emojiOf(v) {
+  if (v === undefined) return undefined;
+  const e = String(v ?? '').trim();
+  if (!e) return '';
+  if (e.length > 16 || [...graphemes.segment(e)].length !== 1) return null;
+  return /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(e) ? e : null;
+}
 const formatCode = (code) => code.replace(/(.{4})(.{4})(.{2})/, '$1-$2-$3');
 
 // In a demo family these answer 403 demoOff (see docs/design.md, "Demo families").
@@ -99,6 +109,10 @@ function createRouter({
       if (!name || !['target', 'penalty', 'challenge'].includes(b.kind)) {
         return [400, apiError('nameRequired')];
       }
+      const emoji = emojiOf(b.emoji);
+      if (emoji === null) {
+        return [400, apiError('badRequest')];
+      }
       let pmin = num(b.pmin, 0, 10000);
       let pmax = num(b.pmax, 0, 10000);
       if (b.kind === 'challenge') pmin = pmax = 0;
@@ -116,6 +130,7 @@ function createRouter({
         pmin,
         pmax,
         children: forChildren(b.children),
+        emoji,
       });
       return ok ? [200, state()] : [404, apiError('notFound')];
     },
@@ -129,6 +144,8 @@ function createRouter({
     '/api/reward/save'({ b, fid, state }) {
       const name = text(b.name);
       if (!name) return [400, apiError('nameRequired')];
+      const emoji = emojiOf(b.emoji);
+      if (emoji === null) return [400, apiError('badRequest')];
       if (!b.id) {
         const limited = full(fid, 'rewards');
         if (limited) return limited;
@@ -139,6 +156,7 @@ function createRouter({
         stars: num(b.stars, 0, 1000),
         points: num(b.points, 0, 100000),
         children: forChildren(b.children),
+        emoji,
       });
       return ok ? [200, state()] : [404, apiError('notFound')];
     },
@@ -204,12 +222,16 @@ function createRouter({
     '/api/child/save'({ b, fid, state }) {
       const name = text(b.name, 40);
       if (!name) return [400, apiError('nameRequired')];
+      const emoji = emojiOf(b.emoji);
+      if (emoji === null) return [400, apiError('badRequest')];
       if (b.id) {
-        return repo.renameChild(fid, id(b.id), name) ? [200, state()] : [404, apiError('notFound')];
+        return repo.renameChild(fid, id(b.id), name, emoji)
+          ? [200, state()]
+          : [404, apiError('notFound')];
       }
       const limited = full(fid, 'children');
       if (limited) return limited;
-      const cid = repo.addChild(fid, name);
+      const cid = repo.addChild(fid, name, emoji || '');
       return [200, state({ child: cid })];
     },
     '/api/child/delete'({ b, fid, state }) {
