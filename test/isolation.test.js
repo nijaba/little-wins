@@ -158,6 +158,7 @@ const cases = () => {
       [byB({ item_id: ids.challenge, mark: 'bad' }), 404],
     ],
     '/api/undo': [[{ id: ids.entry }, 404]],
+    '/api/entry/note': [[{ id: ids.entry, note: 'from B' }, 404]],
     // These routes name no ID: they act on B's own family, whatever the body says about A.
     '/api/family/save': [
       [

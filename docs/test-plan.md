@@ -65,6 +65,7 @@ Recording and undoing entries.
 | PT-04 | The child sees positive history only, no penalties and no warnings | API |
 | PT-05 | Warnings count per target per day; challenges cannot get points or warnings | API |
 | PT-06 | Adding without a child or with an unknown item answers 404 | API |
+| PT-07 | A parent adds, changes and clears a note on points or a warning, never on a mark; the child never sees it | API |
 
 ## WK: Weekly challenges and stars
 

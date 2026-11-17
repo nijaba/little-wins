@@ -358,6 +358,11 @@ function createRepo(db) {
 
   const undoEntry = (fid, id) =>
     db.prepare('UPDATE entries SET undone=1 WHERE family_id=? AND id=?').run(fid, id).changes > 0;
+  /** Sets a parent's note on points or a warning (a mark's `note` holds the mark itself). */
+  const setNote = (fid, id, note) =>
+    db
+      .prepare("UPDATE entries SET note=? WHERE family_id=? AND id=? AND kind IN ('points','warn')")
+      .run(note, fid, id).changes > 0;
 
   // --- Devices --------------------------------------------------------------------------------
   const sessions = (fid) =>
@@ -537,6 +542,7 @@ function createRepo(db) {
     addEntry,
     replaceMark,
     undoEntry,
+    setNote,
     sessions,
     revokeSession,
     createPairing,

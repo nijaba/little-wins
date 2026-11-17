@@ -81,6 +81,9 @@ window.LW_STRINGS.es = {
   // Toast and history descriptions
   undo: 'Deshacer',
   undoLower: 'deshacer',
+  note: 'Nota',
+  noteLower: 'nota',
+  notePrompt: 'Nota para los padres (tu hijo nunca la ve). Déjala vacía para quitarla.',
   warningPrefix: '⚠ Aviso · ',
 
   // Next-reward ring

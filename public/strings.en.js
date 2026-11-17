@@ -83,6 +83,9 @@ window.LW_STRINGS.en = {
   // Toast and history descriptions
   undo: 'Undo',
   undoLower: 'undo',
+  note: 'Note',
+  noteLower: 'note',
+  notePrompt: 'Note for parents (your child never sees it). Leave empty to remove it.',
   warningPrefix: '⚠ Warning · ',
 
   // Next-reward ring

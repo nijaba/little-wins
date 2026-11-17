@@ -59,7 +59,7 @@ These hold in both hosting modes. With several children **(target)**, each rule 
 - A penalty subtracts its amount. A parent confirms before it's recorded.
 - The balance never drops below 0. Entries apply in time order, and each one is clamped at 0, so a penalty on an empty balance costs nothing later.
 - Undo removes an entry; the balance is recomputed from what remains.
-- A parent may add a short note to an entry. Only parents see notes.
+- A parent may add a short note (up to 120 characters) to points, a penalty or a warning: **Note** on the confirmation message right after recording it, or **note** beside the entry in History, opens a prompt with the current note. An empty note removes it. A mark has no note. Only parents see notes.
 
 ### Warnings
 
@@ -189,7 +189,7 @@ Defaults for hosted mode, each overridable by environment variable:
 - **Parents' notes** are visible to parents only and are excluded from the child's view and from logs.
 - **No third parties.** No analytics, trackers or external fonts; the only third parties are the sign-in providers, which see only that someone signed in to this app.
 - **Export and delete.** The owner can download the family's data as JSON, and delete the family. Deletion removes all its rows at once; backups age out within the stated retention period (30 days by default).
-- **Logs** hold method, path template, status, duration and a truncated IP. Never names, notes or tokens. Kept 14 days.
+- **Logs.** The app writes no request log. It logs only startup, warnings (such as a failed sign-in at the provider) and errors, never names, notes or tokens. Request logs, if any, are the reverse proxy's; the operator sets how long they are kept and says so in the privacy policy.
 - **Cookies** are strictly necessary (the session and the sign-in state), so no consent banner is needed.
 - **Hosted operators** must publish a privacy policy and terms that cover parents as users, children's data processed on the parents' behalf, the hosting and sign-in providers as processors, and the retention periods. The app links to them from the sign-in page and Settings. This design is not legal advice: check GDPR (EU/UK) and COPPA (US) obligations for your situation.
 
@@ -205,7 +205,7 @@ Defaults for hosted mode, each overridable by environment variable:
 
 ### Backups
 
-- Nightly online backups (SQLite backup API) with an integrity check, kept 30 days, plus an off-site copy.
+- Nightly online backups (SQLite backup API) with an integrity check, kept 30 days (`KEEP_DAYS` in `scripts/backup.sh`), plus an off-site copy.
 - In hosted mode, off-site copies are encrypted before they leave the server.
 - Restoring is tested on a copy before relying on it.
 

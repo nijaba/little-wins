@@ -12,6 +12,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `SECURITY.md`, `CONTRIBUTING.md`, this changelog, issue and pull request templates, `CODEOWNERS`.
 - Security review (`docs/security-review.md`).
 
+### Changed
+
+- Parents can add a note to points, a penalty or a warning, from the confirmation message or History (parents only).
+- `scripts/backup.sh` keeps copies 30 days by default (was 60), as the design and privacy template say.
+- The design now says the app writes no request log (it never did).
+
 ### Security
 
 - A session unused for over a year ends when it is next used, not only when another session is created.

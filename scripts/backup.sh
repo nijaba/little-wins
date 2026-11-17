@@ -4,12 +4,12 @@
 # deletes copies older than KEEP_DAYS. Needs only python3 on the host.
 #
 #   scripts/backup.sh                     # -> ~/little-wins-backup/daily/little-wins-YYYY-MM-DD.db
-#   BACKUP_DIR=/x KEEP_DAYS=30 scripts/backup.sh
+#   BACKUP_DIR=/x KEEP_DAYS=14 scripts/backup.sh   # copies are kept 30 days by default
 set -eu
 APP_DIR=$(cd "$(dirname "$0")/.." && pwd)
 SRC=${DB_FILE:-$APP_DIR/data/little-wins.db}
 DEST=${BACKUP_DIR:-$HOME/little-wins-backup/daily}
-KEEP=${KEEP_DAYS:-60}
+KEEP=${KEEP_DAYS:-30}
 OUT="$DEST/little-wins-$(date +%F).db"
 
 mkdir -p "$DEST"

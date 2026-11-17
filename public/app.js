@@ -594,10 +594,13 @@
     $('toast').style.display = 'none';
   };
 
-  function toast(m, id) {
+  function toast(m, id, noted) {
     const t = $('toast');
     t.innerHTML =
       `<span>${esc(m)}</span>` +
+      (noted
+        ? `<button class="b g" data-action=toast-note data-id=${id}>${STR.note}</button>`
+        : '') +
       (id ? `<button class="b g" data-action=toast-undo data-id=${id}>${STR.undo}</button>` : '');
     t.style.display = 'flex';
     clearTimeout(toastTimer);
@@ -639,7 +642,18 @@
 
   // Call the API, then toast the newest history entry with an Undo button.
   async function act(path, body) {
-    if ((await api(path, body)) && S.hist[0]) toast(desc(S.hist[0]), S.hist[0].id);
+    const e = (await api(path, body)) && S.hist[0];
+    if (e) toast(desc(e), e.id, notable(e));
+  }
+
+  // Points (penalties too) and warnings can carry a note for parents; a mark cannot.
+  const notable = (e) => e.kind === 'points' || e.kind === 'warn';
+
+  // Ask for an entry's note (prefilled); an empty answer clears it, Cancel changes nothing.
+  function note(id) {
+    const e = S.hist.find((x) => x.id === id);
+    const text = prompt(STR.notePrompt, e?.note || '');
+    if (text !== null) api('entry/note', { id, note: text });
   }
 
   // Tap-to-cycle a challenge mark: none -> perfect -> ok -> bad -> perfect.
@@ -804,6 +818,11 @@
       api('undo', { id: +d.id });
       hideToast();
     },
+    note: (d) => note(+d.id),
+    'toast-note': (d) => {
+      hideToast();
+      note(+d.id);
+    },
     edit: (d) => edit(d.t, +d.id, d.kind),
     'save-ed': () => saveEd(),
     'cancel-ed': () => {
@@ -946,8 +965,12 @@
             ? STR.history.mark + esc(STR.history.markNames[e.note] || e.note)
             : ''
       }<br><small>${fmtTs(e.ts, { dateStyle: 'medium', timeStyle: 'short' })} ${
-        e.note && e.kind === 'points' ? `· ${esc(e.note)}` : ''
+        e.note && notable(e) ? `· ${esc(e.note)}` : ''
       }</small></div><div>${e.kind === 'points' ? (e.points > 0 ? '+' : '') + e.points : ''} ${
+        P() && notable(e)
+          ? `<button class="b g" data-action=note data-id=${e.id}>${STR.noteLower}</button>`
+          : ''
+      } ${
         P() ? `<button class="b g" data-action=undo data-id=${e.id}>${STR.undoLower}</button>` : ''
       }</div></div></div>`;
     }

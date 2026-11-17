@@ -119,7 +119,9 @@ and stars, and today's date.
 Under **Earn points**, tap **+** next to what your child did. A behavior with a fixed number of points adds
 them at once. One with a range, such as *5-15 pts*, asks how many; the amount is kept inside the range.
 
-A message at the bottom confirms each entry for a few seconds, with **Undo** if you tapped the wrong one.
+A message at the bottom confirms each entry for a few seconds, with **Undo** if you tapped the wrong one, and
+**Note** to add a few words about it, such as "helped grandma with the shopping". Notes are for parents: your
+child never sees them.
 
 ### Warnings
 
@@ -180,7 +182,8 @@ mark Sunday, you can still do it on Monday morning.
 
 The **History** tab lists everything recorded for the chosen child, newest first: points, warnings, penalties
 and marks, with who recorded each. **undo** removes an entry, and the balance is worked out again from what's
-left. Undoing a mark clears it.
+left. Undoing a mark clears it. **note** adds, changes or removes the note on points, a penalty or a warning
+(leave it empty to remove it); the note shows under the entry.
 
 ![The parent's History tab: entries newest first, each with its points or mark, who recorded it and an undo link](images/parent-history.png)
 
