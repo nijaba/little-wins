@@ -31,7 +31,14 @@ const sessionCookie = (token) =>
   `${config.cookies.session}=${token}; ${config.cookies.attrs}; Max-Age=${config.cookies.sessionMaxAge}`;
 const clearSessionCookie = () => `${config.cookies.session}=; ${config.cookies.attrs}; Max-Age=0`;
 
-function createSessions(db) {
+/**
+ * `cookie` names the session cookie and makes its Set-Cookie values; the default is the real
+ * session (`lw_session`). Demo families pass their own (`lw_demo`, see server/demo.js).
+ */
+function createSessions(
+  db,
+  cookie = { name: config.cookies.session, set: sessionCookie, clear: clearSessionCookie },
+) {
   // Devices are part of a family's state, so adding or removing one changes its version.
   const bump = (fid) => {
     if (fid != null) db.prepare('UPDATE families SET version=version+1 WHERE id=?').run(fid);
@@ -65,7 +72,7 @@ function createSessions(db) {
         ).lastInsertRowid,
     );
     bump(owner.familyId);
-    return { id, cookie: sessionCookie(token) };
+    return { id, cookie: cookie.set(token) };
   }
 
   /**
@@ -73,7 +80,7 @@ function createSessions(db) {
    * A parent session whose membership has gone (removed from the family) is ended.
    */
   function auth(req) {
-    const token = readCookie(req, config.cookies.session);
+    const token = readCookie(req, cookie.name);
     if (!token || !/^[\w-]{43}$/.test(token)) return null;
     const s = db.prepare('SELECT * FROM sessions WHERE token_hash=?').get(sha(token));
     if (!s) return null;
@@ -117,7 +124,18 @@ function createSessions(db) {
     bump(s?.family_id);
   }
 
-  return { create, auth, joinFamily, end };
+  /** Demo families only: shows a session as a parent or as one child of its family. */
+  function setView(sessionId, kind, childId) {
+    const s = db.prepare('SELECT family_id FROM sessions WHERE id=?').get(sessionId);
+    db.prepare('UPDATE sessions SET kind=?, child_id=? WHERE id=?').run(
+      kind,
+      kind === 'child' ? childId : null,
+      sessionId,
+    );
+    bump(s?.family_id);
+  }
+
+  return { create, auth, joinFamily, end, setView, clearCookie: cookie.clear };
 }
 
 module.exports = { createSessions, sha, randomToken, deviceOf, readCookie, clearSessionCookie };

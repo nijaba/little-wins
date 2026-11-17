@@ -13,9 +13,20 @@ Parents record good behavior and day-by-day marks on a few weekly challenges. Ch
 - **Rewards** as milestones of stars and points, with a celebration when one unlocks
 - **Past weeks** to look back and fix a mark; each family sets its own time zone and week start
 - **Devices** listed in Settings, each one can be logged out
+- **A guided tour** for parents and children, and optional **demo families** anyone can try with no sign-in
 - One small container, one SQLite file, no third-party scripts or trackers
 
 > **Status: early.** Sign-in with Google and GitHub, families, children, invites and device codes are done. Hardening for the open internet (HTTPS handling, security headers, trusted proxies, rate limits on every route, container hardening) is phase 4. Until then, run Little Wins behind a reverse proxy with TLS, ideally on a private network. See [docs/build-plan.md](docs/build-plan.md).
+
+### The tour in 30 seconds
+
+[![A parent's tour of a demo family: the weekly challenges are outlined, with today just marked perfect and the step's caption below](docs/video/tour-poster.png)](https://<your-domain>/tour.mp4)
+
+A parent opens a demo family and walks through the app's built-in tour, with a voice-over. Click the picture to
+play the video (MP4, 30 seconds, with sound), served by a running Little Wins at `/tour.mp4`, since GitHub
+does not play videos kept in a repository. Replace `<your-domain>` with your own installation, or play
+[public/tour.mp4](public/tour.mp4) locally. The narration is in
+[docs/video/tour-voiceover.md](docs/video/tour-voiceover.md). Everyone in it is made up.
 
 ## Try it locally
 
@@ -26,7 +37,7 @@ npm install   # dev tools only; the app has no runtime dependencies
 npm run dev
 ```
 
-Open http://localhost:3000, click **Sign in with Google** and pick a test person on the fake sign-in page. Nothing leaves your machine, and the data lives in a throwaway database under `/tmp`.
+Open http://localhost:3000, click **Sign in with Google** and pick a test person on the fake sign-in page, or **Try a demo** for a made-up family. Nothing leaves your machine, and the data lives in a throwaway database under `/tmp`.
 
 Run the tests and the linter:
 
@@ -44,6 +55,7 @@ See [docs/admin-guide.md](docs/admin-guide.md) for Docker setup, updates, backup
 - [Design](docs/design.md): how the app behaves, including hosting for other families
 - [Build plan](docs/build-plan.md): what's done and what's next
 - [Admin guide](docs/admin-guide.md): running your own copy
+- [docs/video/](docs/video/): the tour video's voice-over script and recording; [docs/images/](docs/images/): pictures for the guides, from a demo family
 
 ## License
 

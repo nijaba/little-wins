@@ -248,6 +248,97 @@ window.LW_STRINGS.fr = {
     days: (n) => `il y a ${n} jour${n > 1 ? 's' : ''}`,
   },
 
+  // Demo families (DEMO_FAMILIES=1) and the tour video
+  demo: {
+    tryTitle: 'Essaie d’abord',
+    tryHelp:
+      'Ouvre une famille imaginaire, sans connexion. Rien de ce que tu y fais n’est conservé.',
+    tryButton: 'Essayer la démo',
+    videoTitle: 'Vois-le en 30 secondes',
+    videoHelp: 'Une courte visite commentée de l’appli.',
+    watchButton: 'Voir la vidéo',
+    videoLabel: 'Vidéo de présentation',
+    closeVideo: 'Fermer',
+    bannerLabel: 'Démo',
+    banner: (minutes) =>
+      `Famille de démo : personnes et données imaginaires, supprimées après ${minutes} minutes sans activité.`,
+    childView: (name) => `Vue de ${name}`,
+    parentView: 'Vue des parents',
+    leave: 'Quitter la démo',
+    off: 'C’est une démo : inviter un autre parent, ajouter l’appareil d’un enfant, déconnecter des appareils, exporter et supprimer sont désactivés.',
+    ended:
+      'La démo s’est terminée après un moment sans activité. Tu peux en lancer une nouvelle quand tu veux.',
+  },
+
+  // The guided tour: a title (t) and a sentence or two (b) per step, by role
+  tour: {
+    offer: 'Nouveau ici ? Une visite rapide présente l’essentiel.',
+    offerLabel: 'Proposition de visite',
+    take: 'Faire la visite',
+    noThanks: 'Non merci',
+    step: (n, total) => `Étape ${n} sur ${total}`,
+    back: 'Retour',
+    next: 'Suivant',
+    done: 'Terminé',
+    close: 'Fermer',
+    parent: {
+      earn: {
+        t: 'Gagner des points',
+        b: 'Touche + quand ton enfant fait l’une de ces choses. Un comportement avec une fourchette demande combien de points.',
+      },
+      warn: {
+        t: 'Avertissements',
+        b: 'Un avertissement est un petit rappel à l’ordre, compté par jour (1/2). Il ne coûte aucun point.',
+      },
+      penalties: {
+        t: 'Pénalités',
+        b: 'Une pénalité retire des points après ta confirmation. Le solde ne descend jamais sous zéro, et les enfants ne voient jamais les pénalités.',
+      },
+      marks: {
+        t: 'Défis de la semaine',
+        b: 'Touche un jour pour le marquer parfait, correct ou mauvais. Deux jours parfaits et aucun mauvais jour font gagner une étoile pour la semaine.',
+      },
+      rewards: {
+        t: 'Récompenses',
+        b: 'Les récompenses se débloquent avec des étoiles et des points. L’anneau montre si la prochaine est proche ; rien n’est dépensé.',
+      },
+      history: {
+        t: 'Historique et annulation',
+        b: 'Tout ce qui est enregistré, du plus récent au plus ancien. Annuler corrige une erreur, et le solde est recalculé.',
+      },
+      settings: {
+        t: 'Réglages',
+        b: 'Modifie les comportements, pénalités, défis et récompenses, ajoute des enfants et invite un autre parent.',
+      },
+      device: {
+        t: 'Le téléphone de ton enfant',
+        b: 'Dans Appareils, ajoute un appareil pour obtenir un code à usage unique pour le téléphone de ton enfant. Il n’y voit que sa progression : ni pénalités, ni avertissements, ni notes.',
+      },
+    },
+    child: {
+      header: {
+        t: 'Tes points et tes étoiles',
+        b: 'Tes points et tes étoiles sont toujours en haut.',
+      },
+      ring: {
+        t: 'Ta prochaine récompense',
+        b: 'L’anneau montre si ta prochaine récompense est proche.',
+      },
+      earn: {
+        t: 'Comment gagner',
+        b: 'Ça rapporte des points. Un parent les ajoute quand tu les fais.',
+      },
+      marks: {
+        t: 'Cette semaine',
+        b: 'Tes défis jour par jour. Deux jours parfaits et aucun mauvais jour font gagner une étoile.',
+      },
+      rewards: {
+        t: 'Récompenses',
+        b: 'Chaque récompense et ce qu’il faut pour l’obtenir. Continue !',
+      },
+    },
+  },
+
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
     login: 'Connecte-toi à nouveau.',
@@ -287,5 +378,10 @@ window.LW_STRINGS.fr = {
     inviteInvalid:
       'Ce lien d’invitation ne fonctionne pas. Il a peut-être expiré ou déjà été utilisé.',
     tooManyTries: ({ seconds }) => `Trop d’essais. Réessaie dans ${seconds} s.`,
+    demoOff: 'Ce n’est pas disponible dans la démo.',
+    demoEnded:
+      'La démo s’est terminée après un moment sans activité. Tu peux en lancer une nouvelle quand tu veux.',
+    demoFull:
+      'Toutes les familles de démo sont occupées en ce moment. Prends un thé et réessaie dans quelques minutes.',
   },
 };

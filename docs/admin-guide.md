@@ -47,6 +47,10 @@ All of these are environment variables, normally set in `.env`.
 | `DATABASE_PATH` | SQLite file inside the container. `docker-compose.yml` sets `/data/little-wins.db`. The older name `DB` still works if `DATABASE_PATH` is not set. | `/data/little-wins.db` |
 | `PORT` | Port the app listens on inside the container. Leave it at 3000 with Docker and change the published port instead. | `3000` |
 | `TZ` | Time zone of the container. Each family has its own time zone, so this only places data migrated from an old single-family install. | `UTC` |
+| `DEMO_FAMILIES` | `1` offers **Try a demo** on the sign-in page: anyone, with no sign-in, gets a private demo family with made-up history, held in memory only (never in the database file, backups, exports or the operator's counts). See [Demo families](#demo-families). | Off |
+| `DEMO_MAX` | How many demo families may exist at once. Past that, visitors are asked to try again in a few minutes. Each is small (a few hundred rows in memory). | `20` |
+| `DEMO_IDLE_SECONDS` | How long a demo family lasts without a request, in seconds. | `1800` (30 minutes) |
+| `TOUR_VIDEO` | `0` hides **Watch the video**, the 30-second tour, from the sign-in page. It is also hidden when `public/tour.mp4` is missing. `/tour.mp4` stays served either way. | On |
 | `LITTLE_WINS_FAKE_SSO` | `1` replaces Google and GitHub with a fake sign-in page. Development only; refused unless `APP_BASE_URL` is localhost. | Off |
 
 `PARENT_ALLOWLIST` entries:
@@ -146,6 +150,19 @@ Little Wins speaks English, Chinese (Simplified), Spanish, French and German. Ea
 2. Copy `server/i18n/en.js` to `server/i18n/<code>.js` and translate `pages` and `starter`, keeping the starter lists' lengths and order (points are shared).
 3. Copy `public/strings.en.js` to `public/strings.<code>.js`, set `window.LW_STRINGS.<code>`, translate every key (functions stay functions with the same parameters) and set `locale` to a BCP 47 tag for `Intl`.
 4. Update the `language` list in `docs/design.md`; the tests check that every translation has the English keys and starter lengths.
+
+## Demo families
+
+With `DEMO_FAMILIES=1` the sign-in page offers **Try a demo**. Each visitor gets a private family of their own, "Demo family" with the parent "Sam (demo)" and the children Mia and Leo, and a few weeks of made-up points, marks, stars and rewards. A banner on every screen says it is a demo, switches between the parent's and the child's view, offers the tour, and leaves the demo (which deletes it at once).
+
+- **Memory only.** Demo families live in a second SQLite database in memory. They never touch `data/little-wins.db`, the backups, any export or the operator's counts, and a restart ends them all.
+- **Limits.** A demo family is deleted after `DEMO_IDLE_SECONDS` without use (30 minutes by default); at most `DEMO_MAX` exist at once (20 by default), and starting one is rate limited like sign-in (10 a minute per client).
+- **What a demo can't do:** invite a co-parent, remove a parent or hand over ownership, add a child's device, log devices out, export or delete the family, or see the operator page. Everything a parent does day to day works.
+- Its cookie, `lw_demo`, is separate from the sign-in cookie and ends when the browser closes; a signed-in parent who tries the demo is back in their own family after leaving it.
+
+## Tour and video
+
+The page offers a short guided tour once per device and role (kept in the browser), and again from **Settings → Take the tour**; it is drawn by the page alone and sends nothing to the server. **Watch the video** on the sign-in page plays the 30-second narrated tour from `/tour.mp4` (`TOUR_VIDEO=0` hides the button). To remake the video or the guide pictures after a screen changes, see `scripts/tour-video.js`, `scripts/tour-voiceover.py` and `scripts/guide-pictures.js` (development machine only; they need Playwright's Chromium, and the voice-over needs its own Python environment described in the script).
 
 ## Operator page
 

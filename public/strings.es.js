@@ -245,6 +245,92 @@ window.LW_STRINGS.es = {
     days: (n) => `hace ${n} días`,
   },
 
+  // Demo families (DEMO_FAMILIES=1) and the tour video
+  demo: {
+    tryTitle: 'Pruébalo primero',
+    tryHelp: 'Abre una familia inventada, sin iniciar sesión. Nada de lo que hagas allí se guarda.',
+    tryButton: 'Probar la demo',
+    videoTitle: 'Míralo en 30 segundos',
+    videoHelp: 'Un breve recorrido narrado de la app.',
+    watchButton: 'Ver el vídeo',
+    videoLabel: 'Vídeo del recorrido',
+    closeVideo: 'Cerrar',
+    bannerLabel: 'Demo',
+    banner: (minutes) =>
+      `Familia de demo: personas y datos inventados, se borra tras ${minutes} minutos sin uso.`,
+    childView: (name) => `Vista de ${name}`,
+    parentView: 'Vista de los padres',
+    leave: 'Salir de la demo',
+    off: 'Esto es una demo: invitar a otro padre, añadir un dispositivo para un niño, cerrar la sesión de dispositivos, exportar y borrar están desactivados.',
+    ended: 'La demo terminó tras un rato sin uso. Puedes empezar otra cuando quieras.',
+  },
+
+  // The guided tour: a title (t) and a sentence or two (b) per step, by role
+  tour: {
+    offer: '¿Eres nuevo? Un recorrido rápido te muestra lo principal.',
+    offerLabel: 'Invitación al recorrido',
+    take: 'Hacer el recorrido',
+    noThanks: 'No, gracias',
+    step: (n, total) => `Paso ${n} de ${total}`,
+    back: 'Atrás',
+    next: 'Siguiente',
+    done: 'Listo',
+    close: 'Cerrar',
+    parent: {
+      earn: {
+        t: 'Ganar puntos',
+        b: 'Toca + cuando tu hijo haga una de estas cosas. Un comportamiento con rango te pregunta cuántos puntos.',
+      },
+      warn: {
+        t: 'Avisos',
+        b: 'Un aviso es una advertencia suave, que se cuenta por día (1/2). No cuesta puntos.',
+      },
+      penalties: {
+        t: 'Penalizaciones',
+        b: 'Una penalización quita puntos cuando la confirmas. El saldo nunca baja de cero y los niños nunca ven las penalizaciones.',
+      },
+      marks: {
+        t: 'Retos semanales',
+        b: 'Toca un día para marcarlo perfecto, regular o malo. Dos días perfectos y ningún día malo ganan una estrella en la semana.',
+      },
+      rewards: {
+        t: 'Premios',
+        b: 'Los premios se desbloquean con estrellas y puntos. El anillo muestra lo cerca que está el siguiente; no se gasta nada.',
+      },
+      history: {
+        t: 'Historial y deshacer',
+        b: 'Todo lo registrado, lo más reciente primero. Deshacer corrige un error y el saldo se calcula de nuevo.',
+      },
+      settings: {
+        t: 'Ajustes',
+        b: 'Cambia comportamientos, penalizaciones, retos y premios, añade niños e invita a otro padre.',
+      },
+      device: {
+        t: 'El móvil de tu hijo',
+        b: 'En Dispositivos, añade un dispositivo para obtener un código de un solo uso para el móvil de tu hijo. Solo muestra su progreso: sin penalizaciones, avisos ni notas.',
+      },
+    },
+    child: {
+      header: {
+        t: 'Tus puntos y estrellas',
+        b: 'Tus puntos y estrellas siempre están arriba del todo.',
+      },
+      ring: {
+        t: 'Tu próximo premio',
+        b: 'El anillo muestra lo cerca que estás de tu próximo premio.',
+      },
+      earn: {
+        t: 'Formas de ganar',
+        b: 'Con esto ganas puntos. Un padre los añade cuando lo haces.',
+      },
+      marks: {
+        t: 'Esta semana',
+        b: 'Tus retos, día a día. Dos días perfectos y ningún día malo ganan una estrella.',
+      },
+      rewards: { t: 'Premios', b: 'Cada premio y lo que necesita. ¡Sigue así!' },
+    },
+  },
+
   // Errors from the server, by the `code` it sends. Functions get the reply's extra fields.
   errors: {
     login: 'Entra de nuevo, por favor.',
@@ -284,5 +370,9 @@ window.LW_STRINGS.es = {
     inviteInvalid:
       'Este enlace de invitación no funciona. Puede que haya caducado o ya se haya usado.',
     tooManyTries: ({ seconds }) => `Demasiados intentos. Inténtalo de nuevo en ${seconds} s.`,
+    demoOff: 'Eso no está disponible en la demo.',
+    demoEnded: 'La demo terminó tras un rato sin uso. Puedes empezar otra cuando quieras.',
+    demoFull:
+      'Todas las familias de demo están ocupadas ahora mismo. Tómate un té y vuelve a intentarlo en unos minutos.',
   },
 };

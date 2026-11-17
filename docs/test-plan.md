@@ -372,6 +372,33 @@ Family language, the starter list in it, error codes and the translation files.
 | LG-13 | Server page translations have the English keys; every page file has a locale | Unit |
 | LG-14 | Sign-in problem pages are in the `Accept-Language` language (`html lang` and text), English by default | API |
 
+## DM: Demo families
+
+Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child's view (test/demo.test.js).
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| DM-01 | With demo families off: no demo in the config, `/api/demo/start` is 404, a `lw_demo` cookie is ignored | API |
+| DM-02 | Try a demo opens a new family as its parent with an `lw_demo` cookie (HttpOnly, SameSite=Strict, no Max-Age) and no real session; time zone and language from the request, junk falls back to UTC and English | API |
+| DM-03 | The made-up history: the first child has unlocked and locked rewards and more stars than the second; the second has a penalty and a warning; nothing in the future | API |
+| DM-04 | The child's view shows only that child, without penalties, warnings, notes or parent data, can't change things, and switches back; another child's ID is 404 | API |
+| DM-05 | A demo records, undoes and edits, and refuses invites, parents, devices, export, delete, setup, sign-out and the operator page with `demoOff` | API |
+| DM-06 | Demo families never reach the database file; with both cookies the demo wins, and the real family comes back after leaving | API |
+| DM-07 | Cross-family: demo families can't reach each other's or a real family's IDs, and a real session can't use demo routes | API |
+| DM-08 | Leave the demo deletes it at once; its old cookie gets 401 `demoEnded` and is cleared | API |
+| DM-09 | An idle demo family is deleted after `DEMO_IDLE_SECONDS`, freeing its place | API |
+| DM-10 | Past `DEMO_MAX` a new demo gets 503 `demoFull` with `Retry-After`, until one is left | API |
+| DM-11 | Starting demos is rate limited per client (10 a minute) | API |
+| DM-12 | A restart ends every demo; starting one needs JSON from this site (POST only) | API |
+| DM-13 | The app refuses unreadable `DEMO_FAMILIES`, `DEMO_MAX`, `DEMO_IDLE_SECONDS` and `TOUR_VIDEO` | API |
+
+## VD: Tour video
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| VD-01 | Watch the video is offered when `public/tour.mp4` exists, unless `TOUR_VIDEO=0`; the file stays served | API |
+| VD-02 | `/tour.mp4` answers byte ranges: 206 with `Content-Range` for `a-b`, `a-` and `-n`, clamped ends, 416 for unsatisfiable or several ranges, HEAD | API |
+
 ## E2E: browser tests
 
 Titles and steps are in [e2e/README.md](../e2e/README.md); each test name starts with its ID.

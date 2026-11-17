@@ -239,6 +239,9 @@ These hold in both modes.
 | `PORT` | Listening port | `3000` |
 | `LIMIT_*` | Overrides for "Limits" | Mode defaults |
 | `LITTLE_WINS_FAKE_SSO` | Fake sign-in, localhost only | Off |
+| `DEMO_FAMILIES` | `1` offers **Try a demo** (see "Demo families") | Off |
+| `DEMO_MAX`, `DEMO_IDLE_SECONDS` | How many demo families at once; how long one lasts unused | 20; 1800 |
+| `TOUR_VIDEO` | `0` hides **Watch the video** | On |
 
 `DB` is still read as a fallback for `DATABASE_PATH`. `SIGNUP_MODE=invite` behaves like `closed` until operator-issued family invites exist (phase 4, operator page).
 
@@ -259,6 +262,37 @@ These hold in both modes.
 - **Page text** lives in `public/strings.<lang>.js` (`window.LW_STRINGS.<lang>`). The page loads English with itself and fetches another language on demand from its own origin (so the CSP holds).
 - **Server text.** API errors keep an English `error` for logs and old pages, plus a stable `code` (the key in `server/messages.js`) and its parameters (`seconds`, `limit`); the page shows `STR.errors[code]`. The few pages the server renders itself use `server/i18n`. Startup refusals stay English (for the operator).
 - The language choice is a set of radio buttons, each labeled in its own language (a `<select>` inserted as HTML trips WebKit's CSP check).
+
+## Demo families
+
+Demo families let anyone see Little Wins working, as a parent and as a child, with no sign-in. Each visitor gets a private family of their own with made-up history. They are off unless `DEMO_FAMILIES=1`.
+
+- **Starting one.** With demo families on, the sign-in page offers **Try a demo**. It asks the server for a new demo family (`POST /api/demo/start`, rate limited like sign-in) and opens it as its parent. The page sends the browser's time zone and the language it is showing; the family uses them.
+- **Memory only, never mixed.** Demo families live in a second SQLite database held in memory (`:memory:`), with the same migrations, data layer and routes as real families, but never the database file. A demo family can therefore never reach a real family, a backup or an export, and the operator's counts never include one. A restart ends every demo.
+- **The demo session.** Its cookie is `lw_demo` (random token, only its SHA-256 hash stored, HttpOnly, SameSite=Strict, Secure outside localhost, no Max-Age, so it ends with the browser). While it is valid, the page's calls go to the demo family; the browser's real session, if any, is untouched and comes back when the demo is left. A `lw_demo` cookie for a demo that has ended gets `401` with the code `demoEnded`, and the page says the demo ended.
+- **Idle time and limit.** A demo family is deleted after `DEMO_IDLE_SECONDS` (default 1800, 30 minutes) without a request from it, and at most `DEMO_MAX` (default 20) exist at once. Past the limit, **Try a demo** gets `503` with the code `demoFull`: a calm note that every demo family is busy and to try again in a few minutes, and the button stays to try again. The state carries the idle time, and the demo banner gives it.
+- **The made-up family.** The parent is "Sam (demo)"; the children are Mia and Leo. The starter list in the family's language, and four weeks of history before today: points most days, the odd warning and penalty for the parent's view, and challenge marks that win Mia a few stars and Leo fewer. Mia has at least one reward unlocked and another in progress. Today's marks are left for the visitor to tap. The history is generated from a fixed seed, so every demo, guide picture and the video look alike. Nothing in it is a real person.
+- **Parent's and child's view.** The demo banner, on every screen, says it is a demo with made-up data and when it is deleted, and offers **Child's view** (the selected child, exactly as that child's paired device would see it) or **Parent's view**, **Take the tour** and **Leave the demo**. Switching changes the demo session's kind (`POST /api/demo/view`); it is the one control a child's view shows beyond the child's own, and only in a demo. Leave the demo deletes the family at once (`POST /api/demo/leave`) and returns to the sign-in page.
+- **What a demo can do.** Everything a parent does day to day: points, warnings, penalties, marks, undo, past weeks, and editing children, behaviors, penalties, challenges, rewards and the family's name, time zone, week start and language. **What it cannot** (`403`, code `demoOff`), each hidden from the demo's page with a short note: inviting a co-parent, removing a parent or handing over ownership, adding a child's device, logging devices out, exporting and deleting the family, the operator page, setup, and signing out (Leave the demo stands in for it). The per-family limits apply as usual.
+- **Tour.** The banner's **Take the tour** is there every time, and the once-only offer is not shown in a demo (see "Tour").
+
+## Tour
+
+A short guided tour explains the app to whoever opens it, by role.
+
+- **Offered once.** The first time a device shows a family, a note at the top offers **Take the tour** or **No thanks**. Either answer is kept on the device (`localStorage`, per role), so the note does not come back.
+- **On demand.** **Take the tour** at the bottom of Settings (parents) starts it again; in a demo the banner offers it every time.
+- **Steps by role.** A parent: earning points (the + button), warnings, penalties, weekly marks and the star rule, rewards and the progress ring, History and undo, Settings, and adding a child's device. A child: points and stars in the header, the next reward, ways to earn, the week's marks, and rewards. A step switches to the tab it explains.
+- **How a step looks.** The part it explains is outlined and scrolled into view, and the rest dimmed (the page stays usable underneath); a caption, below or above the part so it never covers it, gives a title, a sentence or two, "Step 2 of 7", and Back, Next and Done (Close on every step). Escape closes the tour and returns focus where it was. A step whose part is missing (no penalties in the list) shows its caption on its own. With reduced motion, nothing animates.
+- The tour is drawn by the page alone: no library, nothing sent to the server. Its text is in `public/strings.<lang>.js` like every page string.
+
+## Guide pictures and the tour video
+
+The pictures in the guides (`docs/images/`) are screenshots taken by `scripts/guide-pictures.js`, which runs the app with demo families on and drives the demo with Playwright at phone size. Run it again when a screen changes. They show only the demo's made-up family.
+
+The 30-second tour video is recorded the same way (`scripts/tour-video.js`, to `docs/video/tour.webm`) and narrated from `docs/video/tour-voiceover.md`. GitHub does not play videos kept in a repository, so the narrated MP4 sits in `public/` and the app serves it at `/tour.mp4`, with byte ranges for Safari.
+
+- **Watch the video** on the sign-in page opens it in a player over the page, playing at once; Close or Escape stops it. `TOUR_VIDEO=0` hides the button (it is on by default, and hidden anyway when `public/tour.mp4` is missing); `/tour.mp4` itself stays served.
 
 ## Open questions
 

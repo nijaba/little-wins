@@ -25,6 +25,7 @@
   let delTxt = ''; // what was typed in the "delete family" box
   let iss = null; // device code or invite link just issued, shown until Done
   let cdTimer; // countdown of the device code
+  let tour = null; // the guided tour while it runs: { role, steps, i, shown, back }
   try {
     chSel = +localStorage.getItem('child') || null;
   } catch {}
@@ -166,7 +167,7 @@
     if (P()) {
       chSel = S.childId;
       try {
-        localStorage.setItem('child', String(chSel));
+        if (!S.demo) localStorage.setItem('child', String(chSel));
       } catch {}
     }
     render();
@@ -185,8 +186,10 @@
       return false;
     }
     if (r.status === 401) {
-      S = null;
+      const j = await r.json().catch(() => ({}));
+      leaveScreen();
       await useLang(browserLang());
+      if (j.code === 'demoEnded') notice = STR.demo.ended;
       login();
       return false;
     }
@@ -230,9 +233,215 @@
         ? `<h3>${L.joinTitle(esc(invite.family))}</h3><p><small>${L.joinHelp}</small></p>${btns}<p><button class="b g" data-action=not-now>${L.notNow}</button></p>`
         : `<p class=err>${L.inviteInvalid}</p><p><button class="b g" data-action=not-now>${L.notNow}</button></p>`;
     } else {
+      h += tryCard();
       h += `<div class=card><h3 class=edit-title>${L.parentsOnly}</h3>${btns}</div><div class=card><h3 class=edit-title>${L.codeTitle}</h3><p><small>${L.codeHelp}</small></p><p><input id=code aria-label="${L.codeTitle}" autocapitalize=characters autocomplete=off autocorrect=off spellcheck=false placeholder="${L.codePlaceholder}"></p><p class=err id=err></p><p><button class=b data-action=pair-code>${L.codeButton}</button></p></div>`;
     }
     $('app').innerHTML = `${h}${legal()}</main>`;
+  }
+
+  // Try a demo and Watch the video, at the top of the sign-in screen when they are on.
+  function tryCard() {
+    const D = STR.demo;
+    const demo = cfg.demo
+      ? `<p><button class=b data-action=demo-start>${D.tryButton}</button></p>`
+      : '';
+    const video = cfg.tourVideo
+      ? `<p><button class="b${cfg.demo ? ' g' : ''}" data-action=video>${D.watchButton}</button></p>`
+      : '';
+    if (!demo && !video) return '';
+    return `<div class="card try"><h3 class=edit-title>${cfg.demo ? D.tryTitle : D.videoTitle}</h3><p><small>${cfg.demo ? D.tryHelp : D.videoHelp}</small></p>${demo}${video}</div>`;
+  }
+
+  // Forget the signed-in screen's state (signing out, a deleted family, a demo left or ended).
+  function leaveScreen() {
+    const wasDemo = !!S?.demo;
+    S = null;
+    iss = null;
+    ops = null;
+    ed = null;
+    closeTour();
+    if (wasDemo) {
+      tab = 'today';
+      try {
+        chSel = +localStorage.getItem('child') || null;
+      } catch {
+        chSel = null;
+      }
+    }
+  }
+
+  // ---- Demo families ----
+
+  async function demoStart() {
+    let timezone = '';
+    try {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch {}
+    const r = await post('demo/start', { timezone, language: lang }).catch(() => null);
+    if (r?.ok) {
+      tab = 'today';
+      chSel = null;
+      wkSel = null;
+      return api('state');
+    }
+    const j = r ? await r.json().catch(() => ({})) : null;
+    notice =
+      j?.code === 'demoFull'
+        ? `<span aria-hidden=true>☕</span> ${esc(errText(j))}`
+        : esc(errText(j));
+    login();
+  }
+
+  async function demoLeave() {
+    await post('demo/leave').catch(() => {});
+    leaveScreen();
+    await useLang(browserLang());
+    login();
+  }
+
+  // ---- Tour video ----
+
+  function openVideo() {
+    if ($('player')) return;
+    const D = STR.demo;
+    const box = document.createElement('div');
+    box.id = 'player';
+    box.className = 'player';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', D.videoLabel);
+    box.innerHTML = `<div class=player-box><video src="/tour.mp4" controls autoplay playsinline preload=auto></video><p class=center><button class=b data-action=video-close>${D.closeVideo}</button></p></div>`;
+    box.addEventListener('click', onClick);
+    document.body.appendChild(box);
+    box.querySelector('button').focus();
+  }
+
+  function closeVideo() {
+    const box = $('player');
+    if (!box) return;
+    box.querySelector('video')?.pause();
+    box.remove();
+    document.querySelector('[data-action=video]')?.focus();
+  }
+
+  // ---- Guided tour ----
+  // Drawn by the page alone: an outline around the part a step explains, and a caption.
+
+  const TOUR = {
+    parent: [
+      { key: 'earn', tab: 'today', sel: '[data-tour=earn]' },
+      { key: 'warn', tab: 'today', sel: '[data-tour=warn]' },
+      { key: 'penalties', tab: 'today', sel: '[data-tour=penalties]' },
+      { key: 'marks', tab: 'week', sel: '[data-tour=marks]' },
+      { key: 'rewards', tab: 'rew', sel: '[data-tour=ring]' },
+      { key: 'history', tab: 'hist', sel: '[data-tour=hist]' },
+      { key: 'settings', tab: 'set', sel: '.tabs [data-tab=set]', fixed: true },
+      { key: 'device', tab: 'set', sel: '[data-tour=device]', open: 'dev' },
+    ],
+    child: [
+      { key: 'header', tab: 'today', sel: 'header' },
+      { key: 'ring', tab: 'today', sel: '[data-tour=ring]' },
+      { key: 'earn', tab: 'today', sel: '[data-tour=earn]' },
+      { key: 'marks', tab: 'week', sel: '[data-tour=marks]' },
+      { key: 'rewards', tab: 'rew', sel: '[data-tour=rewards]' },
+    ],
+  };
+  const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+  // The once-only offer is answered (either way) per role on this device.
+  const offerKey = () => `tour_${S.role}`;
+  function offerAnswered() {
+    try {
+      return !!localStorage.getItem(offerKey());
+    } catch {
+      return true; // no storage: don't offer on every visit
+    }
+  }
+  function answerOffer() {
+    try {
+      localStorage.setItem(offerKey(), '1');
+    } catch {}
+  }
+
+  function startTour() {
+    answerOffer();
+    const role = P() ? 'parent' : 'child';
+    tour = { role, steps: TOUR[role], i: 0, shown: -1, back: document.activeElement };
+    goTour(0);
+  }
+
+  // Show step i: switch to its tab (and open its section), then draw.
+  function goTour(i) {
+    tour.i = Math.max(0, Math.min(tour.steps.length - 1, i));
+    const st = tour.steps[tour.i];
+    if (st.open) op[st.open] = true;
+    tab = st.tab;
+    ed = null;
+    render(); // calls drawTour
+  }
+
+  function closeTour() {
+    if (!tour) return;
+    const back = tour.back;
+    tour = null;
+    drawTour();
+    if (back?.isConnected) back.focus();
+  }
+
+  // Draw the current step, or clear the overlay when no tour runs. Called after every render.
+  function drawTour() {
+    const box = $('tour');
+    if (!tour || screen !== 'app') {
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+    const T = STR.tour;
+    const st = tour.steps[tour.i];
+    const text = T[tour.role][st.key];
+    const n = tour.steps.length;
+    const last = tour.i === n - 1;
+    const el = document.querySelector(st.sel);
+    const fresh = tour.shown !== tour.i;
+    tour.shown = tour.i;
+    box.hidden = false;
+    box.innerHTML = `<div class="tour-ring${st.fixed ? ' fixed' : ''}"></div><div class="tour-caption${captionOnTop(st, el) ? ' top' : ''}" role=dialog aria-labelledby=tour-t aria-describedby=tour-b tabindex=-1><p class=tour-n><small>${T.step(tour.i + 1, n)}</small></p><h3 id=tour-t>${text.t}</h3><p id=tour-b>${text.b}</p><div class=tour-btns><button class="b g" data-action=tour-close>${T.close}</button>${
+      tour.i ? `<button class="b g" data-action=tour-back>${T.back}</button>` : ''
+    }<button class=b data-action=${last ? 'tour-close' : 'tour-next'}>${last ? T.done : T.next}</button></div></div>`;
+    const ring = box.querySelector('.tour-ring');
+    if (!el) ring.hidden = true;
+    else {
+      if (fresh && !st.fixed)
+        el.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+      placeRing();
+    }
+    if (fresh) box.querySelector('.tour-caption').focus({ preventScroll: true });
+  }
+
+  // The caption goes above when the part will sit in the lower half once scrolled to (the tabs,
+  // or the end of the page), so it never covers it.
+  function captionOnTop(st, el) {
+    if (!el) return false;
+    if (st.fixed) return true;
+    const r = el.getBoundingClientRect();
+    const top = r.top + window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const scroll = Math.max(0, Math.min(max, top - (window.innerHeight - r.height) / 2));
+    return top + r.height / 2 - scroll > window.innerHeight * 0.55;
+  }
+
+  // Put the outline around the step's part (page coordinates, or the viewport for fixed parts).
+  function placeRing() {
+    const ring = $('tour').querySelector('.tour-ring');
+    const st = tour?.steps[tour.i];
+    const el = st && document.querySelector(st.sel);
+    if (!ring || !el) return;
+    const r = el.getBoundingClientRect();
+    const dx = st.fixed ? 0 : window.scrollX;
+    const dy = st.fixed ? 0 : window.scrollY;
+    ring.style.left = `${r.left + dx - 4}px`;
+    ring.style.top = `${r.top + dy - 4}px`;
+    ring.style.width = `${r.width + 8}px`;
+    ring.style.height = `${r.height + 8}px`;
   }
 
   // Redeem a pairing code; on success load the child's state.
@@ -254,9 +463,7 @@
 
   async function logout() {
     await post('logout').catch(() => {});
-    S = null;
-    iss = null;
-    ops = null;
+    leaveScreen();
     await useLang(browserLang());
     login();
   }
@@ -268,10 +475,7 @@
     const r = await post('family/delete', { confirm: $('del_name').value }).catch(() => null);
     const j = r ? await r.json().catch(() => ({})) : {};
     if (r?.ok && j.deleted) {
-      S = null;
-      iss = null;
-      ops = null;
-      ed = null;
+      leaveScreen();
       delTxt = '';
       tab = 'today';
       for (const k of Object.keys(op)) delete op[k];
@@ -415,7 +619,7 @@
       const ids = S.rewards
         .filter((r) => S.stars >= r.stars && S.balance >= r.points)
         .map((r) => r.id);
-      const k = `seen_${S.role}_${S.childId}`;
+      const k = `seen_${S.demo ? 'demo_' : ''}${S.role}_${S.childId}`;
       const seen = JSON.parse(localStorage.getItem(k) || 'null');
       localStorage.setItem(k, JSON.stringify(ids));
       if (!seen) return; // first visit: nothing is "new"
@@ -517,6 +721,19 @@
   // data-action name -> handler; d is the element's dataset.
   const actions = {
     'pair-code': () => redeem($('code').value),
+    'demo-start': () => demoStart(),
+    'demo-leave': () => demoLeave(),
+    'demo-view': () => api('demo/view', { as: P() ? 'child' : 'parent', child_id: S.childId }),
+    video: () => openVideo(),
+    'video-close': () => closeVideo(),
+    tour: () => startTour(),
+    'tour-no': () => {
+      answerOffer();
+      render();
+    },
+    'tour-next': () => goTour(tour.i + 1),
+    'tour-back': () => goTour(tour.i - 1),
+    'tour-close': () => closeTour(),
     'not-now': () => {
       history.replaceState(null, '', location.pathname);
       api('state');
@@ -641,30 +858,34 @@
   // Progress ring toward the next locked reward.
   function ring() {
     const r = S.rewards.find((x) => !(S.stars >= x.stars && S.balance >= x.points));
-    if (!r) return `<div class="card center">${STR.ring.allUnlocked}</div>`;
+    if (!r) return `<div class="card center" data-tour=ring>${STR.ring.allUnlocked}</div>`;
     const a = Math.min(1, S.stars / (r.stars || 1));
     const b = r.points ? Math.min(1, S.balance / r.points) : a;
     const pc = Math.round(100 * (r.stars && r.points ? (a + b) / 2 : r.points ? b : a));
     const C = 264;
-    return `<div class="card ringcard"><svg width=96 height=96 viewBox="0 0 100 100"><circle cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${esc(r.name)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
+    return `<div class="card ringcard" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${esc(r.name)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
   }
 
   function viewToday() {
     let h = '';
     if (!P()) h += ring();
     h += `<h3>${P() ? STR.today.earn : STR.today.waysToEarn}</h3>`;
-    for (const i of S.items.filter((x) => x.kind === 'target')) {
-      h += `<div class=card><div class=row><div>${esc(i.name)}<br><small>${i.note ? `${esc(i.note)} · ` : ''}${range(i)}</small></div>${
-        P()
-          ? `<div><button class=b data-action=add data-id=${i.id}>+</button> <button class="b w" data-action=warn data-id=${i.id}>${STR.today.warnButton(S.warn[i.id] || 0)}</button></div>`
-          : ''
-      }</div></div>`;
-    }
+    S.items
+      .filter((x) => x.kind === 'target')
+      .forEach((i, n) => {
+        const t = (name) => (n ? '' : ` data-tour=${name}`); // the tour points at the first one
+        h += `<div class=card${t('earn')}><div class=row><div>${esc(i.name)}<br><small>${i.note ? `${esc(i.note)} · ` : ''}${range(i)}</small></div>${
+          P()
+            ? `<div><button class=b data-action=add data-id=${i.id}>+</button> <button class="b w" data-action=warn data-id=${i.id}${t('warn')}>${STR.today.warnButton(S.warn[i.id] || 0)}</button></div>`
+            : ''
+        }</div></div>`;
+      });
     if (P()) {
-      h += `<h3>${STR.today.penalties}</h3>`;
+      h += `<div data-tour=penalties><h3>${STR.today.penalties}</h3>`;
       for (const i of S.items.filter((x) => x.kind === 'penalty')) {
         h += `<div class=card><div class=row><div>${esc(i.name)}<br><small>${esc(i.note)}</small></div><button class="b r" data-action=pen data-id=${i.id}>-${i.pmin}</button></div></div>`;
       }
+      h += '</div>';
     }
     return h;
   }
@@ -684,7 +905,7 @@
     if (!W.current)
       h += `<p class=back><button class="b g" data-action=week data-week="">${wk.back}</button></p>`;
     h += `<h3>${wk.challenges}</h3><small class=hint>${wk.rule}${P() ? wk.ruleParent : ''}</small>`;
-    for (const i of S.items.filter((x) => x.kind === 'challenge')) {
+    for (const [n, i] of S.items.filter((x) => x.kind === 'challenge').entries()) {
       const m = W.marks[i.id] || [];
       const pf = m.filter((x) => x === 'perfect').length;
       const bd = m.includes('bad');
@@ -699,7 +920,7 @@
             : `<span class="d ${v || ''}${fut ? ' fut' : ''}">${label}</span>`;
         })
         .join('');
-      h += `<div class=card><div class=row><div>${esc(i.name)}<br><small>${
+      h += `<div class=card${n ? '' : ' data-tour=marks'}><div class=row><div>${esc(i.name)}<br><small>${
         S.won[i.id] ? '' : wk.perfectDays(pf) + (bd ? wk.aBadDay : '')
       }</small></div>${S.won[i.id] ? `<b>${wk.won}</b>` : ''}</div><div class=strip>${days}</div></div>`;
     }
@@ -708,17 +929,17 @@
 
   function viewRewards() {
     let h = `${ring()}<h3>${STR.rewards.title}</h3>`;
-    for (const r of S.rewards) {
+    for (const [n, r] of S.rewards.entries()) {
       const ok = S.stars >= r.stars && S.balance >= r.points;
-      h += `<div class=card><div class=row><b>${esc(r.name)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}</div>`;
+      h += `<div class=card${n ? '' : ' data-tour=rewards'}><div class=row><b>${esc(r.name)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}</div>`;
     }
     return h;
   }
 
   function viewHistory() {
     let h = `<h3>${STR.history.title}</h3>`;
-    for (const e of S.hist) {
-      h += `<div class=card><div class=row><div>${esc(e.name)} ${
+    for (const [n, e] of S.hist.entries()) {
+      h += `<div class=card${n ? '' : ' data-tour=hist'}><div class=row><div>${esc(e.name)} ${
         e.kind === 'warn'
           ? STR.history.warning
           : e.kind === 'mark'
@@ -766,11 +987,13 @@
     if (ed) return viewEdit();
     const st = STR.settings;
     const fam = S.family;
-    let h = fold(
+    const demo = !!S.demo;
+    let h = demo ? `<p class=note>${STR.demo.off}</p>` : '';
+    h += fold(
       'fam',
       st.family,
       esc(fam.name),
-      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p>${weekRadios('f_week', st, fam.weekStart)}${langRadios('f_lang', st.language, fam.language || 'en')}<button class=b data-action=save-family>${st.save}</button></div>${S.me.owner ? ownerTools() : ''}`,
+      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p>${weekRadios('f_week', st, fam.weekStart)}${langRadios('f_lang', st.language, fam.language || 'en')}<button class=b data-action=save-family>${st.save}</button></div>${S.me.owner && !demo ? ownerTools() : ''}`,
     );
     let c = '';
     for (const k of S.children) {
@@ -781,7 +1004,7 @@
 
     let pr = '';
     for (const p of S.parents) {
-      const owner = S.me.owner && !p.me;
+      const owner = S.me.owner && !p.me && !demo;
       pr += `<div class=card><div class="row stk"><div>${esc(p.name)}${p.me ? ` · <b>${st.you}</b>` : ''}<br><small>${esc(p.label)} · ${p.role === 'owner' ? st.owner : st.parentRole}</small></div>${
         owner
           ? `<div><button class="b g" data-action=make-owner data-id=${p.id}>${st.makeOwner}</button> <button class="b r" data-action=rm-parent data-id=${p.id}>${st.removeParent}</button></div>`
@@ -789,7 +1012,8 @@
       }</div></div>`;
     }
     if (iss?.type === 'invite/create') pr += issuedBox(st.inviteTitle, st.inviteHelp, '');
-    else pr += `<button class=b data-action=invite>${st.inviteParent}</button>`;
+    else
+      pr += `<button class=b ${demo ? 'disabled' : 'data-action=invite'}>${st.inviteParent}</button>`;
     if (S.invites.length) {
       pr += `<h3>${st.openInvites}</h3>`;
       for (const i of S.invites) {
@@ -825,14 +1049,14 @@
         d.me ? ` · <b>${st.thisDevice}</b>` : ''
       }<br><small>${d.kind === 'parent' ? st.parentDevice : st.childDevice} · ${st.lastUsed(ago(d.last_seen))} · ${st.loggedIn(
         fmtTs(d.created, { dateStyle: 'medium' }),
-      )}</small></div><div><button class="b r" data-action=revoke data-id=${d.id} data-me=${d.me ? 1 : 0}>${st.logOut}</button></div></div></div>`;
+      )}</small></div>${demo ? '' : `<div><button class="b r" data-action=revoke data-id=${d.id} data-me=${d.me ? 1 : 0}>${st.logOut}</button></div>`}</div></div>`;
     }
     if (iss?.type === 'pairing/create') {
       const k = S.children.find((x) => x.id === iss.child) || {};
       g += issuedBox(st.pairTitle(esc(k.name || '')), st.pairHelp, iss.code);
     } else {
       for (const k of S.children)
-        g += `<p class=p0><button class=b data-action=pair-dev data-id=${k.id}>${st.addDevice(esc(k.name))}</button></p>`;
+        g += `<p class=p0${k === S.children[0] ? ' data-tour=device' : ''}><button class=b ${demo ? 'disabled' : `data-action=pair-dev data-id=${k.id}`}>${st.addDevice(esc(k.name))}</button></p>`;
     }
     h += fold('dev', st.devices, D.length, g);
     if (S.operator)
@@ -842,7 +1066,10 @@
         '',
         `<small class=hint>${STR.operator.help}</small><div id=ops-body>${opsHtml()}</div><p class=p0><button class=b data-action=ops-refresh>${STR.operator.refresh}</button></p>`,
       );
-    return `${h}<p class=center><button class="b g" data-action=logout>${st.signOut}</button></p>${legal()}`;
+    const out = demo
+      ? `<button class="b g" data-action=demo-leave>${STR.demo.leave}</button>`
+      : `<button class="b g" data-action=logout>${st.signOut}</button>`;
+    return `${h}<p class=center><button class="b g" data-action=tour>${STR.tour.take}</button> ${out}</p>${legal()}`;
   }
 
   // Box showing a freshly issued link (and code); the pairing one counts down.
@@ -889,7 +1116,7 @@
     const day = fmtDay(S.today, { weekday: 'short', month: 'short', day: 'numeric' });
     let h = `<header><b>${STR.header(fmtNum(S.balance), fmtNum(S.stars))}</b>${esc(day)}${
       P() ? '' : `<div class=who>${esc(S.childName)}</div>`
-    }</header>${chips}<main>`;
+    }</header>${demoBar()}${tourOffer()}${chips}<main>`;
     if (tab === 'today') h += viewToday();
     if (tab === 'week') h += viewWeek();
     if (tab === 'rew') h += viewRewards();
@@ -904,12 +1131,39 @@
     applyWidths();
     tickCountdown();
     celebrate();
+    drawTour();
+  }
+
+  // On every screen of a demo: what it is, the view switch, the tour and the way out.
+  function demoBar() {
+    if (!S.demo) return '';
+    const D = STR.demo;
+    const min = Math.max(1, Math.round(S.demo.idleSeconds / 60));
+    const view = P() ? D.childView(esc(S.childName)) : D.parentView;
+    return `<div class=demo-bar role=region aria-label="${D.bannerLabel}"><p>${D.banner(min)}</p><div class=btns><button class=b data-action=demo-view>${view}</button><button class=b data-action=tour>${STR.tour.take}</button><button class="b g" data-action=demo-leave>${D.leave}</button></div></div>`;
+  }
+
+  // The once-only tour offer (never in a demo: its banner offers the tour every time).
+  function tourOffer() {
+    if (S.demo || tour || offerAnswered()) return '';
+    const T = STR.tour;
+    return `<div class=tour-offer role=region aria-label="${T.offerLabel}"><p>${T.offer}</p><div class=btns><button class=b data-action=tour>${T.take}</button><button class="b g" data-action=tour-no>${T.noThanks}</button></div></div>`;
   }
 
   // ---- Wiring ----
 
   $('app').addEventListener('click', onClick);
   $('toast').addEventListener('click', onClick);
+  $('tour').addEventListener('click', onClick);
+  // Escape closes the video player, else the tour.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if ($('player')) closeVideo();
+    else if (tour) closeTour();
+  });
+  window.addEventListener('resize', () => {
+    if (tour) placeRing();
+  });
   // The party overlay closes when its card is clicked.
   $('party').addEventListener('click', (e) => {
     if (e.target.closest('#party > div')) $('party').style.display = 'none';
@@ -974,7 +1228,9 @@
       const headers = etag && etagKey === key ? { 'If-None-Match': etag } : {};
       fetch(`/api/state${key}`, { headers })
         .then(async (r) => {
-          // 304: nothing changed. Any other failure (429, 5xx, signed out): skip silently.
+          // A demo that ended: say so. 304: nothing changed. Any other failure (429, 5xx,
+          // signed out): skip silently.
+          if (r.status === 401 && S?.demo) return api('state');
           if (r.status === 304 || !r.ok) return;
           const j = await r.json();
           if (screen === 'app' && g === gen && key === wq()) {

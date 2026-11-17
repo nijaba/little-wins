@@ -43,6 +43,10 @@ module.exports = {
   confirmFamilyName: 'Type the family name exactly to confirm.',
   operatorOnly: 'Only operators can see this',
   inviteInvalid: "This invite link doesn't work. It may have expired or been used.",
+  demoOff: 'Not available in the demo',
+  demoEnded: 'This demo has ended',
+  demoFull:
+    'Every demo family is busy right now. Grab a cup of tea and try again in a few minutes.',
 
   refusingToStart: (problems) =>
     `Refusing to start:\n- ${problems.join('\n- ')}\nSee docs/admin-guide.md.`,

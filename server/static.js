@@ -15,6 +15,7 @@ const TYPES = {
   png: 'image/png',
   svg: 'image/svg+xml',
   webmanifest: 'application/manifest+json',
+  mp4: 'video/mp4',
 };
 
 const CSP =
@@ -27,6 +28,38 @@ const FILES = new Map(
     .filter((entry) => entry.isFile() && /^[\w.-]+$/.test(entry.name))
     .map((entry) => [entry.name, path.join(PUBLIC, entry.name)]),
 );
+
+/**
+ * A video, with byte ranges (Safari asks for them before it plays): one range per request,
+ * `bytes=a-b`, `bytes=a-` or `bytes=-n`; anything else unsatisfiable gets 416.
+ */
+function serveRanges(req, res, file, headers) {
+  const size = fs.statSync(file).size;
+  const all = { ...headers, 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=3600' };
+  const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range || '').trim());
+  let start = 0;
+  let end = size - 1;
+  let status = 200;
+  if (req.headers.range) {
+    if (range && (range[1] || range[2])) {
+      if (range[1]) {
+        start = Number(range[1]);
+        if (range[2]) end = Math.min(Number(range[2]), size - 1);
+      } else {
+        start = Math.max(0, size - Number(range[2]));
+      }
+    }
+    if (!range || (!range[1] && !range[2]) || start > end || start >= size) {
+      res.writeHead(416, { ...all, 'Content-Range': `bytes */${size}` });
+      return res.end();
+    }
+    status = 206;
+    all['Content-Range'] = `bytes ${start}-${end}/${size}`;
+  }
+  res.writeHead(status, { ...all, 'Content-Length': String(end - start + 1) });
+  if (req.method === 'HEAD') return res.end();
+  fs.createReadStream(file, { start, end }).pipe(res);
+}
 
 function serveStatic(req, res) {
   const pathname = req.url.split('?')[0];
@@ -42,6 +75,7 @@ function serveStatic(req, res) {
     'X-Content-Type-Options': 'nosniff',
   };
   if (ext === 'html') headers['Content-Security-Policy'] = CSP;
+  if (ext === 'mp4') return serveRanges(req, res, file, headers);
   res.writeHead(200, headers);
   res.end(fs.readFileSync(file));
 }

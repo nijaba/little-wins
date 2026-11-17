@@ -147,6 +147,24 @@ for (const [key, name] of Object.entries(LIMIT_ENV)) {
   else limits[key] = n;
 }
 
+// --- Demo families (memory only) and the tour video -------------------------------------
+const wholeNumber = (name, fallback) => {
+  if (env[name] === undefined || env[name] === '') return fallback;
+  const n = Number(env[name]);
+  if (Number.isInteger(n) && n >= 1) return n;
+  problems.push(`${name} must be a whole number of at least 1`);
+  return fallback;
+};
+if (env.DEMO_FAMILIES && !['0', '1'].includes(env.DEMO_FAMILIES))
+  problems.push('DEMO_FAMILIES must be 0 or 1');
+if (env.TOUR_VIDEO && !['0', '1'].includes(env.TOUR_VIDEO))
+  problems.push('TOUR_VIDEO must be 0 or 1');
+const demo = {
+  on: env.DEMO_FAMILIES === '1',
+  max: wholeNumber('DEMO_MAX', 20),
+  idleSeconds: wholeNumber('DEMO_IDLE_SECONDS', 1800),
+};
+
 module.exports = {
   port,
   baseUrl,
@@ -162,6 +180,8 @@ module.exports = {
   privacyUrl,
   termsUrl,
   limits,
+  demo,
+  tourVideo: env.TOUR_VIDEO !== '0',
   version: (() => {
     try {
       return require('../package.json').version;
@@ -178,6 +198,8 @@ module.exports = {
 
   cookies: {
     session: 'lw_session',
+    demo: 'lw_demo', // a demo family's session; ends with the browser (no Max-Age)
+    demoAttrs: `Path=/; HttpOnly; SameSite=Strict${isLocal ? '' : '; Secure'}`,
     state: 'lw_oauth',
     attrs: `Path=/; HttpOnly; SameSite=Lax${isLocal ? '' : '; Secure'}`,
     sessionMaxAge: 365 * 24 * 3600, // seconds

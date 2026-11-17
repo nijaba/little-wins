@@ -27,7 +27,10 @@ npm run test:coverage                           # API tests with coverage of the
 npm run e2e:install && npm run test:e2e         # browser tests (Playwright, Chromium + WebKit)
 SKIP_IMAGE_TESTS=1 npm test                     # skip the Docker image test (it needs Docker)
 npm run format                                  # apply Biome formatting
-npm run dev                                     # local server on :3000 with fake sign-in; pick a test person
+npm run dev                                     # local server on :3000 with fake sign-in and demo families
+node scripts/guide-pictures.js                  # guide pictures (docs/images/) from a demo family
+node scripts/tour-video.js                      # silent tour video (docs/video/tour.webm); then
+~/.venvs/voice/bin/python scripts/tour-voiceover.py  # narrated public/tour.mp4 + poster (Kokoro, see the script)
 docker compose up -d --build                    # container; real settings go in .env (see .env.example)
 scripts/backup.sh                               # consistent backup of data/little-wins.db
 ```
@@ -39,18 +42,22 @@ server/          index.js (wiring), config.js (env, startup check), db.js (migra
                  repo.js (family-scoped data layer: all SQL), auth.js (OAuth sign-in), fake-sso.js (dev/test only),
                  sessions.js, allowlist.js, ratelimit.js, routes.js, state.js, scoring.js (pure rules),
                  http.js (body limit, write guard, apiError), web.js (trusted proxies, HTTPS redirect, security headers),
-                 static.js, messages.js (English server strings; keys are the API error codes), clock.js,
+                 demo.js (demo families: in-memory database, made-up history, idle sweep),
+                 static.js (byte ranges for tour.mp4), messages.js (English server strings; keys are the API error codes), clock.js,
                  i18n/ (languages, Accept-Language, server-rendered pages and starter list per language)
 public/          index.html (shell), app.js, strings.en.js (page strings, English base),
-                 strings.<lang>.js (zh, es, fr, de; loaded on demand), style.css, manifest.json
+                 strings.<lang>.js (zh, es, fr, de; loaded on demand), style.css, manifest.json,
+                 tour.mp4 (narrated tour video, made by scripts/)
 test/            *.test.js: real server on a temp database, signed in through the fake provider
                  (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
-                 isolation.test.js (cross-family check for every parent route), scoring.test.js (unit);
+                 isolation.test.js (cross-family check for every parent route), demo (demo families, video),
+                 scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
-scripts/         backup.sh
+scripts/         backup.sh, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
 deploy/          caddy/ (dedicated host, automatic TLS) and nginx/ (behind an existing nginx)
-docs/            design.md, build-plan.md, admin-guide.md
+docs/            design.md, build-plan.md, admin-guide.md, test-plan.md, images/ (guide pictures),
+                 video/ (tour voice-over script, silent recording, poster)
 ```
 
 ## Rules that must always hold

@@ -69,4 +69,15 @@ function starter(lang) {
   return ok ? t : EN.starter;
 }
 
-module.exports = { LANGUAGES, isLanguage, fromAcceptLanguage, pages, starter, STARTER_POINTS };
+/** The demo family's made-up names in a language, falling back to English. */
+const demo = (lang) => ({ ...EN.demo, ...(bundles[lang]?.demo || {}) });
+
+module.exports = {
+  LANGUAGES,
+  isLanguage,
+  fromAcceptLanguage,
+  pages,
+  starter,
+  demo,
+  STARTER_POINTS,
+};

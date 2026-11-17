@@ -29,6 +29,9 @@ const readLimiter = createRateLimiter({ max: reads, windowMs });
 const writeLimiter = createRateLimiter({ max: writes, windowMs });
 const auth = createAuth({ repo, sessions, limiter, clientIp });
 const handleApi = createRouter({ repo, sessions, limiter, clientIp });
+// Demo families, in memory only (DEMO_FAMILIES=1).
+const demo = config.demo.on ? require('./demo').createDemo({ limiter, clientIp }) : null;
+if (demo) console.warn(`Demo families are ON (at most ${config.demo.max})`);
 
 const server = http
   .createServer(async (req, res) => {
@@ -58,6 +61,7 @@ const server = http
           res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': String(wait) });
           return res.end(JSON.stringify(apiError('tooManyTries', { seconds: wait })));
         }
+        if (demo?.wants(req, url.pathname)) return await demo.handle(req, res);
         return await handleApi(req, res);
       }
       if (req.method === 'GET' || req.method === 'HEAD') return serveStatic(req, res);
