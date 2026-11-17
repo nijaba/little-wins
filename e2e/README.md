@@ -87,3 +87,4 @@ app is meant to open are handled with `expectDialog`.
 | E2E-220 | where the browser offers it, Today shows Install; it opens the dialog; Not now sticks|
 | E2E-221 | iPhone gets the Add to Home Screen hint; the code screen says to install first|
 | E2E-222 | a home-screen shortcut opens its tab (/?tab=week)                        |
+| E2E-230 | a save whose first send fails is retried once: saved once, no error      |
