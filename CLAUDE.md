@@ -57,7 +57,7 @@ test/            *.test.js: real server on a temp database, signed in through th
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
                  site (the project page), family-invites (invite mode and the cap on families),
-                 theme (light and dark contrast), icons (favicon and manifest icons), idle (idle families), backup (encrypted backups), review (weekly review),
+                 theme (light and dark contrast), icons (favicon and manifest icons), idle (idle families), backup (encrypted backups), review (weekly review), encouragement (messages to a child),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh, build-site.sh, icons.js, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)

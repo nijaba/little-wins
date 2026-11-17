@@ -22,7 +22,12 @@ module.exports = {
   },
 
   // The made-up family of a demo (server/demo.js): never a real person.
-  demo: { family: 'Demo family', parent: 'Sam (demo)', children: ['Mia', 'Leo'] },
+  demo: {
+    family: 'Demo family',
+    parent: 'Sam (demo)',
+    children: ['Mia', 'Leo'],
+    message: "Great job helping with dinner yesterday. I'm proud of you!",
+  },
 
   starter: {
     // [name, note] — points come from STARTER_POINTS in index.js, in the same order.

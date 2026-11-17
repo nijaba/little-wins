@@ -66,3 +66,5 @@ app is meant to open are handled with `expectDialog`.
 | E2E-111 | with a light device setting the page stays light                                    |
 | E2E-120 | a parent opens the weekly review from Week, prints it, and goes back               |
 | E2E-121 | the weekly review fits a phone; its print view hides the buttons and tabs          |
+| E2E-130 | a parent writes a message for the child, sees it on Today, and clears it          |
+| E2E-131 | the child's view shows the parent's message, with no buttons                      |

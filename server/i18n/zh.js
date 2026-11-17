@@ -16,7 +16,12 @@ module.exports = {
     tooManyTries: (seconds) => `尝试次数太多，请 ${seconds} 秒后再试。`,
   },
 
-  demo: { family: '演示家庭', parent: 'Sam（演示）', children: ['米娅', '小乐'] },
+  demo: {
+    family: '演示家庭',
+    parent: 'Sam（演示）',
+    children: ['米娅', '小乐'],
+    message: '昨天你帮忙准备晚饭，做得真棒，我为你骄傲！',
+  },
 
   starter: {
     targets: [

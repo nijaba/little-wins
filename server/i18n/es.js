@@ -16,7 +16,12 @@ module.exports = {
     tooManyTries: (seconds) => `Demasiados intentos. Inténtalo de nuevo en ${seconds} s.`,
   },
 
-  demo: { family: 'Familia de demostración', parent: 'Sam (demo)', children: ['Mía', 'Leo'] },
+  demo: {
+    family: 'Familia de demostración',
+    parent: 'Sam (demo)',
+    children: ['Mía', 'Leo'],
+    message: '¡Qué bien ayudaste con la cena ayer! Estoy orgulloso de ti.',
+  },
 
   starter: {
     targets: [

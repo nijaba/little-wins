@@ -119,6 +119,38 @@ function weekMarks(challenges, marks, start) {
 }
 
 /**
+ * Milestones the app spots by itself, to cheer the child on (positive only):
+ * - { kind: 'streak', days }: days in a row, up to today or yesterday, with at least one perfect
+ *   mark (from 3 days);
+ * - { kind: 'best' }: this week's points are already more than any earlier week's (from the
+ *   third week with points).
+ */
+function milestones(entries, today, weekStart = 1) {
+  const out = [];
+  const perfect = new Set();
+  for (const [key, mark] of Object.entries(latestMarks(entries)))
+    if (mark === 'perfect') perfect.add(key.split('|')[1]);
+  let day = perfect.has(today) ? today : shift(today, -1);
+  let days = 0;
+  while (perfect.has(day)) {
+    days++;
+    day = shift(day, -1);
+  }
+  if (days >= 3) out.push({ kind: 'streak', days });
+  const byWeek = {};
+  for (const e of entries) {
+    if (e.kind !== 'points' || e.points <= 0) continue;
+    const w = startOfWeek(e.day, weekStart);
+    byWeek[w] = (byWeek[w] || 0) + e.points;
+  }
+  const now = startOfWeek(today, weekStart);
+  const earlier = Object.entries(byWeek).filter(([w]) => w < now);
+  if (earlier.length >= 2 && (byWeek[now] || 0) > Math.max(...earlier.map(([, p]) => p)))
+    out.push({ kind: 'best' });
+  return out;
+}
+
+/**
  * The weekly review for parents: the week starting `start` in detail, and the `weeks` weeks up
  * to it side by side. `entries` are one child's live entries in time order; `items` the family's.
  * Points earned and lost are the entries' own amounts (before the balance's floor at 0).
@@ -220,6 +252,7 @@ function history(entries, role) {
 
 module.exports = {
   review,
+  milestones,
   shift,
   validDay,
   startOfWeek,

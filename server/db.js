@@ -134,6 +134,15 @@ const migrations = [
     db.exec(`UPDATE families SET last_active = COALESCE(
       (SELECT MAX(s.last_seen) FROM sessions s WHERE s.family_id = families.id), created)`);
   },
+
+  // 7: a parent's encouraging message to a child, shown on the child's Today (one per child).
+  (db) => {
+    db.exec(`
+      CREATE TABLE messages(child_id INTEGER PRIMARY KEY REFERENCES children(id) ON DELETE CASCADE,
+        family_id INT NOT NULL REFERENCES families(id) ON DELETE CASCADE, text TEXT NOT NULL,
+        user_id INT, who TEXT NOT NULL, created TEXT NOT NULL);
+    `);
+  },
 ];
 
 function migrate(db) {

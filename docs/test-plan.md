@@ -53,6 +53,7 @@ Pure rules in `server/scoring.js`: dates, weeks, balance, stars, history.
 | SC-20 | Stars: a Sunday-start week groups Sunday with the days after it | Unit |
 | SC-21 | WeekRange with a Sunday start begins on Sunday and clamps like Monday weeks | Unit |
 | SC-22 | Review sums one week and the weeks before it, and counts what was done most often | Unit |
+| SC-23 | Milestones: a streak of perfect days up to today or yesterday, and a best week | Unit |
 
 ## PT: Points, penalties and warnings
 
@@ -429,6 +430,16 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-01 | `scripts/build-site.sh` builds a folder where every local link, image, poster and the video of `site/index.html` exists | API |
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
+
+## EN: Encouragement
+
+A parent's message to a child (`POST /api/message`) and the milestones on Today.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| EN-01 | A parent writes, replaces and clears a message; the child sees it on their device | API |
+| EN-02 | A message shows for 7 days, belongs to one child, and goes with the child | API |
+| EN-03 | A child's device cannot write a message, and an unknown child is a 404 | API |
 
 ## RV: Weekly review
 

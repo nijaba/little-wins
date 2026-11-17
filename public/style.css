@@ -773,3 +773,24 @@ select {
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* Encouragement: a parent's message and the milestones, at the top of Today */
+.msg {
+  border-left: 4px solid var(--t);
+}
+
+.cheers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.cheer {
+  background: var(--perfect-bg);
+  color: var(--perfect);
+  border-radius: 14px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}

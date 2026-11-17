@@ -80,6 +80,12 @@ These hold in both hosting modes. With several children **(target)**, each rule 
 - The next reward not yet unlocked is shown as a progress ring.
 - Each device shows a celebration the first time it sees a newly unlocked reward.
 
+### Encouragement
+
+- **A parent's message.** A parent writes a short message to a child (up to 140 characters) from the top of Today: **Write <child> a message**, then **Change** or **Clear**. It shows at the top of the child's Today, signed with the parent's name, until it is replaced or cleared, and for 7 days at most (owner's default). One message per child (`messages` table, migration 7; it goes with the child and is in the export). It is meant to be read by the child, unlike notes on entries, which children never see.
+- **Milestones** the app spots by itself, positive only, on Today for both views: **N perfect days in a row** (3 or more days, up to today or yesterday, with at least one perfect mark each) and **Best week so far** (this week's points earned beat every earlier week's, from the third week with points). Nothing is stored: they are worked out from the entries each time.
+- The demo family has a message from its parent to the first child.
+
 ### Weekly review
 
 - Parents open **Weekly review** at the bottom of the Week tab: one child, one week (the week shown, browsable like the Week tab).

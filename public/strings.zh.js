@@ -145,6 +145,16 @@ window.LW_STRINGS.zh = {
     pointsPlus: (n) => `+ ${n} 分`,
   },
 
+  cheer: {
+    from: (who) => `来自 ${who}`,
+    write: (name) => `💬 给${name}写一句话`,
+    change: '修改',
+    clear: '清除',
+    prompt: (name) =>
+      `给${name}的一句话（最多 140 个字符），会在“今天”页面显示一周。留空即可删除。`,
+    streak: (n) => `🔥 连续 ${n} 天完美！`,
+    best: '🏅 目前最好的一周！',
+  },
   review: {
     open: '本周回顾',
     title: (name) => `本周回顾：${name}`,
