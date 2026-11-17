@@ -116,6 +116,8 @@ Allowlist, OAuth state, sign-up modes, session handling.
 | SI-23 | Changing display name or email does not change who a parent is | API |
 | SI-24 | The same person on two providers is two accounts | API |
 | SI-25 | The 11th sign-in start within a minute is a 429 page | API |
+| SI-26 | The 11th checked sign-in callback within a minute is a 429 page | API |
+| SI-27 | A session unused for over a year is ended when it is next used | API |
 
 ## SU: Family setup
 
@@ -398,6 +400,14 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | --- | --- | --- |
 | VD-01 | Watch the video is offered when `public/tour.mp4` exists, unless `TOUR_VIDEO=0`; the file stays served | API |
 | VD-02 | `/tour.mp4` answers byte ranges: 206 with `Content-Range` for `a-b`, `a-` and `-n`, clamped ends, 416 for unsatisfiable or several ranges, HEAD | API |
+
+## SITE: Project page
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| SITE-01 | `scripts/build-site.sh` builds a folder where every local link, image, poster and the video of `site/index.html` exists | API |
+| SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
+| SITE-03 | The page has no inline style, script or event handler | API |
 
 ## E2E: browser tests
 

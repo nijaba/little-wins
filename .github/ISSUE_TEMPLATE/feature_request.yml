@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest a change or new feature
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem do you want to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What do you propose?
+    validations:
+      required: true
+  - type: textarea
+    id: values
+    attributes:
+      label: Child's view and privacy
+      description: Does it keep the child's view positive (no penalties, warnings or notes)? Does it collect or share more data? See the Principles in docs/design.md.
+    validations:
+      required: true

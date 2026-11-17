@@ -158,6 +158,9 @@ function createAuth({ repo, sessions, limiter, clientIp }) {
       return failPage(req, res, 'signInUnchecked');
     }
     if (query.get('error') || !query.get('code')) return redirect(res, '/', [stateCookie('', 0)]);
+    // A checked callback calls the provider, so it is limited like the start of a sign-in.
+    const wait = limiter.hit(`callback:${clientIp(req)}`);
+    if (wait) return failPage(req, res, 'tooManyTries', 429, wait);
 
     let identity;
     try {

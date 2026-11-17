@@ -322,3 +322,42 @@ describe('sign-in rate limit', () => {
     }
   });
 });
+
+describe('sign-in callback rate limit', () => {
+  test('SI-26 the 11th checked sign-in callback within a minute is a 429 page', async () => {
+    const srv = await startServer({ allowlist: '*' });
+    const callback = () =>
+      fetch(`${srv.base}/auth/google/callback?code=not-a-code&state=st`, {
+        redirect: 'manual',
+        headers: { cookie: `lw_oauth=${craftState({ p: 'google', s: 'st', v: 'v', i: null })}` },
+      });
+    try {
+      for (let i = 0; i < 10; i++) {
+        assert.equal((await callback()).status, 502, 'checked, then refused by the provider');
+      }
+      const r = await callback();
+      assert.equal(r.status, 429);
+      assert.match(await r.text(), /Too many tries/);
+    } finally {
+      await srv.close();
+    }
+  });
+});
+
+describe('idle sessions', () => {
+  test('SI-27 a session unused for over a year is ended when it is next used', async () => {
+    const srv = await startServer({ allowlist: '*' });
+    try {
+      const j = jar();
+      assert.ok((await srv.signIn(j, 'google', 'alice')).ok);
+      assert.equal((await srv.api(j, '/api/state')).status, 200);
+      const old = new Date(Date.now() - 366 * 864e5).toISOString();
+      srv.sql((db) => db.prepare('UPDATE sessions SET last_seen=?').run(old));
+      assert.equal((await srv.api(j, '/api/state')).status, 401);
+      const left = srv.sql((db) => db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n);
+      assert.equal(left, 0, 'the old session is deleted');
+    } finally {
+      await srv.close();
+    }
+  });
+});
