@@ -11,7 +11,8 @@ const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 
 const ROOT = path.join(__dirname, '..');
-const SECRET = 'test-secret-0123456789abcdef0123456789';
+// Generated per run, so no secret-looking literal sits in the repository.
+const SECRET = crypto.randomBytes(32).toString('hex');
 
 const live = new Set(); // child processes still running
 const dirs = new Set(); // temp folders still to remove

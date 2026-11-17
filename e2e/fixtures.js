@@ -13,7 +13,8 @@ const base = require('@playwright/test');
 
 const { expect } = base;
 const ROOT = path.join(__dirname, '..');
-const SECRET = 'e2e-secret-0123456789abcdef0123456789';
+// Generated per run, so no secret-looking literal sits in the repository.
+const SECRET = require('node:crypto').randomBytes(32).toString('hex');
 
 const live = new Set();
 process.on('exit', () => {

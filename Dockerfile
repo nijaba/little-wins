@@ -2,9 +2,14 @@
 # then docker inspect --format '{{index .RepoDigests 0}}' node:24-alpine
 FROM node@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 
-# Fixed uid/gid so the host data folder can be chowned to a known id.
+# Fixed uid/gid so the host data folder can be chowned to a known id. The app has no runtime
+# dependencies and runs on `node` alone, so the package managers that ship with the base image
+# (npm, npx, corepack, yarn) are removed: smaller image, and their bundled packages can't carry
+# vulnerabilities into it.
 RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app \
- && mkdir /data && chown app:app /data
+ && mkdir /data && chown app:app /data \
+ && rm -rf /usr/local/lib/node_modules /opt/yarn-* \
+      /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
 WORKDIR /app
 COPY server server
