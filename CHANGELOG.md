@@ -21,6 +21,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- An app icon: a gold star on navy, as the favicon, the iOS and Android home-screen icons (with a maskable one) and on the project page.
 - Dark mode: the page follows the device's light or dark setting. Colors are theme tokens, and every text color passes WCAG AA contrast in both themes. In light mode, gray buttons are darker and warning buttons have dark text, for contrast.
 - Parents can add a note to points, a penalty or a warning, from the confirmation message or History (parents only).
 - `scripts/backup.sh` keeps copies 30 days by default (was 60), as the design and privacy template say.

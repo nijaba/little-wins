@@ -16,6 +16,7 @@ const TYPES = {
   svg: 'image/svg+xml',
   webmanifest: 'application/manifest+json',
   mp4: 'video/mp4',
+  ico: 'image/x-icon',
 };
 
 const CSP =

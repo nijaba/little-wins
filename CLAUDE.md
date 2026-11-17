@@ -29,6 +29,7 @@ SKIP_IMAGE_TESTS=1 npm test                     # skip the Docker image test (it
 npm run format                                  # apply Biome formatting
 npm run dev                                     # local server on :3000 with fake sign-in and demo families
 scripts/build-site.sh                           # project page (site/ + pictures + video) into _site/
+node scripts/icons.js                           # app icons (PNGs, favicon.ico) from public/icon*.svg
 node scripts/guide-pictures.js                  # guide pictures (docs/images/) from a demo family
 node scripts/tour-video.js                      # silent tour video (docs/video/tour.webm); then
 ~/.venvs/voice/bin/python scripts/tour-voiceover.py  # narrated public/tour.mp4 + poster (Kokoro, see the script)
@@ -48,16 +49,17 @@ server/          index.js (wiring), config.js (env, startup check), db.js (migra
                  i18n/ (languages, Accept-Language, server-rendered pages and starter list per language)
 public/          index.html (shell), app.js, strings.en.js (page strings, English base),
                  strings.<lang>.js (zh, es, fr, de; loaded on demand), style.css, manifest.json,
+                 icon.svg, icon-maskable.svg and the icons made from them (scripts/icons.js),
                  tour.mp4 (narrated tour video, made by scripts/)
 test/            *.test.js: real server on a temp database, signed in through the fake provider
                  (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
                  site (the project page), family-invites (invite mode and the cap on families),
-                 theme (light and dark contrast),
+                 theme (light and dark contrast), icons (favicon and manifest icons),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
-scripts/         backup.sh, build-site.sh, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
+scripts/         backup.sh, build-site.sh, icons.js, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
 deploy/          caddy/ (dedicated host, automatic TLS) and nginx/ (behind an existing nginx)
 docs/            design.md, build-plan.md, admin-guide.md, user-guide.md (for families), why.md (the story), test-plan.md,
                  security-review.md, legal/ (privacy and terms templates for hosted operators),

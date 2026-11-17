@@ -9,7 +9,7 @@ out="${1:-_site}"
 rm -rf "$out"
 mkdir -p "$out/images"
 cp site/index.html site/style.css "$out/"
-cp public/tour.mp4 "$out/"
+cp public/tour.mp4 public/icon.svg public/apple-touch-icon.png "$out/"
 cp docs/images/parent-today.png docs/images/parent-week.png docs/images/parent-rewards.png \
   docs/images/child-today.png docs/images/child-rewards.png docs/video/tour-poster.png \
   "$out/images/"
