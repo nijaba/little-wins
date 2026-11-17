@@ -107,7 +107,7 @@ Proposed after launch prep and accepted by the owner (2026-11-17). Defaults are 
 - [x] Encrypted off-site backups: a script that encrypts each nightly copy before it leaves the server
 - [x] A weekly review page for parents, printable for a counselor or teacher
 - [x] Encouragement: a parent's short message on the child's Today, and milestones the app spots (streaks, best week)
-- [ ] Behaviors, challenges and rewards limited to some children (one family list; each item can say who it is for)
+- [x] Behaviors, challenges and rewards limited to some children (one family list; each item can say who it is for)
 - [ ] An evening reminder to mark the day, for parents who turn it on (Web Push, no dependency)
 
 ## Later (not yet scheduled)

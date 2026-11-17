@@ -143,6 +143,21 @@ const migrations = [
         user_id INT, who TEXT NOT NULL, created TEXT NOT NULL);
     `);
   },
+
+  // 8: behaviors, penalties, challenges and rewards for some children only. for_all=1 (the
+  // default, and every existing row) means every child; otherwise the link table names them.
+  (db) => {
+    addColumn(db, 'items', 'for_all', 'INT NOT NULL DEFAULT 1');
+    addColumn(db, 'rewards', 'for_all', 'INT NOT NULL DEFAULT 1');
+    db.exec(`
+      CREATE TABLE item_children(item_id INT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+        child_id INT NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+        family_id INT NOT NULL REFERENCES families(id) ON DELETE CASCADE, PRIMARY KEY(item_id, child_id));
+      CREATE TABLE reward_children(reward_id INT NOT NULL REFERENCES rewards(id) ON DELETE CASCADE,
+        child_id INT NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+        family_id INT NOT NULL REFERENCES families(id) ON DELETE CASCADE, PRIMARY KEY(reward_id, child_id));
+    `);
+  },
 ];
 
 function migrate(db) {

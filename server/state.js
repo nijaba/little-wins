@@ -27,6 +27,8 @@ function buildState(
   const cid = selected?.id;
 
   const items = repo.items(fid);
+  // Items and rewards can be for some children only (`for`: null = everyone).
+  const applies = (r) => r.for === null || r.for.includes(cid);
   const entries = cid ? repo.entries(fid, cid) : [];
   const td = today(family.timezone);
   const weekStart = family.week_start;
@@ -39,7 +41,7 @@ function buildState(
     weekStart,
   );
   const week = scoring.weekMarks(
-    items.filter((i) => i.kind === 'challenge'),
+    items.filter((i) => i.kind === 'challenge' && applies(i)),
     marks,
     range.start,
   );
@@ -57,8 +59,10 @@ function buildState(
     week: { days: week.days, lbl: scoring.dayLabels(weekStart), marks: week.marks, ...range },
     balance: scoring.balance(entries),
     stars,
-    items: items.filter((i) => parent || i.kind !== 'penalty'),
-    rewards: repo.rewards(fid),
+    // Parents get the whole list (Settings edits it; the page shows the chosen child's part);
+    // a child's device gets only what is for that child, and never penalties.
+    items: parent ? items : items.filter((i) => i.kind !== 'penalty' && applies(i)),
+    rewards: parent ? repo.rewards(fid) : repo.rewards(fid).filter(applies),
     warn: parent ? warn : {},
     mk,
     won,

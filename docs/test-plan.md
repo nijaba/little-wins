@@ -431,6 +431,16 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
 
+## PC: Lists for some children
+
+Behaviors, penalties, challenges and rewards limited to some children.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| PC-01 | An item for one child shows and records for that child only | API |
+| PC-02 | A challenge and a reward for one child: the other child's week and rewards leave them out | API |
+| PC-03 | Ticking every child means everyone; another family's children are dropped; a deleted child leaves 'nobody' | API |
+
 ## EN: Encouragement
 
 A parent's message to a child (`POST /api/message`) and the milestones on Today.

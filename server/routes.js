@@ -29,6 +29,9 @@ const text = (v, max = 120) =>
     .trim()
     .slice(0, max);
 const id = (v) => num(v, 0, 1e12);
+// Who an item or reward is for, from a request: undefined (unchanged), null (everyone) or IDs.
+const forChildren = (v) =>
+  v === undefined ? undefined : Array.isArray(v) ? v.slice(0, 50).map(id) : null;
 const formatCode = (code) => code.replace(/(.{4})(.{4})(.{2})/, '$1-$2-$3');
 
 // In a demo family these answer 403 demoOff (see docs/design.md, "Demo families").
@@ -98,6 +101,7 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
         note: text(b.note),
         pmin,
         pmax,
+        children: forChildren(b.children),
       });
       return ok ? [200, state()] : [404, apiError('notFound')];
     },
@@ -120,6 +124,7 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
         name,
         stars: num(b.stars, 0, 1000),
         points: num(b.points, 0, 100000),
+        children: forChildren(b.children),
       });
       return ok ? [200, state()] : [404, apiError('notFound')];
     },
@@ -235,6 +240,8 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     const child = repo.child(fid, id(b.child_id));
     const item = repo.item(fid, id(b.item_id));
     if (!child || !item) return [404, apiError('notFound')];
+    // An item for some children only can't be recorded for another child.
+    if (!repo.itemAppliesTo(fid, item.id, child.id)) return [400, apiError('badRequest')];
     const day = today(repo.family(fid).timezone);
     const limited = full(fid, 'entriesPerDay', day);
     if (limited) return limited;
@@ -514,7 +521,14 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
         {
           child: { id: child.id, name: child.name },
           ...range,
-          ...scoring.review(entries, repo.items(fid), range.start, family.week_start),
+          ...scoring.review(
+            entries,
+            repo
+              .items(fid)
+              .filter((i) => i.kind !== 'challenge' || i.for === null || i.for.includes(child.id)),
+            range.start,
+            family.week_start,
+          ),
         },
       ]);
     }

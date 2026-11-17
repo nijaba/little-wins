@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Behaviors, penalties, challenges and rewards can be for some children only ("Who is it for?" in the edit form); each child's Today, Week and Rewards show only theirs.
 - Encouragement: a parent's message on the child's Today (a week, or until changed), and milestones the app spots (perfect days in a row, best week so far).
 - Weekly review for parents, at the bottom of the Week tab: the week's stars, points, warnings and challenges, the last four weeks, and a Print button for a counselor or teacher.
 - An app icon: a gold star on navy, as the favicon, the iOS and Android home-screen icons (with a maskable one) and on the project page.

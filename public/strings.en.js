@@ -190,6 +190,10 @@ window.LW_STRINGS.en = {
 
   // Settings tab
   settings: {
+    forLabel: (names) => `For: ${names}`,
+    forNobody: 'nobody yet',
+    forWho: 'Who is it for?',
+    forHelp: 'Tick every child for everyone, including children you add later.',
     idleNote: (days) =>
       `A family that no phone or browser uses for ${days} days is deleted, with all its data.`,
     family: 'Family',

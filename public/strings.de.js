@@ -190,6 +190,10 @@ window.LW_STRINGS.de = {
 
   // Settings tab
   settings: {
+    forLabel: (names) => `Für: ${names}`,
+    forNobody: 'noch niemanden',
+    forWho: 'Für wen?',
+    forHelp: 'Alle Kinder ankreuzen heißt: für alle, auch für später hinzugefügte.',
     idleNote: (days) =>
       `Eine Familie, die ${days} Tage lang von keinem Telefon oder Browser genutzt wird, wird mit allen Daten gelöscht.`,
     family: 'Familie',
