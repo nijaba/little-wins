@@ -38,6 +38,15 @@ window.LW_STRINGS.zh = {
     networkError: '无法连接服务器，请再试一次。',
     familyDeleted: '家庭已删除。',
   },
+  // The welcome on the sign-in page
+  welcome: {
+    tagline: '一颗星一颗星，庆祝每一个小进步。',
+    perks: [
+      ['⭐', '为好表现赢得积分和星星'],
+      ['🏆', '全家一起挑选奖励'],
+      ['🌈', '孩子的屏幕上只有好消息'],
+    ],
+  },
   legal: { privacy: '隐私', terms: '条款' },
   operator: {
     idleAfter: '闲置家庭删除时间',

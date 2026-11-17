@@ -72,3 +72,5 @@ app is meant to open are handled with `expectDialog`.
 | E2E-141 | with one child the edit form has no "Who is it for?" choice                      |
 | E2E-150 | Settings offers the evening reminder; the service worker registers under the CSP|
 | E2E-151 | a parent turns notices on and off for a child in Settings -> Children          |
+| E2E-160 | the sign-in page opens with the welcome: star, name, tagline, three reasons   |
+| E2E-161 | the welcome stays still when the device asks for reduced motion               |

@@ -40,7 +40,7 @@ function device() {
 
 // A stand-in push service on localhost: records requests, answers with `status`.
 let pushes = [];
-let status = 201;
+const status = 201;
 let push;
 let pushUrl;
 let srv;

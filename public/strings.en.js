@@ -40,6 +40,15 @@ window.LW_STRINGS.en = {
     networkError: "Can't reach the server. Try again.",
     familyDeleted: 'Family deleted.',
   },
+  // The welcome on the sign-in page
+  welcome: {
+    tagline: 'Celebrate the small wins, one star at a time.',
+    perks: [
+      ['⭐', 'Points and stars for the good stuff'],
+      ['🏆', 'Rewards your family picks together'],
+      ['🌈', "Only good news on your child's screen"],
+    ],
+  },
   legal: { privacy: 'Privacy', terms: 'Terms' },
   operator: {
     idleAfter: 'Idle families deleted after',
