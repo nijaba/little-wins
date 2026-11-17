@@ -111,6 +111,16 @@ Proposed after launch prep and accepted by the owner (2026-11-17). Defaults are 
 - [x] Notices on a child's device when they unlock a reward or reach a milestone, allowed per child by a parent (owner's request, 2026-11-17)
 - [x] An evening reminder to mark the day, for parents who turn it on (Web Push, no dependency)
 
+## Priority 1: running the hosted service
+
+The owner's priorities for the hosted service (2026-11-17), before phase 8. Deployment details stay in the git-ignored
+`deploy.local.md`, not here.
+
+- [ ] Encrypted off-site backups for the hosted service: a backup key kept off the server, `BACKUP_PUBLIC_KEY` on the
+  nightly job, and the `offsite` folder copied to another machine (see the admin guide, "Encrypted copies for off-site")
+- [ ] "Ask for a place" on the hosted service: `SIGNUP_CONTACT_URL` set, so families who find it full or private know
+  whom to ask
+
 ## Phase 8 (priority 2): a more fun app
 
 Proposed and accepted by the owner (2026-11-17), after the brighter sign-in page. The fun goes to the child's screens;
