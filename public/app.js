@@ -238,7 +238,10 @@
           `<p><a class="b lnk" href="/auth/${esc(p)}/login${q}">${esc(L.signInWith[p] || p)}</a></p>`,
       )
       .join('');
-    let h = `<main class=center><h2>${esc(cfg.appName)}</h2>${note}`;
+    let h =
+      signup || invite
+        ? `<main class=center><h2>${esc(cfg.appName)}</h2>${note}`
+        : `<main class="center landing">${welcome()}${note}`;
     if (signup) {
       h += signup.ok
         ? `<h3>${signup.full ? STR.setup.full : L.signupTitle}</h3>${signup.full ? contact() : `<p><small>${L.signupHelp}</small></p>${btns}`}<p><button class="b g" data-action=not-now>${L.notNow}</button></p>`
@@ -255,10 +258,21 @@
   }
 
   // Try a demo and Watch the video, at the top of the sign-in screen when they are on.
+  // The welcome at the top of the sign-in page: the star, the name, a tagline and three reasons.
+  function welcome() {
+    const W = STR.welcome;
+    const stars = ['s1', 's2', 's3', 's4', 's5']
+      .map((k) => `<span class="sparkle ${k}" aria-hidden=true>★</span>`)
+      .join('');
+    return `<section class=hero aria-label="${esc(cfg.appName)}">${stars}<img class=hero-logo src=icon.svg alt="" width=84 height=84><h1>${esc(cfg.appName)}</h1><p class=tagline>${W.tagline}</p><ul class=perks>${W.perks
+      .map(([icon, text]) => `<li><span aria-hidden=true>${icon}</span> ${text}</li>`)
+      .join('')}</ul></section>`;
+  }
+
   function tryCard() {
     const D = STR.demo;
     const demo = cfg.demo
-      ? `<p><button class=b data-action=demo-start>${D.tryButton}</button></p>`
+      ? `<p><button class="b w" data-action=demo-start>${D.tryButton}</button></p>`
       : '';
     const video = cfg.tourVideo
       ? `<p><button class="b${cfg.demo ? ' g' : ''}" data-action=video>${D.watchButton}</button></p>`

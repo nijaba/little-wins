@@ -31,6 +31,10 @@
   --offer-line: #c9dde3;
   --toast: #222;
   --dim: rgba(15, 30, 50, 0.35);
+  --gold: #f5b82e; /* the star of the logo and the welcome's sparkles */
+  --glass: rgba(255, 255, 255, 0.14); /* soft panels on the welcome's colors */
+  --glow: rgba(0, 0, 0, 0.18);
+  --sunrise: rgba(245, 184, 46, 0.45); /* the warm glow behind the welcome's stars */
 }
 
 /* Dark: follows the device's setting */
@@ -800,4 +804,134 @@ select {
   margin-top: 6px;
   font-size: 13px;
   padding: 5px 10px;
+}
+
+/* The welcome on the sign-in page: the star, the name, a tagline and three reasons */
+.landing {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  margin: 6px 0 14px;
+  padding: 26px 18px 20px;
+  border-radius: 22px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 88% -8%, var(--sunrise), transparent 45%),
+    linear-gradient(155deg, var(--n) 0%, var(--n) 35%, var(--t) 100%);
+  box-shadow: 0 8px 24px var(--glow);
+}
+
+.hero h1 {
+  margin: 8px 0 4px;
+  font-size: 34px;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+.hero-logo {
+  display: block;
+  margin: 0 auto;
+  border-radius: 20px;
+  box-shadow: 0 6px 16px var(--glow);
+  animation: lw-pop 0.7s ease-out both;
+}
+
+.tagline {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.perks li {
+  background: var(--glass);
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 15px;
+}
+
+.sparkle {
+  position: absolute;
+  color: var(--gold);
+  line-height: 1;
+  opacity: 0.85;
+  animation: lw-twinkle 3.2s ease-in-out infinite;
+}
+
+.sparkle.s1 {
+  top: 14px;
+  left: 18px;
+  font-size: 18px;
+}
+
+.sparkle.s2 {
+  top: 34px;
+  right: 22px;
+  font-size: 26px;
+  animation-delay: 0.8s;
+}
+
+.sparkle.s3 {
+  top: 96px;
+  left: 30px;
+  font-size: 12px;
+  animation-delay: 1.6s;
+}
+
+.sparkle.s4 {
+  top: 108px;
+  right: 40px;
+  font-size: 14px;
+  animation-delay: 2.2s;
+}
+
+.sparkle.s5 {
+  top: 8px;
+  right: 46%;
+  font-size: 10px;
+  animation-delay: 1.2s;
+}
+
+@keyframes lw-twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.85;
+  }
+
+  50% {
+    transform: scale(1.35) rotate(18deg);
+    opacity: 0.35;
+  }
+}
+
+@keyframes lw-pop {
+  from {
+    transform: scale(0.6) rotate(-12deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle,
+  .hero-logo {
+    animation: none;
+  }
 }

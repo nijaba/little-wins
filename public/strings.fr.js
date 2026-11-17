@@ -40,6 +40,15 @@ window.LW_STRINGS.fr = {
     networkError: 'Impossible de joindre le serveur. Réessaie.',
     familyDeleted: 'Famille supprimée.',
   },
+  // The welcome on the sign-in page
+  welcome: {
+    tagline: 'Célébrez les petites victoires, une étoile à la fois.',
+    perks: [
+      ['⭐', 'Des points et des étoiles pour ce qui va bien'],
+      ['🏆', 'Des récompenses choisies en famille'],
+      ['🌈', "Que des bonnes nouvelles sur l'écran de votre enfant"],
+    ],
+  },
   legal: { privacy: 'Confidentialité', terms: 'Conditions' },
   operator: {
     idleAfter: 'Familles inactives supprimées après',

@@ -39,6 +39,15 @@ window.LW_STRINGS.es = {
     networkError: 'No se puede conectar con el servidor. Inténtalo de nuevo.',
     familyDeleted: 'Familia eliminada.',
   },
+  // The welcome on the sign-in page
+  welcome: {
+    tagline: 'Celebra los pequeños logros, una estrella a la vez.',
+    perks: [
+      ['⭐', 'Puntos y estrellas por lo bueno'],
+      ['🏆', 'Recompensas que elige toda la familia'],
+      ['🌈', 'Solo buenas noticias en la pantalla de tu hijo'],
+    ],
+  },
   legal: { privacy: 'Privacidad', terms: 'Condiciones' },
   operator: {
     idleAfter: 'Familias inactivas eliminadas tras',

@@ -40,6 +40,15 @@ window.LW_STRINGS.de = {
     networkError: 'Der Server ist nicht erreichbar. Versuch es noch einmal.',
     familyDeleted: 'Familie gelöscht.',
   },
+  // The welcome on the sign-in page
+  welcome: {
+    tagline: 'Feiere die kleinen Erfolge, Stern für Stern.',
+    perks: [
+      ['⭐', 'Punkte und Sterne für das Gute'],
+      ['🏆', 'Belohnungen, die die Familie gemeinsam aussucht'],
+      ['🌈', 'Nur gute Nachrichten auf dem Bildschirm Ihres Kindes'],
+    ],
+  },
   legal: { privacy: 'Datenschutz', terms: 'Nutzungsbedingungen' },
   operator: {
     idleAfter: 'Inaktive Familien gelöscht nach',
