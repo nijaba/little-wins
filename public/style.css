@@ -143,6 +143,14 @@ small {
   color: #fff;
 }
 
+/* A button alone on its line (e.g. "Add a device for <long name>", longer in German) wraps
+   instead of pushing the page sideways. */
+p > .b {
+  white-space: normal;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .b.r {
   background: #c0392b;
 }
