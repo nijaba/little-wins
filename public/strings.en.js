@@ -149,6 +149,20 @@ window.LW_STRINGS.en = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  reminder: {
+    title: 'Evening reminder',
+    help: "A reminder on this phone to mark the day's challenges, sent only when something is still unmarked. It goes through your phone maker's push service (Apple, Google or Mozilla), which can't read it.",
+    time: 'Remind me at',
+    turnOn: 'Remind me on this phone',
+    save: 'Save the time',
+    off: 'Turn off',
+    on: (t) => `On: every day at ${t}, on this phone.`,
+    denied:
+      'Notifications are blocked for Little Wins. Allow them in your phone or browser settings, then try again.',
+    unsupported:
+      "This browser can't show reminders. On iPhone, add Little Wins to the Home Screen first (Share, then Add to Home Screen) and open it from there.",
+    failed: "The reminder couldn't be turned on. Try again.",
+  },
   cheer: {
     from: (who) => `from ${who}`,
     write: (name) => `💬 Write ${name} a message`,

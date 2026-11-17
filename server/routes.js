@@ -9,6 +9,7 @@ const { sendJson, readBody, checkWrite, apiError } = require('./http');
 const i18n = require('./i18n');
 const messages = require('./messages');
 const scoring = require('./scoring');
+const webpush = require('./webpush');
 
 const { validDay } = scoring;
 const { buildState } = require('./state');
@@ -41,6 +42,8 @@ const DEMO_OFF = new Set([
   '/api/signup/info',
   '/api/operator/invite/create',
   '/api/operator/invite/revoke',
+  '/api/push/subscribe',
+  '/api/push/unsubscribe',
   '/api/setup',
   '/api/logout',
   '/api/operator',
@@ -58,7 +61,7 @@ const DEMO_OFF = new Set([
  * `demo` is set only for the demo families' router (server/demo.js): their own repo and
  * sessions, plus { idleSeconds, sweep, full, create, touch, leave }.
  */
-function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
+function createRouter({ repo, sessions, limiter, clientIp, demo = null, reminders = null }) {
   /** [409, …] when the family already has as many of `what` as its limit allows, else null. */
   function full(fid, what, day) {
     if (repo.count(fid, what, day) < config.limits[what]) return null;
@@ -146,6 +149,27 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
       return repo.setMessage(fid, cid, text(b.text, 140), s.userId, who)
         ? [200, state({ child: cid })]
         : [404, apiError('notFound')];
+    },
+    // Evening reminder for this device (Web Push): its subscription and time.
+    '/api/push/subscribe'({ b, s, fid, state }) {
+      if (!reminders) return [404, apiError('notFound')];
+      const endpoint = String(b.endpoint || '');
+      const p256dh = String(b.keys?.p256dh || '');
+      const auth = String(b.keys?.auth || '');
+      const time = String(b.time || '');
+      const ok =
+        endpoint.length <= 2048 &&
+        webpush.allowedEndpoint(endpoint, config.isLocal) &&
+        Buffer.from(p256dh, 'base64url').length === 65 &&
+        Buffer.from(auth, 'base64url').length === 16 &&
+        /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+      if (!ok) return [400, apiError('badRequest')];
+      repo.setPush(fid, s.id, { endpoint, p256dh, auth, time });
+      return [200, state()];
+    },
+    '/api/push/unsubscribe'({ s, fid, state }) {
+      repo.clearPush(fid, s.id);
+      return [200, state()];
     },
     '/api/entry/note': ({ b, fid, state }) =>
       repo.setNote(fid, id(b.id), text(b.note)) ? [200, state()] : [404, apiError('notFound')],
@@ -485,6 +509,12 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     const state = (extra = {}) => ({
       ...buildState(repo, s, { ...view, ...extra }, demo),
       ...(operator ? { operator: true } : {}),
+      // This device's evening reminder: the key to subscribe with, and its time if it is on.
+      ...(reminders && s.kind === 'parent'
+        ? {
+            push: { key: reminders.publicKey(), time: repo.pushOf(s.familyId, s.id)?.time || null },
+          }
+        : {}),
     });
     if (path === '/api/state') {
       // Unchanged since the page last asked? Then 304 and no body.

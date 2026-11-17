@@ -148,6 +148,20 @@ window.LW_STRINGS.es = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  reminder: {
+    title: 'Recordatorio de la tarde',
+    help: 'Un recordatorio en este teléfono para marcar los retos del día, solo si queda algo sin marcar. Pasa por el servicio de notificaciones del fabricante (Apple, Google o Mozilla), que no puede leerlo.',
+    time: 'Recordármelo a las',
+    turnOn: 'Recordármelo en este teléfono',
+    save: 'Guardar la hora',
+    off: 'Desactivar',
+    on: (t) => `Activado: todos los días a las ${t}, en este teléfono.`,
+    denied:
+      'Las notificaciones están bloqueadas para Little Wins. Permítelas en los ajustes del teléfono o del navegador y vuelve a intentarlo.',
+    unsupported:
+      'Este navegador no puede mostrar recordatorios. En iPhone, añade primero Little Wins a la pantalla de inicio (Compartir, luego Añadir a pantalla de inicio) y ábrelo desde ahí.',
+    failed: 'No se pudo activar el recordatorio. Inténtalo de nuevo.',
+  },
   cheer: {
     from: (who) => `de ${who}`,
     write: (name) => `💬 Escribir un mensaje a ${name}`,

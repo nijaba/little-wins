@@ -13,7 +13,7 @@ Decided by the owner. Ask before trading one away.
 - Node.js 22+ with built-in `node:sqlite`. No external database, cache or queue. Avoid runtime dependencies; each one needs a reason in design.md.
 - One container, one process, one SQLite file on a mounted volume.
 - HTTPS only when deployed; `localhost` is the one exception.
-- No analytics, trackers, third-party scripts or third-party fonts.
+- No analytics, trackers, third-party scripts or third-party fonts. One exception, approved by the owner: the opt-in evening reminder (Web Push) goes through the device's push service (Apple, Google, Mozilla), encrypted and saying nothing about the child.
 - The same code serves self-hosted and hosted modes; the difference is configuration.
 - No personal data in the repository: no real names, hostnames, accounts or family details in code, docs, tests or commit messages. Personal deployment notes go in `*.local.md` files, which git ignores. One exception, approved by the owner: the repository's GitHub handle (`nijaba`) in repository and project-page links and `CODEOWNERS`.
 
@@ -46,18 +46,19 @@ server/          index.js (wiring), config.js (env, startup check), db.js (migra
                  http.js (body limit, write guard, apiError), web.js (trusted proxies, HTTPS redirect, security headers),
                  demo.js (demo families: in-memory database, made-up history, idle sweep),
                  backup-crypto.js (encrypts off-site backups to a public key; keygen/encrypt/decrypt),
+                 webpush.js (RFC 8291 encryption, VAPID), reminders.js (evening reminder scheduler),
                  static.js (byte ranges for tour.mp4), messages.js (English server strings; keys are the API error codes), clock.js,
                  i18n/ (languages, Accept-Language, server-rendered pages and starter list per language)
 public/          index.html (shell), app.js, strings.en.js (page strings, English base),
                  strings.<lang>.js (zh, es, fr, de; loaded on demand), style.css, manifest.json,
-                 icon.svg, icon-maskable.svg and the icons made from them (scripts/icons.js),
+                 sw.js (service worker for the evening reminder only), icon.svg, icon-maskable.svg and the icons made from them (scripts/icons.js),
                  tour.mp4 (narrated tour video, made by scripts/)
 test/            *.test.js: real server on a temp database, signed in through the fake provider
                  (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
                  site (the project page), family-invites (invite mode and the cap on families),
-                 theme (light and dark contrast), icons (favicon and manifest icons), idle (idle families), backup (encrypted backups), review (weekly review), encouragement (messages to a child), per-child (lists for some children),
+                 theme (light and dark contrast), icons (favicon and manifest icons), idle (idle families), backup (encrypted backups), review (weekly review), encouragement (messages to a child), per-child (lists for some children), webpush and reminders (evening reminders),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh, build-site.sh, icons.js, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)

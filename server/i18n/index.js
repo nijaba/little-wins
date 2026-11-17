@@ -71,6 +71,7 @@ function starter(lang) {
 
 /** The demo family's made-up names in a language, falling back to English. */
 const demo = (lang) => ({ ...EN.demo, ...(bundles[lang]?.demo || {}) });
+const reminder = (lang) => ({ ...EN.reminder, ...(bundles[lang]?.reminder || {}) });
 
 module.exports = {
   LANGUAGES,
@@ -79,5 +80,6 @@ module.exports = {
   pages,
   starter,
   demo,
+  reminder,
   STARTER_POINTS,
 };

@@ -150,6 +150,20 @@ window.LW_STRINGS.fr = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  reminder: {
+    title: 'Rappel du soir',
+    help: "Un rappel sur ce téléphone pour noter les défis du jour, envoyé seulement s'il reste quelque chose à noter. Il passe par le service de notifications du fabricant (Apple, Google ou Mozilla), qui ne peut pas le lire.",
+    time: 'Me le rappeler à',
+    turnOn: 'Me le rappeler sur ce téléphone',
+    save: "Enregistrer l'heure",
+    off: 'Désactiver',
+    on: (t) => `Activé : tous les jours à ${t}, sur ce téléphone.`,
+    denied:
+      'Les notifications sont bloquées pour Little Wins. Autorisez-les dans les réglages du téléphone ou du navigateur, puis réessayez.',
+    unsupported:
+      "Ce navigateur ne peut pas afficher de rappels. Sur iPhone, ajoutez d'abord Little Wins à l'écran d'accueil (Partager, puis Sur l'écran d'accueil) et ouvrez-le depuis là.",
+    failed: "Le rappel n'a pas pu être activé. Réessayez.",
+  },
   cheer: {
     from: (who) => `de ${who}`,
     write: (name) => `💬 Écrire un message à ${name}`,

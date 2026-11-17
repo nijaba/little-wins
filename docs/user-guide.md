@@ -217,6 +217,10 @@ Everything in **Settings** is in folding sections. Each header shows a count; ta
   Today, Week or Rewards. Settings shows "For: …" under those. A behavior has a name, a short note (such as "per day") and its points: the
   same number twice for a fixed amount, or a minimum and a maximum for a range. Removing a behavior, penalty or
   challenge hides it but keeps the history that used it.
+- **Evening reminder** (on your own phone): a daily nudge at the time you choose, such as 19:30, to mark the
+  day's challenges. It only comes when something is still unmarked, and says nothing about your children.
+  Turn it on on each phone you want it on. On iPhone, add Little Wins to the Home Screen first and open it
+  from there. It goes through your phone maker's push service (Apple, Google or Mozilla), which can't read it.
 - **Devices:** every phone and browser logged in to your family, parents' and children's, with when each was
   last used. **Log out** one that's lost, sold or no longer used; a child's device then needs a new code.
   **Add a device for** *child* is here too.

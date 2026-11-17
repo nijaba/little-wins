@@ -431,6 +431,21 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
 
+## RM: Evening reminders
+
+Web Push without dependencies (`server/webpush.js`) and the scheduler (`server/reminders.js`).
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| WP-01 | Encryption matches the example in RFC 8291, byte for byte | Unit |
+| WP-02 | The VAPID header is an ES256 JWT for the push service origin, signed by the key it names | Unit |
+| WP-03 | Only https endpoints on known push services are accepted (localhost only in tests) | Unit |
+| WP-04 | A reminder is due once a day, from its time to two hours later, in the family's time zone | Unit |
+| RM-01 | A parent device subscribes with a time; bad endpoints, keys and times are refused | API |
+| RM-02 | At its time the device gets one encrypted, signed push, in the family language, and only once | API |
+| RM-03 | No push when every challenge is marked; a gone subscription is dropped; logging out removes it | API |
+| RM-04 | PUSH_REMINDERS=0 turns reminders off | API |
+
 ## PC: Lists for some children
 
 Behaviors, penalties, challenges and rewards limited to some children.

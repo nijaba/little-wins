@@ -526,6 +526,69 @@ function createRepo(db) {
       .prepare('SELECT text, who, created FROM messages WHERE family_id=? AND child_id=?')
       .get(fid, cid) ?? null;
 
+  // --- Evening reminders (Web Push), one subscription per parent device -------------------
+  function setPush(fid, sessionId, { endpoint, p256dh, auth, time }) {
+    db.prepare('DELETE FROM push_subscriptions WHERE family_id=? AND session_id=?').run(
+      fid,
+      sessionId,
+    );
+    db.prepare(
+      'INSERT INTO push_subscriptions(session_id,family_id,endpoint,p256dh,auth,time,created) VALUES(?,?,?,?,?,?,?)',
+    ).run(sessionId, fid, endpoint, p256dh, auth, time, now());
+  }
+  const clearPush = (fid, sessionId) =>
+    db
+      .prepare('DELETE FROM push_subscriptions WHERE family_id=? AND session_id=?')
+      .run(fid, sessionId);
+  const pushOf = (fid, sessionId) =>
+    db
+      .prepare('SELECT time FROM push_subscriptions WHERE family_id=? AND session_id=?')
+      .get(fid, sessionId) ?? null;
+
+  /** Whether some child still has a challenge (meant for them) without a mark on `day`. */
+  function unmarked(fid, day) {
+    const challenges = items(fid).filter((i) => i.kind === 'challenge');
+    const marked = new Set(
+      db
+        .prepare(
+          "SELECT child_id || '|' || item_id AS k FROM entries WHERE family_id=? AND kind='mark' AND day=? AND undone=0",
+        )
+        .all(fid, day)
+        .map((r) => r.k),
+    );
+    return db
+      .prepare('SELECT id FROM children WHERE family_id=?')
+      .all(fid)
+      .some(({ id: cid }) =>
+        challenges.some(
+          (c) => (c.for === null || c.for.includes(cid)) && !marked.has(`${cid}|${c.id}`),
+        ),
+      );
+  }
+
+  // Installation-wide, for the reminder scheduler (like the operator's counts): every
+  // subscription with its family's time zone and language.
+  const allPush = () =>
+    db
+      .prepare(
+        `SELECT p.session_id, p.family_id, p.endpoint, p.p256dh, p.auth, p.time, p.last_day,
+                f.timezone, f.language FROM push_subscriptions p JOIN families f ON f.id = p.family_id`,
+      )
+      .all();
+  const pushSent = (sessionId, day) =>
+    db.prepare('UPDATE push_subscriptions SET last_day=? WHERE session_id=?').run(day, sessionId);
+  const dropPush = (sessionId) =>
+    db.prepare('DELETE FROM push_subscriptions WHERE session_id=?').run(sessionId);
+
+  /** The installation's VAPID keys, made on first use and kept in the database. */
+  function vapid(make) {
+    const row = db.prepare("SELECT value FROM app_settings WHERE key='vapid'").get();
+    if (row) return JSON.parse(row.value);
+    const keys = make();
+    db.prepare("INSERT INTO app_settings(key,value) VALUES('vapid',?)").run(JSON.stringify(keys));
+    return keys;
+  }
+
   // --- Devices --------------------------------------------------------------------------------
   const sessions = (fid) =>
     db
@@ -728,6 +791,14 @@ function createRepo(db) {
     addEntry,
     replaceMark,
     undoEntry,
+    setPush,
+    clearPush,
+    pushOf,
+    unmarked,
+    allPush,
+    pushSent,
+    dropPush,
+    vapid,
     itemAppliesTo,
     setMessage,
     message,

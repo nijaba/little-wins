@@ -33,13 +33,17 @@ function sweepIdleFamilies() {
 }
 sweepIdleFamilies();
 setInterval(sweepIdleFamilies, 6 * 3600e3).unref();
+
+// Evening reminders (Web Push), for parent devices that turned them on.
+const reminders = config.push ? require('./reminders').createReminders({ repo }) : null;
+if (reminders) setInterval(() => reminders.tick().catch(() => {}), config.pushIntervalMs).unref();
 const sessions = createSessions(db);
 const limiter = createRateLimiter(config.rateLimit);
 const { reads, writes, windowMs } = config.apiRateLimit;
 const readLimiter = createRateLimiter({ max: reads, windowMs });
 const writeLimiter = createRateLimiter({ max: writes, windowMs });
 const auth = createAuth({ repo, sessions, limiter, clientIp });
-const handleApi = createRouter({ repo, sessions, limiter, clientIp });
+const handleApi = createRouter({ repo, sessions, limiter, clientIp, reminders });
 // Demo families, in memory only (DEMO_FAMILIES=1).
 const demo = config.demo.on ? require('./demo').createDemo({ limiter, clientIp }) : null;
 if (demo) console.warn(`Demo families are ON (at most ${config.demo.max})`);
