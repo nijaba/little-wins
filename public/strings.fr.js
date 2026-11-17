@@ -237,6 +237,8 @@ window.LW_STRINGS.fr = {
   },
   // History tab
   history: {
+    today: 'Aujourd’hui',
+    yesterday: 'Hier',
     title: 'Historique',
     warning: '⚠ avertissement',
     mark: 'note : ',

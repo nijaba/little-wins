@@ -235,6 +235,8 @@ window.LW_STRINGS.en = {
   },
   // History tab
   history: {
+    today: 'Today',
+    yesterday: 'Yesterday',
     title: 'History',
     warning: '⚠ warning',
     mark: 'mark: ',

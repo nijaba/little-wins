@@ -235,6 +235,8 @@ window.LW_STRINGS.es = {
   },
   // History tab
   history: {
+    today: 'Hoy',
+    yesterday: 'Ayer',
     title: 'Historial',
     warning: '⚠ aviso',
     mark: 'marca: ',

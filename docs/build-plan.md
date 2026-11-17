@@ -137,7 +137,7 @@ strict CSP, in light and dark mode, and still with reduced motion. Each item get
 - [x] A greeting on the child's Today by time of day ("Good morning, Mia! ☀️")
 - [x] Reward cards as goals: progress bars and "3 more ★ to go!" on locked rewards, a sparkle badge on unlocked ones
 - [x] Friendlier empty moments ("No points yet today — let's go!")
-- [ ] History grouped by day, with each day's total and its best moment on top
+- [x] History grouped by day, with each day's total and its best moment on top
 
 ## Later (not yet scheduled)
 

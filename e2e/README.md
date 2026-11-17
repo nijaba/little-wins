@@ -82,3 +82,4 @@ app is meant to open are handled with `expectDialog`.
 | E2E-200 | the child's Today greets them by time of day and counts today's points    |
 | E2E-201 | locked rewards say what is left; unlocked ones sparkle                    |
 | E2E-202 | empty lists say something kind instead of nothing                         |
+| E2E-210 | History groups entries under Today with its points; the best moment on top|

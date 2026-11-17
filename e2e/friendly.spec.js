@@ -1,5 +1,5 @@
 // The child's greeting and today line, reward cards as goals, and kind words for empty lists.
-const { test, expect, startFamily, signInAs, createFamily, goTab, card } = require('./fixtures');
+const { test, expect, signInAs, createFamily, goTab, card } = require('./fixtures');
 
 test.describe('in a demo family', () => {
   test.use({ serverOptions: { env: { DEMO_FAMILIES: '1' } } });

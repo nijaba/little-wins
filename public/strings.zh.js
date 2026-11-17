@@ -230,6 +230,8 @@ window.LW_STRINGS.zh = {
   },
   // History tab
   history: {
+    today: '今天',
+    yesterday: '昨天',
     title: '记录',
     warning: '⚠ 警告',
     mark: '标记：',

@@ -248,6 +248,7 @@ function history(entries, role) {
       note: parent ? e.note : '',
       name: e.iname,
       emoji: e.iemoji || '',
+      day: e.day,
     }));
 }
 
