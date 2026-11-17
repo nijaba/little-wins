@@ -126,6 +126,8 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     '/api/mark': (ctx) => record(ctx, 'mark'),
     '/api/undo': ({ b, fid, state }) =>
       repo.undoEntry(fid, id(b.id)) ? [200, state()] : [404, apiError('notFound')],
+    '/api/entry/note': ({ b, fid, state }) =>
+      repo.setNote(fid, id(b.id), text(b.note)) ? [200, state()] : [404, apiError('notFound')],
 
     '/api/family/save'({ b, fid, state }) {
       const name = text(b.name, 60);

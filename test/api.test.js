@@ -154,6 +154,38 @@ test('PT-03 notes are kept for parents and trimmed, and the child never sees the
   assert.ok(h.length > 0 && h.every((e) => e.note === '' && e.points > 0));
 });
 
+test('PT-07 a parent adds, changes and clears a note on points or a warning, never on a mark', async () => {
+  const f = await srv.newFamily({ child: 'Notes' });
+  const t = item(f.state, 'target', 'Reading 20 min');
+  const c = item(f.state, 'challenge');
+  const note = (id, text) => srv.api(f.jar, '/api/entry/note', { id, note: text });
+  let S = (await srv.api(f.jar, '/api/add', { child_id: f.childId, item_id: t.id })).json;
+  const pts = S.hist[0].id;
+  S = (await note(pts, '  read two chapters  ')).json;
+  assert.equal(S.hist.find((e) => e.id === pts).note, 'read two chapters');
+  S = (await note(pts, 'x'.repeat(200))).json;
+  assert.equal(S.hist.find((e) => e.id === pts).note.length, 120, 'capped like other text');
+  S = (await srv.api(f.jar, '/api/warn', { child_id: f.childId, item_id: t.id })).json;
+  const warn = S.hist[0].id;
+  assert.equal((await note(warn, 'first warning')).status, 200);
+  S = (await note(pts, '')).json;
+  assert.equal(S.hist.find((e) => e.id === pts).note, '', 'an empty note clears it');
+  S = (await srv.api(f.jar, '/api/mark', { child_id: f.childId, item_id: c.id, mark: 'perfect' }))
+    .json;
+  const mark = S.hist[0];
+  assert.equal(mark.kind, 'mark');
+  assert.equal((await note(mark.id, 'nope')).status, 404, 'a mark keeps its value');
+  assert.equal(
+    (await srv.api(f.jar, '/api/state')).json.hist.find((e) => e.id === mark.id).note,
+    'perfect',
+  );
+  assert.equal((await note(999999, 'nope')).status, 404);
+  await note(pts, 'secret');
+  const dev = await srv.pairChild(f.jar, f.childId);
+  assert.ok((await srv.api(dev.jar, '/api/state')).json.hist.every((e) => e.note === ''));
+  assert.equal((await srv.api(dev.jar, '/api/entry/note', { id: pts, note: 'hi' })).status, 403);
+});
+
 test('PT-04 the child sees positive history only, no penalties and no warnings', async () => {
   const S = await state();
   const t = item(S, 'target', 'Homework');

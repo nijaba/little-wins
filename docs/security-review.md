@@ -44,17 +44,16 @@ What the review checked, and where each property is tested. Test IDs are in [tes
 | 6 | Writes without both `Origin` and `Sec-Fetch-Site` are accepted. Modern browsers send at least one on cross-site requests, and the JSON content type already forces a CORS preflight that the app never grants. | Info | **Accepted** |
 | 7 | The state cookie is not single use within its 10 minutes. The provider's code is single use, so a replay can't sign anyone in. | Info | **Accepted** (finding 2 limits the cost) |
 
-### Design and code that disagree
+### Design and code that disagreed
 
-Found during the review; none is a vulnerability. Each needs the owner's decision, so they are open items, not
-fixes:
+Found during the review; none was a vulnerability. The owner decided each, and the follow-up change resolved
+them:
 
-- The design says logs keep "method, path template, status, duration and a truncated IP" for 14 days. The app
-  writes no request log at all. Request logs now come only from the reverse proxy, which the admin guide and
-  the privacy template now cover.
-- The design says backups are kept 30 days. `scripts/backup.sh` keeps 60 by default (`KEEP_DAYS`).
-- The design says a parent may add a note to an entry. The API accepts one, but the page offers no way to add
-  it, so in practice there are no notes.
+- **Request logs.** The design said the app keeps request logs for 14 days; it writes none. The design now
+  says so: request logs are the reverse proxy's, and the operator states their retention.
+- **Backups.** The design said 30 days, `scripts/backup.sh` kept 60 by default. Both now say 30.
+- **Notes.** The design said a parent may add a note to an entry; the API accepted one, but the page offered no
+  way to add it. The page now does (PT-07, E2E-16).
 
 ## Next review
 

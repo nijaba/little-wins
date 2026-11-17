@@ -84,3 +84,31 @@ test('E2E-15 History lists what was recorded and undo from History works', async
   await expect(header(page)).toHaveText('0 pts · 0 ★');
   await expect(page.locator('main .card').filter({ hasText: 'Tidy room' })).toHaveCount(0);
 });
+
+test('E2E-16 a note from the toast or History shows for parents, and an empty one removes it', async ({
+  page,
+}) => {
+  await startFamily(page);
+  await plus(page, 'Tidy room').click();
+  let asked = expectDialog(page, 'toys away');
+  await toast(page).getByRole('button', { name: 'Note' }).click();
+  const d = await asked;
+  expect(d.type).toBe('prompt');
+  expect(d.defaultValue).toBe('');
+  await goTab(page, 'History');
+  const entry = page.locator('main .card').filter({ hasText: 'Tidy room' });
+  await expect(entry).toContainText('· toys away');
+
+  asked = expectDialog(page, '');
+  await entry.getByRole('button', { name: 'note' }).click();
+  expect((await asked).defaultValue).toBe('toys away');
+  await expect(entry).not.toContainText('toys away');
+
+  // A mark gets no note button.
+  await goTab(page, 'Week');
+  await page.locator('button.d').first().click();
+  await goTab(page, 'History');
+  const mark = page.locator('main .card').filter({ hasText: 'mark:' });
+  await expect(mark).toHaveCount(1);
+  await expect(mark.getByRole('button', { name: 'note' })).toHaveCount(0);
+});

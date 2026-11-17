@@ -80,6 +80,9 @@ window.LW_STRINGS.zh = {
   // Toast and history descriptions
   undo: '撤销',
   undoLower: '撤销',
+  note: '备注',
+  noteLower: '备注',
+  notePrompt: '家长备注（孩子永远看不到）。留空即可删除。',
   warningPrefix: '⚠ 警告 · ',
 
   // Next-reward ring

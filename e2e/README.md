@@ -22,6 +22,7 @@ app is meant to open are handled with `expectDialog`.
 | E2E-13 | a penalty asks to confirm before it takes points away                                |
 | E2E-14 | the warning counter goes up and Undo takes it back                                   |
 | E2E-15 | History lists what was recorded and undo from History works                          |
+| E2E-16 | a note from the toast or History shows for parents; empty removes it                 |
 | E2E-20 | user-entered names render as text everywhere                                         |
 | E2E-30 | the bottom tabs have an icon and a label, the selected one is marked                 |
 | E2E-31 | the Settings sections start folded, with counts                                      |

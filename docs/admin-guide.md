@@ -225,9 +225,9 @@ A cron job on the server runs [scripts/backup.sh](../scripts/backup.sh) every ni
 - takes a consistent copy with SQLite's online backup (safe while the app runs);
 - checks the copy with `PRAGMA integrity_check`;
 - writes `~/little-wins-backup/daily/little-wins-YYYY-MM-DD.db`;
-- deletes copies older than 60 days.
+- deletes copies older than 30 days.
 
-It needs `python3` on the host (nothing else). You can override its settings with environment variables: `DB_FILE` (source database), `BACKUP_DIR` (destination) and `KEEP_DAYS` (default 60).
+It needs `python3` on the host (nothing else). You can override its settings with environment variables: `DB_FILE` (source database), `BACKUP_DIR` (destination) and `KEEP_DAYS` (default 30; it was 60 before, so an existing install keeps 30 days of copies after its next update unless you set it).
 
 Add the job (this example runs at 03:00 server time; adjust to taste):
 

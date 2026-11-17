@@ -82,6 +82,9 @@ window.LW_STRINGS.de = {
   // Toast and history descriptions
   undo: 'Rückgängig',
   undoLower: 'rückgängig',
+  note: 'Notiz',
+  noteLower: 'Notiz',
+  notePrompt: 'Notiz für Eltern (Ihr Kind sieht sie nie). Leer lassen, um sie zu entfernen.',
   warningPrefix: '⚠ Verwarnung · ',
 
   // Next-reward ring
