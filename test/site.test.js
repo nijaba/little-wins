@@ -55,7 +55,7 @@ test('SITE-03 no inline styles, scripts or event handlers', () => {
   assert.doesNotMatch(html, /<style\b/i);
 });
 
-test('SITE-04 the header stars are decoration: hidden from screen readers, still with reduced motion', () => {
+test('SITE-04 the header stars and the app icon are decoration: hidden from screen readers, still with reduced motion', () => {
   const stars = [...html.matchAll(/<span class="sparkle s\d" aria-hidden="true">★<\/span>/g)];
   assert.ok(stars.length >= 5, `${stars.length} stars`);
   assert.equal(
@@ -63,5 +63,13 @@ test('SITE-04 the header stars are decoration: hidden from screen readers, still
     stars.length,
     'every star is aria-hidden',
   );
-  assert.match(css, /prefers-reduced-motion: reduce\)\s*\{\s*\.sparkle\s*\{\s*animation: none;/);
+  assert.match(
+    css,
+    /prefers-reduced-motion: reduce\)\s*\{\s*\.sparkle,\s*\.hero-logo\s*\{\s*animation: none;/,
+  );
+  assert.equal(
+    (html.match(/src="icon\.svg"/g) || []).length,
+    2,
+    'the app icon, in the top bar and above the title',
+  );
 });

@@ -239,7 +239,8 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sparkle {
+  .sparkle,
+  .hero-logo {
     animation: none;
   }
 }
@@ -267,8 +268,37 @@ code {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 800;
   font-size: 20px;
+}
+
+/* The app's icon: small in the top bar, larger above the title (with a pop, still with
+   reduced motion) */
+.brand-logo {
+  border-radius: 7px;
+}
+
+.hero-logo {
+  display: block;
+  margin: 8px 0 14px;
+  border-radius: 18px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  animation: logo-pop 0.7s ease-out both;
+}
+
+@keyframes logo-pop {
+  from {
+    transform: scale(0.6) rotate(-12deg);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 
 .top-links {
