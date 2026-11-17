@@ -97,7 +97,7 @@ Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided
 - [x] Repository made public (early, before the rest of phase 6, to enable branch protection and CodeQL)
 - [x] Apply `.github/rulesets/main.json` (branch protection) right after the repository goes public
 - [x] App icon: favicon, home-screen icons and manifest icons, also on the project page
-- [ ] Launch announcement (blog post), linked from the README and the project page
+- Launch announcement: moved to Later by the owner (2026-11-17)
 
 ## Phase 7: families in the long run
 
@@ -111,6 +111,36 @@ Proposed after launch prep and accepted by the owner (2026-11-17). Defaults are 
 - [x] Notices on a child's device when they unlock a reward or reach a milestone, allowed per child by a parent (owner's request, 2026-11-17)
 - [x] An evening reminder to mark the day, for parents who turn it on (Web Push, no dependency)
 
+## Priority 1: running the hosted service
+
+The owner's priorities for the hosted service (2026-11-17), before phase 8. Deployment details stay in the git-ignored
+`deploy.local.md`, not here.
+
+- [ ] Encrypted off-site backups for the hosted service: a backup key kept off the server, `BACKUP_PUBLIC_KEY` on the
+  nightly job, and the `offsite` folder copied to another machine (see the admin guide, "Encrypted copies for off-site")
+- [ ] "Ask for a place" on the hosted service: `SIGNUP_CONTACT_URL` set, so families who find it full or private know
+  whom to ask
+
+## Phase 8 (priority 2): a more fun app
+
+Proposed and accepted by the owner (2026-11-17), after the brighter sign-in page. The fun goes to the child's screens;
+the parents' recording and Settings stay quick and calm. Everything stays positive-only, with no dependency, under the
+strict CSP, in light and dark mode, and still with reduced motion. Each item gets its design in design.md first.
+
+- [ ] An emoji for each behavior, reward and child, picked by a parent (a short picker, no library), shown large in the
+  lists, on reward cards and in the child's header, with defaults for the starter list; helps children who can't read
+  well yet
+- [ ] Celebrations: the child's points count up when new ones arrived since they last looked; a reward unlock with CSS
+  confetti and a bounce; a full ring glows; a small "+5" floats up from the + button
+- [ ] Stars to collect: a perfect day as a tilted gold sticker on the child's Week, a "⭐ won!" stamp on a week that wins,
+  and the stars so far filling a jar or row toward the next reward
+- [ ] A greeting on the child's Today by time of day ("Good morning, Mia! ☀️")
+- [ ] Reward cards as goals: progress bars and "3 more ★ to go!" on locked rewards, a sparkle badge on unlocked ones
+- [ ] Friendlier empty moments ("No points yet today — let's go!")
+- [ ] History grouped by day, with each day's total and its best moment on top
+
 ## Later (not yet scheduled)
 
+- [ ] Launch announcement (blog post), linked from the README and the project page; a draft for parents is in the
+  owner's git-ignored notes, waiting for the go-ahead (moved from phase 6, 2026-11-17)
 - [x] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons
