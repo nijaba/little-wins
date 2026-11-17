@@ -68,6 +68,10 @@ function buildState(
     won,
     hist: scoring.history(entries, role),
     today: td,
+    // Points earned today (positive entries only), for the child's Today.
+    todayPoints: entries
+      .filter((e) => e.day === td && e.kind === 'points' && e.points > 0)
+      .reduce((sum, e) => sum + e.points, 0),
     milestones: scoring.milestones(entries, td, weekStart),
   };
 

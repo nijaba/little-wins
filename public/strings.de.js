@@ -126,6 +126,8 @@ window.LW_STRINGS.de = {
 
   // Today tab
   today: {
+    soFar: (n) => `+${n} heute, super!`,
+    noneYet: 'Heute noch keine Punkte, los geht’s!',
     earn: 'Punkte sammeln',
     waysToEarn: 'So sammelst du Punkte',
     penalties: 'Abzüge',
@@ -154,6 +156,12 @@ window.LW_STRINGS.de = {
 
   // Rewards tab
   rewards: {
+    toGo: (stars, points) =>
+      stars && points !== '0'
+        ? `Noch ${stars} ★ und ${points} Punkte!`
+        : stars
+          ? `Noch ${stars} ★!`
+          : `Noch ${points} Punkte!`,
     yourStars: (n) => `Deine Sterne: ${n}`,
     toNext: (n, name) => `Noch ${n} ★ für ${name}`,
     title: 'Belohnungen',
@@ -191,6 +199,22 @@ window.LW_STRINGS.de = {
       `Eine kurze Nachricht für ${name} (bis zu 140 Zeichen). Sie erscheint eine Woche lang auf „Heute“. Leer lassen, um sie zu entfernen.`,
     streak: (n) => `🔥 ${n} perfekte Tage in Folge!`,
     best: '🏅 Beste Woche bisher!',
+  },
+  // The child's greeting on Today, by time of day
+  greet: {
+    morning: (n) => `Guten Morgen, ${n}!`,
+    afternoon: (n) => `Guten Tag, ${n}!`,
+    evening: (n) => `Guten Abend, ${n}!`,
+  },
+  // Kind words where a list is empty
+  empty: {
+    history: 'Hier ist noch nichts. Der erste Erfolg kommt bald!',
+    rewards: 'Noch keine Belohnungen. Frag ein Elternteil!',
+    rewardsParent:
+      'Noch keine Belohnungen. Legen Sie die erste unter Einstellungen → Belohnungen an.',
+    challenges: 'Diese Woche keine Aufgaben. Genieß die Punkte!',
+    challengesParent:
+      'Noch keine Wochenaufgaben. Legen Sie eine unter Einstellungen → Wochenaufgaben an.',
   },
   review: {
     open: 'Wochenrückblick',

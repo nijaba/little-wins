@@ -1093,8 +1093,32 @@
     if (text !== null) api('message', { child_id: S.childId, text });
   }
 
+  // The child's greeting, by the time of day in the family's time zone.
+  function greeting() {
+    const G = STR.greet;
+    let hour = new Date().getHours();
+    try {
+      hour = Number(
+        new Intl.DateTimeFormat('en-GB', {
+          hour: 'numeric',
+          hourCycle: 'h23',
+          timeZone: S.family.timezone,
+        }).format(new Date()),
+      );
+    } catch {}
+    const [say, icon] =
+      hour >= 5 && hour < 12
+        ? [G.morning, '☀️']
+        : hour >= 12 && hour < 18
+          ? [G.afternoon, '🌤️']
+          : [G.evening, '🌙'];
+    const me = S.children.find((c) => c.id === S.childId);
+    const today = S.todayPoints ? STR.today.soFar(fmtNum(S.todayPoints)) : STR.today.noneYet;
+    return `<p class=greet>${say(`${emo(me)}${esc(S.childName)}`)} <span aria-hidden=true>${icon}</span></p><p class=today-line>${today}</p>`;
+  }
+
   function viewToday() {
-    let h = cheers();
+    let h = P() ? cheers() : greeting() + cheers();
     if (!P()) h += ring();
     h += `<h3>${P() ? STR.today.earn : STR.today.waysToEarn}</h3>`;
     S.items
@@ -1213,6 +1237,8 @@
         S.won[i.id] ? '' : wk.perfectDays(pf) + (bd ? wk.aBadDay : '')
       }</small></div>${S.won[i.id] ? (P() ? `<b>${wk.won}</b>` : `<b class=stamp>${wk.wonStamp}</b>`) : ''}</div><div class=strip>${days}</div></div>`;
     }
+    if (!S.items.some((x) => x.kind === 'challenge' && mine(x)))
+      h += `<p class="center empty">${P() ? STR.empty.challengesParent : STR.empty.challenges}</p>`;
     if (P())
       h += `<p class=center><button class=b data-action=review>${STR.review.open}</button></p>`;
     return h;
@@ -1240,13 +1266,19 @@
     let h = `${ring()}${P() ? '' : starJar()}<h3>${STR.rewards.title}</h3>`;
     for (const [n, r] of myRewards().entries()) {
       const ok = S.stars >= r.stars && S.balance >= r.points;
-      h += `<div class=card${n ? '' : ' data-tour=rewards'}><div class=row><b>${named(r)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}</div>`;
+      const starsLeft = Math.max(0, r.stars - S.stars);
+      const pointsLeft = Math.max(0, r.points - S.balance);
+      const goal = ok ? '' : `<p class=goal>${STR.rewards.toGo(starsLeft, fmtNum(pointsLeft))}</p>`;
+      h += `<div class="card${ok ? ' won-card' : ''}"${n ? '' : ' data-tour=rewards'}><div class=row><b>${named(r)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}${goal}</div>`;
     }
+    if (!myRewards().length)
+      h += `<p class="center empty">${P() ? STR.empty.rewardsParent : STR.empty.rewards}</p>`;
     return h;
   }
 
   function viewHistory() {
     let h = `<h3>${STR.history.title}</h3>`;
+    if (!S.hist.length) h += `<p class="center empty">${STR.empty.history}</p>`;
     for (const [n, e] of S.hist.entries()) {
       h += `<div class=card${n ? '' : ' data-tour=hist'}><div class=row><div>${named(e)} ${
         e.kind === 'warn'

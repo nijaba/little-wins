@@ -127,6 +127,8 @@ window.LW_STRINGS.fr = {
 
   // Today tab
   today: {
+    soFar: (n) => `+${n} aujourd’hui, bravo !`,
+    noneYet: 'Pas encore de points aujourd’hui, c’est parti !',
     earn: 'Gagner des points',
     waysToEarn: 'Comment gagner des points',
     penalties: 'Pénalités',
@@ -155,6 +157,12 @@ window.LW_STRINGS.fr = {
 
   // Rewards tab
   rewards: {
+    toGo: (stars, points) =>
+      stars && points !== '0'
+        ? `Encore ${stars} ★ et ${points} points !`
+        : stars
+          ? `Encore ${stars} ★ !`
+          : `Encore ${points} points !`,
     yourStars: (n) => `Tes étoiles : ${n}`,
     toNext: (n, name) => `Encore ${n} ★ pour ${name}`,
     title: 'Récompenses',
@@ -192,6 +200,20 @@ window.LW_STRINGS.fr = {
       `Un petit message pour ${name} (140 caractères au plus). Il s'affiche sur son écran Aujourd'hui pendant une semaine. Laissez vide pour le retirer.`,
     streak: (n) => `🔥 ${n} jours parfaits d'affilée !`,
     best: "🏅 Meilleure semaine jusqu'ici !",
+  },
+  // The child's greeting on Today, by time of day
+  greet: {
+    morning: (n) => `Bonjour, ${n} !`,
+    afternoon: (n) => `Bon après-midi, ${n} !`,
+    evening: (n) => `Bonsoir, ${n} !`,
+  },
+  // Kind words where a list is empty
+  empty: {
+    history: 'Rien pour l’instant. La première victoire arrive !',
+    rewards: 'Pas encore de récompenses. Demande à un parent d’en ajouter !',
+    rewardsParent: 'Pas encore de récompenses. Ajoutez la première dans Réglages → Récompenses.',
+    challenges: 'Pas de défis cette semaine. Profite des points !',
+    challengesParent: 'Pas encore de défis. Ajoutez-en un dans Réglages → Défis de la semaine.',
   },
   review: {
     open: 'Bilan de la semaine',

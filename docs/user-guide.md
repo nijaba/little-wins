@@ -250,6 +250,8 @@ Your child's device shows only their own progress, and only the positive parts.
 
 ![A child's Rewards tab: the ring for the next reward and the list of rewards, with the unlocked ones ticked](images/child-rewards.png)
 
+Their Today opens with a greeting ("Good morning, Mia! ☀️") and how many points they've earned today.
+
 On their Week, perfect days are gold star stickers and a week that wins a star is stamped "⭐ won!". Their Rewards
 open with a jar of the stars they've earned and how many more the next reward needs.
 

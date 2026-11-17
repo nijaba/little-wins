@@ -126,6 +126,8 @@ window.LW_STRINGS.en = {
 
   // Today tab
   today: {
+    soFar: (n) => `+${n} today, great going!`,
+    noneYet: 'No points yet today, let’s go!',
     earn: 'Earn points',
     waysToEarn: 'Ways to earn points',
     penalties: 'Penalties',
@@ -154,6 +156,12 @@ window.LW_STRINGS.en = {
 
   // Rewards tab
   rewards: {
+    toGo: (stars, points) =>
+      stars && points !== '0'
+        ? `${stars} more ★ and ${points} points to go!`
+        : stars
+          ? `${stars} more ★ to go!`
+          : `${points} more points to go!`,
     yourStars: (n) => `Your stars: ${n}`,
     toNext: (n, name) => `${n} more ★ for ${name}`,
     title: 'Rewards',
@@ -190,6 +198,20 @@ window.LW_STRINGS.en = {
       `A short message for ${name} (up to 140 characters). It shows on their Today for a week. Leave empty to remove it.`,
     streak: (n) => `🔥 ${n} perfect days in a row!`,
     best: '🏅 Best week so far!',
+  },
+  // The child's greeting on Today, by time of day
+  greet: {
+    morning: (n) => `Good morning, ${n}!`,
+    afternoon: (n) => `Good afternoon, ${n}!`,
+    evening: (n) => `Good evening, ${n}!`,
+  },
+  // Kind words where a list is empty
+  empty: {
+    history: 'Nothing here yet. The first win is on its way!',
+    rewards: 'No rewards yet. Ask a parent to add some!',
+    rewardsParent: 'No rewards yet. Add the first one in Settings → Rewards.',
+    challenges: 'No challenges this week. Enjoy the points!',
+    challengesParent: 'No weekly challenges yet. Add one in Settings → Weekly challenges.',
   },
   review: {
     open: 'Weekly review',

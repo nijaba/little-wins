@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Friendly touches: a greeting and today's points on the child's Today, "N more ★ to go!" on every locked reward with a sparkle on unlocked ones, and kind words where a list is empty.
 - Stars to collect on the child's screens: perfect days as gold stickers, a "⭐ won!" stamp on weeks that win, and a star jar on Rewards.
 - Celebrations: the child's points count up when new ones arrived, confetti when a reward unlocks, a glowing ring near the end, and "+5" floating up from the + button. Still with reduced motion.
 - Emoji for behaviors, penalties, challenges, rewards and children, picked in the edit form and shown on every screen; the starter list comes with them. The page's files are revalidated on each load (`Cache-Control: no-cache`), so updates show right away.

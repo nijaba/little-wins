@@ -1103,3 +1103,45 @@ select {
 .jar-empty {
   color: var(--chevron);
 }
+
+/* The child's greeting, reward goals, unlocked sparkle and kind words for empty lists */
+.greet {
+  margin: 10px 4px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.today-line {
+  margin: 2px 4px 6px;
+  color: var(--good);
+  font-weight: 600;
+}
+
+.goal {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.won-card {
+  border: 2px solid var(--gold);
+}
+
+.won-card .row > span::after {
+  content: " ✨";
+  display: inline-block;
+  animation: lw-twinkle 3.2s ease-in-out infinite;
+}
+
+.empty {
+  color: var(--muted);
+  margin: 16px 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .won-card .row > span::after {
+    animation: none;
+  }
+}
