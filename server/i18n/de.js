@@ -6,6 +6,7 @@ module.exports = {
   pages: {
     appName: 'Little Wins',
     backToApp: 'Zurück zu Little Wins',
+    askForPlace: 'Um einen Platz bitten',
     unknownProvider: 'Dieser Anmeldedienst ist hier nicht eingerichtet.',
     signInExpired:
       'Die Anmeldung hat zu lange gedauert oder wurde in einem anderen Browser gestartet. Versuch es noch einmal.',

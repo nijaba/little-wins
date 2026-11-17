@@ -115,6 +115,17 @@ const migrations = [
   (db) => {
     addColumn(db, 'families', 'language', "TEXT NOT NULL DEFAULT 'en'");
   },
+
+  // 5: family invites, issued by an operator (SIGNUP_MODE=invite). Installation-wide, so no
+  // family_id of their own: family_id is the family the invited parent created, once they have.
+  (db) => {
+    db.exec(`
+      CREATE TABLE family_invites(id INTEGER PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, created_by INT,
+        created TEXT NOT NULL, expires TEXT NOT NULL,
+        used_by INT REFERENCES users(id) ON DELETE CASCADE, used_at TEXT,
+        family_id INT REFERENCES families(id) ON DELETE SET NULL);
+    `);
+  },
 ];
 
 function migrate(db) {

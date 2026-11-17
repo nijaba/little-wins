@@ -10,6 +10,7 @@ module.exports = {
   pages: {
     appName: 'Little Wins',
     backToApp: 'Back to Little Wins',
+    askForPlace: 'Ask for a place',
     unknownProvider: "That sign-in provider isn't set up here.",
     signInExpired: 'The sign-in took too long or started in another browser. Try again.',
     signInUnchecked: "The sign-in couldn't be checked. Try again.",

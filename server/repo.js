@@ -3,6 +3,7 @@
  * filters on it; IDs that come from a request are only ever used together with that family ID,
  * so another family's IDs behave like IDs that don't exist. Routes never write SQL themselves.
  */
+const config = require('./config');
 const { seedStarter } = require('./db');
 const { sha, randomToken } = require('./sessions');
 
@@ -207,6 +208,63 @@ function createRepo(db) {
   const useInvite = (inviteId) =>
     db.prepare('UPDATE invites SET used_at=? WHERE id=? AND used_at IS NULL').run(now(), inviteId)
       .changes > 0;
+
+  // --- Family invites (operator, SIGNUP_MODE=invite) ----------------------------------------
+  // Installation-wide like the operator's counts: no family ID to scope them by. Only the
+  // operator routes and sign-in reach them.
+  function createFamilyInvite(userId, ms) {
+    const token = randomToken(24);
+    const expires = new Date(Date.now() + ms).toISOString();
+    db.prepare(
+      'INSERT INTO family_invites(token_hash,created_by,created,expires) VALUES(?,?,?,?)',
+    ).run(sha(token), userId, now(), expires);
+    return { token, expires };
+  }
+
+  /** Invites not used yet and not expired, oldest first. */
+  const familyInvites = () =>
+    db
+      .prepare(
+        'SELECT id, created, expires FROM family_invites WHERE used_at IS NULL AND expires>? ORDER BY id',
+      )
+      .all(now());
+
+  const revokeFamilyInvite = (id) =>
+    db.prepare('DELETE FROM family_invites WHERE id=? AND used_at IS NULL').run(id).changes > 0;
+
+  /** A usable family invite by its token (not used, not expired), or null. */
+  const findFamilyInvite = (token) =>
+    typeof token === 'string' && token.length >= 16
+      ? (db
+          .prepare(
+            'SELECT id FROM family_invites WHERE token_hash=? AND used_at IS NULL AND expires>?',
+          )
+          .get(sha(token), now()) ?? null)
+      : null;
+
+  /** Uses an invite up for this parent; true when it was still free. */
+  const useFamilyInvite = (inviteId, userId) =>
+    db
+      .prepare('UPDATE family_invites SET used_by=?, used_at=? WHERE id=? AND used_at IS NULL')
+      .run(userId, now(), inviteId).changes > 0;
+
+  /** Whether this parent holds a used invite whose family is not created yet. */
+  const holdsFamilyInvite = (userId) =>
+    !!db.prepare('SELECT 1 FROM family_invites WHERE used_by=? AND family_id IS NULL').get(userId);
+
+  /** Marks the parent's invite as spent on the family they just created. */
+  const spendFamilyInvite = (userId, fid) =>
+    db
+      .prepare(
+        'UPDATE family_invites SET family_id=? WHERE id=(SELECT id FROM family_invites WHERE used_by=? AND family_id IS NULL ORDER BY id LIMIT 1)',
+      )
+      .run(fid, userId);
+
+  /** How many real families the installation holds (for LIMIT_FAMILIES). */
+  const familyCount = () => db.prepare('SELECT COUNT(*) n FROM families').get().n;
+
+  /** True when LIMIT_FAMILIES is set and reached: no new family can be created. */
+  const familiesFull = () => config.familyLimit != null && familyCount() >= config.familyLimit;
 
   // --- Children -----------------------------------------------------------------------------
   const children = (fid) =>
@@ -506,6 +564,15 @@ function createRepo(db) {
     exportFamily,
     deleteFamily,
     operatorStats,
+    createFamilyInvite,
+    familyInvites,
+    revokeFamilyInvite,
+    findFamilyInvite,
+    useFamilyInvite,
+    holdsFamilyInvite,
+    spendFamilyInvite,
+    familyCount,
+    familiesFull,
     identityOf,
     family,
     updateFamily,

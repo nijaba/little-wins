@@ -14,7 +14,7 @@ const { shift, startOfWeek } = require('./scoring');
 const { readCookie, randomToken } = require('./sessions');
 
 // Calls that stay with the real router even while a demo cookie is set: they need no family.
-const PUBLIC = ['/api/config', '/api/pair', '/api/invite/info'];
+const PUBLIC = ['/api/config', '/api/pair', '/api/invite/info', '/api/signup/info'];
 
 /** A small seeded random generator (mulberry32), so every demo has the same history. */
 function seeded(seed) {
