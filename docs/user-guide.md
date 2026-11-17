@@ -250,6 +250,9 @@ Your child's device shows only their own progress, and only the positive parts.
 
 ![A child's Rewards tab: the ring for the next reward and the list of rewards, with the unlocked ones ticked](images/child-rewards.png)
 
+On their Week, perfect days are gold star stickers and a week that wins a star is stamped "⭐ won!". Their Rewards
+open with a jar of the stars they've earned and how many more the next reward needs.
+
 When you've added points since they last looked, their points count up on the screen, and a reward unlocking
 brings a small burst of confetti. The ring glows when the next reward is nearly theirs.
 

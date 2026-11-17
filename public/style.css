@@ -1065,3 +1065,41 @@ select {
     animation: none;
   }
 }
+
+/* Stars to collect (the child's screens): gold stickers, the "won!" stamp, the star jar */
+.strip .d.sticker {
+  background: var(--gold);
+  color: var(--warn-text);
+  font-weight: 700;
+  transform: rotate(-6deg);
+  box-shadow: 0 2px 4px var(--shadow);
+}
+
+.strip .d.sticker:nth-child(even) {
+  transform: rotate(5deg);
+}
+
+.stamp {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  color: var(--heading);
+  transform: rotate(-8deg);
+  font-size: 14px;
+}
+
+.jar .jar-row {
+  margin: 8px 0 4px;
+  font-size: 26px;
+  line-height: 1.3;
+  letter-spacing: 2px;
+}
+
+.jar-star {
+  color: var(--gold);
+}
+
+.jar-empty {
+  color: var(--chevron);
+}

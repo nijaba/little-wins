@@ -132,7 +132,7 @@ strict CSP, in light and dark mode, and still with reduced motion. Each item get
   well yet
 - [x] Celebrations: the child's points count up when new ones arrived since they last looked; a reward unlock with CSS
   confetti and a bounce; a full ring glows; a small "+5" floats up from the + button
-- [ ] Stars to collect: a perfect day as a tilted gold sticker on the child's Week, a "⭐ won!" stamp on a week that wins,
+- [x] Stars to collect: a perfect day as a tilted gold sticker on the child's Week, a "⭐ won!" stamp on a week that wins,
   and the stars so far filling a jar or row toward the next reward
 - [ ] A greeting on the child's Today by time of day ("Good morning, Mia! ☀️")
 - [ ] Reward cards as goals: progress bars and "3 more ★ to go!" on locked rewards, a sparkle badge on unlocked ones
