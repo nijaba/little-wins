@@ -1,4 +1,7 @@
-/** Static files from public/, by plain file name only. Anything else is a 404. */
+/**
+ * Static files from public/. The files are listed once at startup, and a request can only
+ * name one of them: a request never builds a file path, so it can't reach anything else.
+ */
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -17,11 +20,19 @@ const TYPES = {
 const CSP =
   "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
 
+// Plain file names in public/ (no folders), mapped to their full paths.
+const FILES = new Map(
+  fs
+    .readdirSync(PUBLIC, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^[\w.-]+$/.test(entry.name))
+    .map((entry) => [entry.name, path.join(PUBLIC, entry.name)]),
+);
+
 function serveStatic(req, res) {
   const pathname = req.url.split('?')[0];
   const name = pathname === '/' ? 'index.html' : pathname.slice(1);
-  const file = path.join(PUBLIC, name);
-  if (!/^[\w.-]+$/.test(name) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+  const file = FILES.get(name);
+  if (!file) {
     res.writeHead(404);
     return res.end();
   }
