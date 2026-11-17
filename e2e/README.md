@@ -78,3 +78,4 @@ app is meant to open are handled with `expectDialog`.
 | E2E-180 | a reward unlocking brings confetti, and + makes "+10" float up              |
 | E2E-181 | with reduced motion the reward still shows, with no confetti or floating points|
 | E2E-182 | new points count up on the child's view, and the almost-full ring glows     |
+| E2E-190 | the child's Week shows stickers and "won!" stamps; Rewards has the star jar|

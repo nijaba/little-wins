@@ -137,6 +137,7 @@ window.LW_STRINGS.fr = {
 
   // Week tab
   week: {
+    wonStamp: '⭐ gagnée !',
     prevLabel: 'Semaine précédente',
     nextLabel: 'Semaine suivante',
     thisWeek: 'Cette semaine',
@@ -154,6 +155,8 @@ window.LW_STRINGS.fr = {
 
   // Rewards tab
   rewards: {
+    yourStars: (n) => `Tes étoiles : ${n}`,
+    toNext: (n, name) => `Encore ${n} ★ pour ${name}`,
     title: 'Récompenses',
     unlocked: '✅ débloquée',
     pointsPlus: (n) => `+ ${n} pts`,

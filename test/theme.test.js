@@ -54,6 +54,7 @@ const PAIRS = [
   ['#fff', 'n'],
   ['#fff', 'toast'],
   ['warn-text', 'warn'],
+  ['warn-text', 'gold'],
   ['err', 'bg'],
   ['err', 'surface'],
   ['good', 'bg'],

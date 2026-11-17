@@ -132,6 +132,7 @@ window.LW_STRINGS.zh = {
 
   // Week tab
   week: {
+    wonStamp: '⭐ 赢了！',
     prevLabel: '上一周',
     nextLabel: '下一周',
     thisWeek: '本周',
@@ -149,6 +150,8 @@ window.LW_STRINGS.zh = {
 
   // Rewards tab
   rewards: {
+    yourStars: (n) => `你的星星：${n}`,
+    toNext: (n, name) => `再得 ${n} 颗 ★ 就能换${name}`,
     title: '奖励',
     unlocked: '✅ 已解锁',
     pointsPlus: (n) => `+ ${n} 分`,

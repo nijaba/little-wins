@@ -1200,24 +1200,44 @@
         .map((d, k) => {
           const v = m[k];
           const fut = d > S.today;
-          const sym = wk.marks[v] || wk.marks.none;
+          // On a child's device a perfect day is a gold star sticker.
+          const sticker = !P() && v === 'perfect';
+          const sym = sticker ? '★' : wk.marks[v] || wk.marks.none;
           const label = `${esc(letters[k])} ${+d.slice(8)}<br>${sym}`;
           return P() && !fut
             ? `<button class="d ${v || ''}" data-action=cyc data-id=${i.id} data-k=${k}>${label}</button>`
-            : `<span class="d ${v || ''}${fut ? ' fut' : ''}">${label}</span>`;
+            : `<span class="d ${v || ''}${sticker ? ' sticker' : ''}${fut ? ' fut' : ''}">${label}</span>`;
         })
         .join('');
       h += `<div class=card${n ? '' : ' data-tour=marks'}><div class=row><div>${named(i)}<br><small>${
         S.won[i.id] ? '' : wk.perfectDays(pf) + (bd ? wk.aBadDay : '')
-      }</small></div>${S.won[i.id] ? `<b>${wk.won}</b>` : ''}</div><div class=strip>${days}</div></div>`;
+      }</small></div>${S.won[i.id] ? (P() ? `<b>${wk.won}</b>` : `<b class=stamp>${wk.wonStamp}</b>`) : ''}</div><div class=strip>${days}</div></div>`;
     }
     if (P())
       h += `<p class=center><button class=b data-action=review>${STR.review.open}</button></p>`;
     return h;
   }
 
+  // The child's star jar: the stars earned so far, and the empty places the next reward still
+  // needs (shown up to 20; beyond that, a count).
+  function starJar() {
+    const R = STR.rewards;
+    const next = myRewards().find((x) => !(S.stars >= x.stars && S.balance >= x.points));
+    const need = next && next.stars > S.stars ? next.stars : S.stars;
+    const shown = Math.min(need, 20);
+    const full = Math.min(S.stars, shown);
+    const stars =
+      need > 20
+        ? `<span class=jar-star>★</span> × ${fmtNum(S.stars)}`
+        : `${'<span class=jar-star>★</span>'.repeat(full)}${'<span class=jar-empty>☆</span>'.repeat(shown - full)}`;
+    const left = next && next.stars > S.stars ? next.stars - S.stars : 0;
+    return `<div class="card jar"><h3 class=edit-title>${R.yourStars(fmtNum(S.stars))}</h3><p class=jar-row aria-hidden=true>${stars}</p>${
+      left ? `<small>${R.toNext(left, named(next))}</small>` : ''
+    }</div>`;
+  }
+
   function viewRewards() {
-    let h = `${ring()}<h3>${STR.rewards.title}</h3>`;
+    let h = `${ring()}${P() ? '' : starJar()}<h3>${STR.rewards.title}</h3>`;
     for (const [n, r] of myRewards().entries()) {
       const ok = S.stars >= r.stars && S.balance >= r.points;
       h += `<div class=card${n ? '' : ' data-tour=rewards'}><div class=row><b>${named(r)}</b><span>${ok ? STR.rewards.unlocked : ''}</span></div><small>${r.stars} ${STR.star} ${r.points ? STR.rewards.pointsPlus(r.points) : ''}</small>${bar(S.stars, r.stars)}${r.points ? bar(S.balance, r.points) : ''}</div>`;
