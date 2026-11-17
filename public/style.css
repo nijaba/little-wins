@@ -389,8 +389,10 @@ select {
   text-align: left;
 }
 
-.chk input {
+.chk input,
+.radios input {
   width: auto;
+  padding: 0;
 }
 
 .chips {
