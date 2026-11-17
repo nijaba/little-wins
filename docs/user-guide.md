@@ -195,7 +195,8 @@ At the bottom of the **Week** tab, **Weekly review** sums up the chosen child's 
 
 The **History** tab lists everything recorded for the chosen child, newest first: points, warnings, penalties
 and marks, with who recorded each. **undo** removes an entry, and the balance is worked out again from what's
-left. Undoing a mark clears it. **note** adds, changes or removes the note on points, a penalty or a warning
+left. Undoing a mark clears it. Entries are grouped by day, with the day's points at the top of each, and the day's
+best moment (the most points earned at once) comes first with a 🏆. **note** adds, changes or removes the note on points, a penalty or a warning
 (leave it empty to remove it); the note shows under the entry.
 
 ![The parent's History tab: entries newest first, each with its points or mark, who recorded it and an undo link](images/parent-history.png)

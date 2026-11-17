@@ -1276,25 +1276,67 @@
     return h;
   }
 
-  function viewHistory() {
-    let h = `<h3>${STR.history.title}</h3>`;
-    if (!S.hist.length) h += `<p class="center empty">${STR.empty.history}</p>`;
-    for (const [n, e] of S.hist.entries()) {
-      h += `<div class=card${n ? '' : ' data-tour=hist'}><div class=row><div>${named(e)} ${
-        e.kind === 'warn'
-          ? STR.history.warning
-          : e.kind === 'mark'
-            ? STR.history.mark + esc(STR.history.markNames[e.note] || e.note)
-            : ''
-      }<br><small>${fmtTs(e.ts, { dateStyle: 'medium', timeStyle: 'short' })} ${
-        e.note && notable(e) ? `· ${esc(e.note)}` : ''
-      }</small></div><div>${e.kind === 'points' ? (e.points > 0 ? '+' : '') + e.points : ''} ${
-        P() && notable(e)
-          ? `<button class="b g" data-action=note data-id=${e.id}>${STR.noteLower}</button>`
+  // One history entry as a card (the day's best moment gets a trophy).
+  function histCard(e, first, best) {
+    return `<div class="card${best ? ' best' : ''}"${first ? ' data-tour=hist' : ''}><div class=row><div>${best ? '<span class=best-badge aria-hidden=true>🏆</span>' : ''}${named(e)} ${
+      e.kind === 'warn'
+        ? STR.history.warning
+        : e.kind === 'mark'
+          ? STR.history.mark + esc(STR.history.markNames[e.note] || e.note)
           : ''
-      } ${
-        P() ? `<button class="b g" data-action=undo data-id=${e.id}>${STR.undoLower}</button>` : ''
-      }</div></div></div>`;
+    }<br><small>${fmtTs(e.ts, { timeStyle: 'short' })} ${
+      e.note && notable(e) ? `· ${esc(e.note)}` : ''
+    }</small></div><div>${e.kind === 'points' ? (e.points > 0 ? '+' : '') + e.points : ''} ${
+      P() && notable(e)
+        ? `<button class="b g" data-action=note data-id=${e.id}>${STR.noteLower}</button>`
+        : ''
+    } ${P() ? `<button class="b g" data-action=undo data-id=${e.id}>${STR.undoLower}</button>` : ''}</div></div></div>`;
+  }
+
+  // History, grouped by day (newest first): a header with the day's points, then its entries,
+  // the best moment (most points earned at once) on top.
+  function viewHistory() {
+    const H = STR.history;
+    let h = `<h3>${H.title}</h3>`;
+    if (!S.hist.length) h += `<p class="center empty">${STR.empty.history}</p>`;
+    const days = [];
+    for (const e of S.hist) {
+      const day = e.day || S.today;
+      if (days.at(-1)?.day !== day) days.push({ day, entries: [] });
+      days.at(-1).entries.push(e);
+    }
+    const yesterday = new Date(`${S.today}T12:00:00Z`);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const yday = yesterday.toISOString().slice(0, 10);
+    let first = true;
+    for (const { day, entries } of days) {
+      const earned = entries.reduce(
+        (n, e) => n + (e.kind === 'points' && e.points > 0 ? e.points : 0),
+        0,
+      );
+      const lost = entries.reduce(
+        (n, e) => n + (e.kind === 'points' && e.points < 0 ? -e.points : 0),
+        0,
+      );
+      const name =
+        day === S.today
+          ? H.today
+          : day === yday
+            ? H.yesterday
+            : fmtDay(day, { weekday: 'long', month: 'short', day: 'numeric' });
+      const sums = `${earned ? `<b class=day-plus>+${fmtNum(earned)}</b>` : ''}${lost && P() ? ` <small>−${fmtNum(lost)}</small>` : ''}`;
+      h += `<div class=day-head><span>${name}</span><span>${sums}</span></div>`;
+      // The best moment: the entry that earned the most at once (ties: the latest), moved to the top.
+      const top = entries.reduce(
+        (b, e) => (e.kind === 'points' && e.points > 0 && (!b || e.points > b.points) ? e : b),
+        null,
+      );
+      const order =
+        top && entries.length > 1 ? [top, ...entries.filter((e) => e !== top)] : entries;
+      for (const e of order) {
+        h += histCard(e, first, e === top && entries.length > 1);
+        first = false;
+      }
     }
     return h;
   }

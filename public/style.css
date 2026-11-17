@@ -1145,3 +1145,25 @@ select {
     animation: none;
   }
 }
+
+/* History grouped by day: a header with the day's points, and the best moment on top */
+.day-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 16px 4px 4px;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.day-plus {
+  color: var(--good);
+}
+
+.card.best {
+  border: 2px solid var(--gold);
+}
+
+.best-badge {
+  margin-right: 6px;
+}

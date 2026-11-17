@@ -238,6 +238,8 @@ window.LW_STRINGS.de = {
   },
   // History tab
   history: {
+    today: 'Heute',
+    yesterday: 'Gestern',
     title: 'Verlauf',
     warning: '⚠ Verwarnung',
     mark: 'Bewertung: ',
