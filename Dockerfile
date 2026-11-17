@@ -1,6 +1,6 @@
 # node:24-alpine, pinned by digest so builds are repeatable. To update: docker pull node:24-alpine,
 # then docker inspect --format '{{index .RepoDigests 0}}' node:24-alpine
-FROM node@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
+FROM node@sha256:e18c3ccdf7d71619990b0e85639f506e2028a95410999cab24cc373cbd10e0ac
 
 # Fixed uid/gid so the host data folder can be chowned to a known id. The app has no runtime
 # dependencies and runs on `node` alone, so the package managers that ship with the base image
