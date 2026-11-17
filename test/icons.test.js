@@ -70,3 +70,22 @@ test('IC-03 favicon.ico holds one 32 x 32 PNG image', () => {
   assert.deepEqual(pngSize(ico.subarray(offset)), [32, 32]);
   assert.equal(ico.readUInt32LE(14), ico.length - offset, 'the size field matches');
 });
+
+test('IC-04 the manifest makes Little Wins installable: id, scope, screenshots at their sizes, shortcuts', () => {
+  const m = JSON.parse(read('manifest.json'));
+  assert.equal(m.id, '/');
+  assert.equal(m.scope, '/');
+  assert.equal(m.display, 'standalone');
+  assert.ok(m.description.length > 20);
+  assert.ok(m.screenshots.length >= 2);
+  for (const shot of m.screenshots) {
+    const [w, h] = pngSize(read(shot.src));
+    assert.equal(`${w}x${h}`, shot.sizes, shot.src);
+    assert.equal(shot.form_factor, 'narrow');
+  }
+  assert.deepEqual(
+    m.shortcuts.map((s) => s.url),
+    ['/?tab=today', '/?tab=week'],
+  );
+  assert.equal(m.launch_handler.client_mode, 'focus-existing');
+});

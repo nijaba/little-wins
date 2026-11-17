@@ -1167,3 +1167,12 @@ select {
 .best-badge {
   margin-right: 6px;
 }
+
+/* Adding Little Wins to the home screen: the banner on Today and the iPhone tip for codes */
+.card.install {
+  border: 2px dashed var(--accent);
+}
+
+.ios-tip {
+  margin: 4px 0 8px;
+}

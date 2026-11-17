@@ -1,10 +1,15 @@
 {
+  "id": "/",
   "name": "Little Wins",
   "short_name": "Little Wins",
+  "description": "A points, stars and rewards chart for families: parents record the good stuff, children see their progress.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#1f3a5f",
   "theme_color": "#1f3a5f",
+  "categories": ["lifestyle", "education", "kids"],
   "icons": [
     {
       "src": "icon-192.png",
@@ -27,5 +32,46 @@
       "sizes": "any",
       "type": "image/svg+xml"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-parent.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "A parent's Today: points and stars, and the behaviors to reward"
+    },
+    {
+      "src": "screenshot-child.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "A child's Today: their points, stars and next reward"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today",
+      "url": "/?tab=today",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Week",
+      "url": "/?tab=week",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
 }

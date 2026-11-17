@@ -51,7 +51,8 @@ test('E2E-60 a child device pairs with a typed code and sees only the child view
   // Today: ways to earn, no buttons and no penalties.
   await expect(kid.getByRole('heading', { name: 'Ways to earn points' })).toBeVisible();
   await expect(kid.getByText('Tidy room')).toBeVisible();
-  await expect(kid.locator('main button')).toHaveCount(0);
+  // (The home-screen banner may offer Install / Not now: it changes nothing in the chart.)
+  await expect(kid.locator('main button:not(.install button)')).toHaveCount(0);
   await expect(kid.getByText('Penalties')).toHaveCount(0);
   await expect(kid.getByText('Hitting or hurting someone')).toHaveCount(0);
   await expect(kid.getByText('Next reward')).toBeVisible();

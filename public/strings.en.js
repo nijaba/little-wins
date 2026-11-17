@@ -24,6 +24,8 @@ window.LW_STRINGS.en = {
 
   // Signed-out screen, invite and setup
   login: {
+    codeIOS:
+      'On iPhone or iPad, add Little Wins to the Home Screen first (Share ⬆️, then “Add to Home Screen”), open it from there, and type the code in the app.',
     signupTitle: "You're invited to start a family",
     signupHelp: 'Sign in to set up your family on this Little Wins. The invite works once.',
     signInWith: { google: 'Sign in with Google', github: 'Sign in with GitHub' },
@@ -189,6 +191,14 @@ window.LW_STRINGS.en = {
       "This browser can't show reminders. On iPhone, add Little Wins to the Home Screen first (Share, then Add to Home Screen) and open it from there.",
     failed: "The reminder couldn't be turned on. Try again.",
   },
+  // Adding Little Wins to the home screen
+  install: {
+    title: '📲 Add Little Wins to your home screen',
+    help: 'It opens like an app: full screen, one tap away.',
+    button: 'Install',
+    notNow: 'Not now',
+    ios: 'On iPhone or iPad: tap Share ⬆️, then “Add to Home Screen”.',
+  },
   cheer: {
     from: (who) => `from ${who}`,
     write: (name) => `💬 Write ${name} a message`,
@@ -246,6 +256,8 @@ window.LW_STRINGS.en = {
 
   // Settings tab
   settings: {
+    pairIOS:
+      'On an iPhone or iPad, add Little Wins to its Home Screen first, then type the code in the app.',
     fieldEmoji: 'Emoji',
     noEmoji: 'No emoji',
     forLabel: (names) => `For: ${names}`,

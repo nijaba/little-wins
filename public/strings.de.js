@@ -21,6 +21,8 @@ window.LW_STRINGS.de = {
 
   // Signed-out screen, invite and setup
   login: {
+    codeIOS:
+      'Auf iPhone oder iPad fügen Sie Little Wins zuerst zum Home-Bildschirm hinzu (Teilen ⬆️, dann „Zum Home-Bildschirm“), öffnen es von dort und geben den Code in der App ein.',
     signupTitle: 'Sie sind eingeladen, eine Familie anzulegen',
     signupHelp:
       'Melden Sie sich an, um Ihre Familie in diesem Little Wins anzulegen. Die Einladung funktioniert einmal.',
@@ -190,6 +192,14 @@ window.LW_STRINGS.de = {
       'Dieser Browser kann keine Erinnerungen anzeigen. Auf dem iPhone fügen Sie Little Wins zuerst zum Home-Bildschirm hinzu (Teilen, dann Zum Home-Bildschirm) und öffnen es von dort.',
     failed: 'Die Erinnerung konnte nicht eingeschaltet werden. Bitte erneut versuchen.',
   },
+  // Adding Little Wins to the home screen
+  install: {
+    title: '📲 Little Wins zum Home-Bildschirm hinzufügen',
+    help: 'Es öffnet sich wie eine App: im Vollbild, nur einen Tipp entfernt.',
+    button: 'Installieren',
+    notNow: 'Nicht jetzt',
+    ios: 'Auf iPhone oder iPad: Teilen ⬆️ tippen, dann „Zum Home-Bildschirm“.',
+  },
   cheer: {
     from: (who) => `von ${who}`,
     write: (name) => `💬 ${name} eine Nachricht schreiben`,
@@ -249,6 +259,8 @@ window.LW_STRINGS.de = {
 
   // Settings tab
   settings: {
+    pairIOS:
+      'Auf einem iPhone oder iPad Little Wins zuerst zum Home-Bildschirm hinzufügen, dann den Code in der App eingeben.',
     fieldEmoji: 'Emoji',
     noEmoji: 'Kein Emoji',
     forLabel: (names) => `Für: ${names}`,

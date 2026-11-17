@@ -256,7 +256,7 @@
         : `<p class=err>${L.inviteInvalid}</p><p><button class="b g" data-action=not-now>${L.notNow}</button></p>`;
     } else {
       h += tryCard();
-      h += `<div class=card><h3 class=edit-title>${L.parentsOnly}</h3>${btns}</div><div class=card><h3 class=edit-title>${L.codeTitle}</h3><p><small>${L.codeHelp}</small></p><p><input id=code aria-label="${L.codeTitle}" autocapitalize=characters autocomplete=off autocorrect=off spellcheck=false placeholder="${L.codePlaceholder}"></p><p class=err id=err></p><p><button class=b data-action=pair-code>${L.codeButton}</button></p></div>`;
+      h += `<div class=card><h3 class=edit-title>${L.parentsOnly}</h3>${btns}</div><div class=card><h3 class=edit-title>${L.codeTitle}</h3><p><small>${L.codeHelp}</small></p>${ios() && !standalone() ? `<p class=ios-tip><small>📲 ${L.codeIOS}</small></p>` : ''}<p><input id=code aria-label="${L.codeTitle}" autocapitalize=characters autocomplete=off autocorrect=off spellcheck=false placeholder="${L.codePlaceholder}"></p><p class=err id=err></p><p><button class=b data-action=pair-code>${L.codeButton}</button></p></div>`;
     }
     $('app').innerHTML = `${h}${legal()}</main>`;
   }
@@ -986,6 +986,22 @@
     },
     note: (d) => note(+d.id),
     'rem-on': () => reminderOn(),
+    'install-go': async () => {
+      const e = installEvt;
+      installEvt = null;
+      if (!e) return;
+      e.prompt();
+      try {
+        await e.userChoice;
+      } catch {}
+      render();
+    },
+    'install-no': () => {
+      try {
+        localStorage.setItem('install_no', String(Date.now()));
+      } catch {}
+      render();
+    },
     // Pick an emoji in the edit form without redrawing it (keeps what was typed).
     'pick-emoji': (d) => {
       $('f_emoji').value = d.e;
@@ -1064,6 +1080,45 @@
     return `<div class="card ringcard${pc >= 90 ? ' near' : ''}" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle class=ring-track cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle class=ring-value cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text class=ring-text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${named(r)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
   }
 
+  // ---- Installing on the home screen ----
+  // Android and desktop Chrome/Edge offer an install dialog the page can open; iPhone and iPad
+  // only have Share -> Add to Home Screen, so they get a hint. Never once installed, never in
+  // a demo, and "Not now" is remembered on the device.
+  let installEvt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installEvt = e;
+    if (screen === 'app') render();
+  });
+  window.addEventListener('appinstalled', () => {
+    installEvt = null;
+    if (screen === 'app') render();
+  });
+  const standalone = () =>
+    window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+  const ios = () =>
+    /iP(hone|od|ad)/.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  const installDismissed = () => {
+    try {
+      return !!localStorage.getItem('install_no');
+    } catch {
+      return false;
+    }
+  };
+  function installCard() {
+    if (S?.demo || standalone() || installDismissed()) return '';
+    const I = STR.install;
+    const no = `<button class="b g" data-action=install-no>${I.notNow}</button>`;
+    if (installEvt) {
+      return `<div class="card install"><p class=p0><b>${I.title}</b></p><p class=p8><small>${I.help}</small></p><p class=p8><button class=b data-action=install-go>${I.button}</button> ${no}</p></div>`;
+    }
+    if (ios()) {
+      return `<div class="card install"><p class=p0><b>${I.title}</b></p><p class=p8><small>${I.ios}</small></p><p class=p8>${no}</p></div>`;
+    }
+    return '';
+  }
+
   // A parent's message and the milestones the app spotted: at the top of Today, for both views.
   function cheers() {
     const E = STR.cheer;
@@ -1122,7 +1177,7 @@
   }
 
   function viewToday() {
-    let h = P() ? cheers() : greeting() + cheers();
+    let h = installCard() + (P() ? cheers() : greeting() + cheers());
     if (!P()) h += ring();
     h += `<h3>${P() ? STR.today.earn : STR.today.waysToEarn}</h3>`;
     S.items
@@ -1605,7 +1660,7 @@
     }
     if (iss?.type === 'pairing/create') {
       const k = S.children.find((x) => x.id === iss.child) || {};
-      g += issuedBox(st.pairTitle(esc(k.name || '')), st.pairHelp, iss.code);
+      g += issuedBox(st.pairTitle(esc(k.name || '')), `${st.pairHelp} ${st.pairIOS}`, iss.code);
     } else {
       for (const k of S.children)
         g += `<p class=p0${k === S.children[0] ? ' data-tour=device' : ''}><button class=b ${demo ? 'disabled' : `data-action=pair-dev data-id=${k.id}`}>${st.addDevice(esc(k.name))}</button></p>`;
@@ -1746,6 +1801,12 @@
   });
 
   async function boot() {
+    // A home-screen shortcut (manifest "shortcuts") opens a tab: /?tab=week.
+    const want = new URLSearchParams(location.search).get('tab');
+    if (['today', 'week', 'rew', 'hist'].includes(want)) tab = want;
+    // The service worker, on every visit: it makes Little Wins installable everywhere, and
+    // carries reminders and notices. It caches nothing.
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
     await useLang(browserLang());
     try {
       cfg = await (await fetch('/api/config')).json();
