@@ -323,6 +323,7 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
     {
       ...repo.operatorStats(),
       familyLimit: config.familyLimit,
+      idleFamilyDays: config.idleFamilyDays,
       signupMode: config.signupMode,
       familyInvites: repo.familyInvites(),
       version: config.version,

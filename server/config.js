@@ -130,6 +130,14 @@ const termsUrl = legalUrl('TERMS_URL');
 const signupContactUrl = env.SIGNUP_CONTACT_URL || '';
 if (signupContactUrl && !/^(https:\/\/|mailto:)\S+$/.test(signupContactUrl))
   problems.push('SIGNUP_CONTACT_URL must be an https:// or mailto: address');
+// Families no device has used for this many days are deleted (0: never).
+let idleFamilyDays = 365;
+if (env.DELETE_IDLE_FAMILIES_DAYS !== undefined && env.DELETE_IDLE_FAMILIES_DAYS !== '') {
+  const n = Number(env.DELETE_IDLE_FAMILIES_DAYS);
+  if (!Number.isInteger(n) || (n !== 0 && n < 30))
+    problems.push('DELETE_IDLE_FAMILIES_DAYS must be 0 (never) or a whole number of at least 30');
+  else idleFamilyDays = n;
+}
 // The most families this installation holds (null: no cap). Demo families never count.
 let familyLimit = null;
 if (env.LIMIT_FAMILIES !== undefined && env.LIMIT_FAMILIES !== '') {
@@ -195,6 +203,7 @@ module.exports = {
   termsUrl,
   signupContactUrl,
   familyLimit,
+  idleFamilyDays,
   limits,
   demo,
   tourVideo: env.TOUR_VIDEO !== '0',

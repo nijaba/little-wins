@@ -69,8 +69,9 @@ decide what is recorded. [If you rely on consent anywhere, say where and how to 
 
 ## How long we keep it
 
-- **Your family's data** stays until the family's owner deletes the family, or [until the account has been
-  unused for (period), after (notice) by email].
+- **Your family's data** stays until the family's owner deletes the family, or until no phone or browser has
+  used it for [365] days (`DELETE_IDLE_FAMILIES_DAYS`), when it is deleted automatically. Opening the app on
+  any of your family's devices keeps it.
 - **Deleting a family** in Settings removes all of its children, history, lists, invites and devices at once.
 - **Backups** are kept for [30] days, so deleted data is gone from them within [30] days.
 - **Signed-in devices** that are unused for a year are logged out and their record deleted.

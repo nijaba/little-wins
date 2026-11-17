@@ -40,6 +40,9 @@ window.LW_STRINGS.zh = {
   },
   legal: { privacy: '隐私', terms: '条款' },
   operator: {
+    idleAfter: '闲置家庭删除时间',
+    days: (n) => `${n} 天后`,
+    never: '从不',
     ofLimit: (n, max) => `${n} / ${max}`,
     familyInvites: '家庭邀请',
     familyInvitesHelp: '只有受邀的家庭才能在此注册。每个链接只能使用一次，有效期 30 天。',
@@ -153,6 +156,8 @@ window.LW_STRINGS.zh = {
 
   // Settings tab
   settings: {
+    idleNote: (days) =>
+      `如果 ${days} 天内没有任何手机或浏览器使用某个家庭，该家庭及其所有数据将被删除。`,
     family: '家庭',
     familyName: '家庭名称',
     timeZone: '时区',

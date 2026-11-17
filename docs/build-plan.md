@@ -99,6 +99,17 @@ Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided
 - [x] App icon: favicon, home-screen icons and manifest icons, also on the project page
 - [ ] Launch announcement (blog post), linked from the README and the project page
 
+## Phase 7: families in the long run
+
+Proposed after launch prep and accepted by the owner (2026-11-17). Defaults are the owner's where they answered, otherwise the proposal's, written into design.md.
+
+- [x] Idle families deleted after `DELETE_IDLE_FAMILIES_DAYS` (default 365, `0` turns it off); Settings states the rule (an in-app warning would never be seen: opening the app keeps the family) (owner: operator sets it, on by default)
+- [ ] Encrypted off-site backups: a script that encrypts each nightly copy before it leaves the server
+- [ ] A weekly review page for parents, printable for a counselor or teacher
+- [ ] Encouragement: a parent's short message on the child's Today, and milestones the app spots (streaks, best week)
+- [ ] Behaviors, challenges and rewards limited to some children (one family list; each item can say who it is for)
+- [ ] An evening reminder to mark the day, for parents who turn it on (Web Push, no dependency)
+
 ## Later (not yet scheduled)
 
 - [x] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons

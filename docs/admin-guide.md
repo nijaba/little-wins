@@ -38,6 +38,7 @@ All of these are environment variables, normally set in `.env`.
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in. Set both or neither. | Off |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub sign-in. Set both or neither. | Off |
 | `SIGNUP_MODE` | Who may create a family: `closed` (only people on `PARENT_ALLOWLIST`), `invite` (people with a family invite from the operator page, or on the allowlist) or `open` (anyone who signs in). See [Hosting for other families](#hosting-for-other-families). | `closed` |
+| `DELETE_IDLE_FAMILIES_DAYS` | A family that no device has used for this many days is deleted, with everything it owns (at least 30; `0` turns it off). Parents see the rule in Settings. Unclaimed families are kept. | `365` |
 | `LIMIT_FAMILIES` | The most families the installation holds, in any mode. Past it, new parents see "full for now"; co-parents can still join. Demo families don't count. | No cap |
 | `SIGNUP_CONTACT_URL` | An `https://` page or `mailto:` address shown as **Ask for a place** on the private and full screens. The app collects no email itself. | None |
 | `PARENT_ALLOWLIST` | Comma-separated list of who may create a family (or claim a migrated one) when sign-up is not `open`. Entries: `*`, `google:you@example.com`, `github:<login>`, `google-domain:example.com`. See below. | Empty |
@@ -168,7 +169,8 @@ The same code runs one family or many; the difference is configuration. Before y
 5. **Backups.** Keep the nightly backups, and an off-site copy encrypted before it leaves the server. Say how long you keep them in your privacy policy: deleted families stay in backups that long. `KEEP_DAYS` in [Automatic backups](#automatic-backups) sets it.
 6. **Logs.** The app writes no request log. Your reverse proxy probably does: decide how long you keep its logs (14 days is plenty) and say so in the privacy policy.
 7. **Demo families (optional).** `DEMO_FAMILIES=1` lets visitors try the app before signing in. Demo families are kept in memory only, apart from real ones. See [Demo families](#demo-families).
-8. **Security reports.** Point people who find a problem in the software to the project's [security policy](../SECURITY.md); problems with your own deployment come to you.
+8. **Idle families.** `DELETE_IDLE_FAMILIES_DAYS` (365 by default) deletes families nobody has used for that long, at startup and every 6 hours; the log says how many. State the period in your privacy policy. Self-hosting for one family that uses the app, it never triggers; set `0` if you'd rather it never could.
+9. **Security reports.** Point people who find a problem in the software to the project's [security policy](../SECURITY.md); problems with your own deployment come to you.
 
 What families can do for themselves, with no help from you: invite a co-parent, hand over ownership, log out lost devices, download all their data, and delete their family (it is gone at once, and from the backups once they age out).
 

@@ -71,6 +71,8 @@ function createSessions(
           now,
         ).lastInsertRowid,
     );
+    if (owner.familyId != null)
+      db.prepare('UPDATE families SET last_active=? WHERE id=?').run(now, owner.familyId);
     bump(owner.familyId);
     return { id, cookie: cookie.set(token) };
   }
@@ -107,7 +109,11 @@ function createSessions(
       }
     }
     if (Date.now() - Date.parse(s.last_seen) > config.lastSeenThrottleMs) {
-      db.prepare('UPDATE sessions SET last_seen=? WHERE id=?').run(new Date().toISOString(), s.id);
+      const now = new Date().toISOString();
+      db.prepare('UPDATE sessions SET last_seen=? WHERE id=?').run(now, s.id);
+      // Any device using the app keeps its family from being deleted as idle.
+      if (s.family_id != null)
+        db.prepare('UPDATE families SET last_active=? WHERE id=?').run(now, s.family_id);
     }
     return {
       id: s.id,

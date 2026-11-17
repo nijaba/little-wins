@@ -41,6 +41,9 @@ window.LW_STRINGS.es = {
   },
   legal: { privacy: 'Privacidad', terms: 'Condiciones' },
   operator: {
+    idleAfter: 'Familias inactivas eliminadas tras',
+    days: (n) => `${n} días`,
+    never: 'nunca',
     ofLimit: (n, max) => `${n} / ${max}`,
     familyInvites: 'Invitaciones de familias',
     familyInvitesHelp:
@@ -156,6 +159,8 @@ window.LW_STRINGS.es = {
 
   // Settings tab
   settings: {
+    idleNote: (days) =>
+      `Una familia que ningún teléfono ni navegador usa durante ${days} días se elimina, con todos sus datos.`,
     family: 'Familia',
     familyName: 'Nombre de la familia',
     timeZone: 'Zona horaria',

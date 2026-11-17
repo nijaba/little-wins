@@ -15,6 +15,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added for hosting
 
+- Idle families are deleted after `DELETE_IDLE_FAMILIES_DAYS` without use (default 365, `0` turns it off); parents see the rule in Settings.
 - Family invites from the operator page (`SIGNUP_MODE=invite`): single-use links that last 30 days, listed and cancellable.
 - `LIMIT_FAMILIES` caps how many families an installation holds; past it, new parents see a calm "full for now" screen.
 - `SIGNUP_CONTACT_URL` adds "Ask for a place" to the private and full screens.

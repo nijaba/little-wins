@@ -22,6 +22,17 @@ const { handleFakeSso } = require('./fake-sso');
 const { clientInfo, setSecurityHeaders, redirectToHttps } = require('./web');
 
 const repo = createRepo(db);
+
+// Families no device has used for DELETE_IDLE_FAMILIES_DAYS are deleted: at startup, then every
+// 6 hours. Only the count is logged.
+function sweepIdleFamilies() {
+  if (!config.idleFamilyDays) return;
+  const before = new Date(Date.now() - config.idleFamilyDays * 864e5).toISOString();
+  const n = repo.deleteIdleFamilies(before);
+  if (n) console.log(`Deleted ${n} idle ${n === 1 ? 'family' : 'families'}`);
+}
+sweepIdleFamilies();
+setInterval(sweepIdleFamilies, 6 * 3600e3).unref();
 const sessions = createSessions(db);
 const limiter = createRateLimiter(config.rateLimit);
 const { reads, writes, windowMs } = config.apiRateLimit;

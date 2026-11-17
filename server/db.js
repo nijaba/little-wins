@@ -126,6 +126,14 @@ const migrations = [
         family_id INT REFERENCES families(id) ON DELETE SET NULL);
     `);
   },
+
+  // 6: when each family last used the app (any of its devices), so idle families can be
+  // deleted (DELETE_IDLE_FAMILIES_DAYS). Starts at the latest device use, or the family's creation.
+  (db) => {
+    addColumn(db, 'families', 'last_active', 'TEXT');
+    db.exec(`UPDATE families SET last_active = COALESCE(
+      (SELECT MAX(s.last_seen) FROM sessions s WHERE s.family_id = families.id), created)`);
+  },
 ];
 
 function migrate(db) {
