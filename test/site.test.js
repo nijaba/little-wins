@@ -54,3 +54,14 @@ test('SITE-03 no inline styles, scripts or event handlers', () => {
     assert.equal(m[1].trim(), '', 'inline script');
   assert.doesNotMatch(html, /<style\b/i);
 });
+
+test('SITE-04 the header stars are decoration: hidden from screen readers, still with reduced motion', () => {
+  const stars = [...html.matchAll(/<span class="sparkle s\d" aria-hidden="true">★<\/span>/g)];
+  assert.ok(stars.length >= 5, `${stars.length} stars`);
+  assert.equal(
+    (html.match(/class="sparkle/g) || []).length,
+    stars.length,
+    'every star is aria-hidden',
+  );
+  assert.match(css, /prefers-reduced-motion: reduce\)\s*\{\s*\.sparkle\s*\{\s*animation: none;/);
+});
