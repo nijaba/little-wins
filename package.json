@@ -20,8 +20,8 @@
     "e2e:install": "playwright install --with-deps chromium webkit"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.4",
-    "@playwright/test": "1.64.1",
+    "@biomejs/biome": "2.6.7",
+    "@playwright/test": "1.65.1",
     "c8": "12.0.0"
   }
 }
