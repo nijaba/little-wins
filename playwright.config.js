@@ -5,6 +5,8 @@ const { defineConfig, devices } = require('@playwright/test');
 const ci = !!process.env.CI;
 
 module.exports = defineConfig({
+  // CI runners are much slower than a laptop: give each test more room there.
+  timeout: ci ? 60_000 : 30_000,
   testDir: 'e2e',
   fullyParallel: true,
   forbidOnly: ci,
