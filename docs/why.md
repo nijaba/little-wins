@@ -50,6 +50,10 @@ and open source, and it runs on your own server, because a chart about a child's
 as family data gets. There are no ads, no trackers and no subscription, and your children never need an
 account.
 
+Not every family can run a server, though. For them, I plan to run a free hosted service. It's less private
+than running your own, since your family's data then sits on my server, but I'll keep it as private as I can:
+the same app, with no ads, no trackers and nothing shared. I'll see how many families I can host.
+
 ## Two months in
 
 We've been using Little Wins for about two months now, and we're seeing progress. It isn't revolutionary.
