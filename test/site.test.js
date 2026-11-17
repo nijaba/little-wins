@@ -40,15 +40,15 @@ test('SITE-02 index.html and style.css link only to the project, never to a thir
   for (const u of urls) assert.match(u, ALLOWED, `third-party URL ${u}`);
   assert.doesNotMatch(css, /@import|url\(\s*['"]?\/\//);
   // Nothing is fetched on load: only same-origin scripts and stylesheets.
-  for (const m of html.matchAll(/<(?:script|link)\b[^>]*>/g))
-    assert.doesNotMatch(m[0], /(?:src|href)="(?:https?:)?\/\//, m[0]);
+  for (const m of html.matchAll(/<(?:script|link)\b[^>]*>/gi))
+    assert.doesNotMatch(m[0], /(?:src|href)="(?:https?:)?\/\//i, m[0]);
 });
 
 test('SITE-03 no inline styles, scripts or event handlers', () => {
   assert.doesNotMatch(html, /\sstyle\s*=/i);
   assert.doesNotMatch(html, /\son[a-z]+\s*=/i);
   assert.doesNotMatch(html, /href="javascript:/i);
-  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g))
+  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi))
     assert.equal(m[1].trim(), '', 'inline script');
   assert.doesNotMatch(html, /<style\b/i);
 });
