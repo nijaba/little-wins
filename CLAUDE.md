@@ -53,7 +53,7 @@ test/            *.test.js: real server on a temp database, signed in through th
                  (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
-                 site (the project page),
+                 site (the project page), theme (light and dark contrast),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh, build-site.sh, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)

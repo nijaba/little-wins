@@ -882,7 +882,7 @@
     const b = r.points ? Math.min(1, S.balance / r.points) : a;
     const pc = Math.round(100 * (r.stars && r.points ? (a + b) / 2 : r.points ? b : a));
     const C = 264;
-    return `<div class="card ringcard" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${esc(r.name)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
+    return `<div class="card ringcard" data-tour=ring><svg width=96 height=96 viewBox="0 0 100 100"><circle class=ring-track cx=50 cy=50 r=42 fill=none stroke="#dde" stroke-width=10 /><circle class=ring-value cx=50 cy=50 r=42 fill=none stroke="#2a7f8e" stroke-width=10 stroke-linecap=round stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pc / 100)}" transform="rotate(-90 50 50)"/><text class=ring-text x=50 y=57 text-anchor=middle font-size=22 font-weight=700 fill="#1f3a5f">${pc}%</text></svg><div><small>${STR.ring.next}</small><br><b>${esc(r.name)}</b><br><small>${S.stars}/${r.stars} ${STR.star}${r.points ? ` · ${S.balance}/${r.points} ${STR.ring.pts}` : ''}</small></div></div>`;
   }
 
   function viewToday() {

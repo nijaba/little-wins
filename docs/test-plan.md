@@ -410,6 +410,15 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
 
+## TH: Themes
+
+Light and dark, following the device (`prefers-color-scheme`).
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| TH-01 | Every text color reads at 4.5:1 or more on its background, in light and in dark | Unit |
+| TH-02 | Colors live in the theme tokens: the rest of the stylesheet uses var(--…) | Unit |
+
 ## E2E: browser tests
 
 Titles and steps are in [e2e/README.md](../e2e/README.md); each test name starts with its ID.

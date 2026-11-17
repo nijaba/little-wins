@@ -59,3 +59,5 @@ app is meant to open are handled with `expectDialog`.
 | E2E-96 | the child tour from the demo banner walks its five steps                             |
 | E2E-97 | Watch the video plays over the sign-in page and Escape closes it                     |
 | E2E-98 | TOUR_VIDEO=0 hides Watch the video                                                   |
+| E2E-110 | with a dark device setting the page is dark, with light text                        |
+| E2E-111 | with a light device setting the page stays light                                    |
