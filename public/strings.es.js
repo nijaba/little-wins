@@ -148,6 +148,26 @@ window.LW_STRINGS.es = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  review: {
+    open: 'Resumen de la semana',
+    title: (name) => `Resumen de la semana: ${name}`,
+    stars: 'Estrellas ganadas',
+    earned: 'Puntos ganados',
+    lost: 'Puntos perdidos (penalizaciones)',
+    warnings: 'Avisos',
+    perfectDays: 'Días perfectos',
+    badDays: 'Días malos',
+    byDay: 'Puntos por día',
+    challenges: 'Retos semanales',
+    top: 'Lo más frecuente',
+    warnedFor: 'Avisos por',
+    recent: 'Las últimas 4 semanas',
+    week: 'Semana del',
+    times: (n) => `${n}×`,
+    none: 'No se registró nada esta semana.',
+    print: 'Imprimir',
+    back: 'Volver a la semana',
+  },
   // History tab
   history: {
     title: 'Historial',

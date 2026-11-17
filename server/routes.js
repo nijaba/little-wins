@@ -8,7 +8,9 @@ const { today, validTimeZone } = require('./clock');
 const { sendJson, readBody, checkWrite, apiError } = require('./http');
 const i18n = require('./i18n');
 const messages = require('./messages');
-const { validDay } = require('./scoring');
+const scoring = require('./scoring');
+
+const { validDay } = scoring;
 const { buildState } = require('./state');
 const { clearSessionCookie } = require('./sessions');
 const { allows } = require('./allowlist');
@@ -371,11 +373,13 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
 
     if (req.method === 'GET') {
       if (path === '/api/config') return send(publicConfig());
-      if (!['/api/state', '/api/export', '/api/operator'].includes(path)) {
+      if (!['/api/state', '/api/export', '/api/operator', '/api/review'].includes(path)) {
         return send([404, apiError('notFound')]);
       }
     } else if (req.method === 'POST') {
-      if (['/api/config', '/api/state', '/api/export', '/api/operator'].includes(path)) {
+      if (
+        ['/api/config', '/api/state', '/api/export', '/api/operator', '/api/review'].includes(path)
+      ) {
         return send([405, apiError('badRequest'), { Allow: 'GET' }]);
       }
       const refused = checkWrite(req);
@@ -485,6 +489,28 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null }) {
       return send([200, state(), { ETag: tag, 'Cache-Control': 'no-cache' }]);
     }
     if (s.kind !== 'parent') return send([403, apiError('viewOnly')]);
+    if (path === '/api/review') {
+      // The weekly review: one child of this family (another family's ID is unknown here).
+      const fid = s.familyId;
+      const child = view.child ? repo.child(fid, id(view.child)) : repo.children(fid)[0];
+      if (!child) return send([404, apiError('notFound')]);
+      const family = repo.family(fid);
+      const range = scoring.weekRange(
+        today(family.timezone),
+        repo.firstEntryDay(fid, child.id),
+        view.week,
+        family.week_start,
+      );
+      const entries = repo.entries(fid, child.id);
+      return send([
+        200,
+        {
+          child: { id: child.id, name: child.name },
+          ...range,
+          ...scoring.review(entries, repo.items(fid), range.start, family.week_start),
+        },
+      ]);
+    }
     if (path === '/api/export') {
       if (repo.role(s.familyId, s.userId) !== 'owner') return send([403, apiError('ownerOnly')]);
       const day = today(repo.family(s.familyId).timezone);

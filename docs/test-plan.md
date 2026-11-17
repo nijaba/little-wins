@@ -52,6 +52,7 @@ Pure rules in `server/scoring.js`: dates, weeks, balance, stars, history.
 | SC-19 | DayLabels start with the first day of the week | Unit |
 | SC-20 | Stars: a Sunday-start week groups Sunday with the days after it | Unit |
 | SC-21 | WeekRange with a Sunday start begins on Sunday and clamps like Monday weeks | Unit |
+| SC-22 | Review sums one week and the weeks before it, and counts what was done most often | Unit |
 
 ## PT: Points, penalties and warnings
 
@@ -428,6 +429,16 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-01 | `scripts/build-site.sh` builds a folder where every local link, image, poster and the video of `site/index.html` exists | API |
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
+
+## RV: Weekly review
+
+`GET /api/review` and the review page.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| RV-01 | The review sums the chosen week for the chosen child, with the last four weeks | API |
+| RV-02 | A child's device and a signed-out visitor cannot read it, and it is read-only | API |
+| RV-03 | Another family's child is unknown: the review answers 404 and shows nothing of it | API |
 
 ## IF: Idle families
 

@@ -149,6 +149,26 @@ window.LW_STRINGS.de = {
     pointsPlus: (n) => `+ ${n} Pkt.`,
   },
 
+  review: {
+    open: 'Wochenrückblick',
+    title: (name) => `Wochenrückblick: ${name}`,
+    stars: 'Gewonnene Sterne',
+    earned: 'Gesammelte Punkte',
+    lost: 'Verlorene Punkte (Strafen)',
+    warnings: 'Verwarnungen',
+    perfectDays: 'Perfekte Tage',
+    badDays: 'Schlechte Tage',
+    byDay: 'Punkte pro Tag',
+    challenges: 'Wochenaufgaben',
+    top: 'Am häufigsten',
+    warnedFor: 'Verwarnungen für',
+    recent: 'Die letzten 4 Wochen',
+    week: 'Woche ab',
+    times: (n) => `${n}×`,
+    none: 'Diese Woche wurde nichts eingetragen.',
+    print: 'Drucken',
+    back: 'Zurück zur Woche',
+  },
   // History tab
   history: {
     title: 'Verlauf',

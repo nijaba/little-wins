@@ -64,3 +64,5 @@ app is meant to open are handled with `expectDialog`.
 | E2E-102 | once LIMIT_FAMILIES is reached, a new parent sees the full screen                   |
 | E2E-110 | with a dark device setting the page is dark, with light text                        |
 | E2E-111 | with a light device setting the page stays light                                    |
+| E2E-120 | a parent opens the weekly review from Week, prints it, and goes back               |
+| E2E-121 | the weekly review fits a phone; its print view hides the buttons and tabs          |

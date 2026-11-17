@@ -150,6 +150,26 @@ window.LW_STRINGS.fr = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  review: {
+    open: 'Bilan de la semaine',
+    title: (name) => `Bilan de la semaine : ${name}`,
+    stars: 'Étoiles gagnées',
+    earned: 'Points gagnés',
+    lost: 'Points perdus (pénalités)',
+    warnings: 'Avertissements',
+    perfectDays: 'Jours parfaits',
+    badDays: 'Mauvais jours',
+    byDay: 'Points par jour',
+    challenges: 'Défis de la semaine',
+    top: 'Le plus souvent',
+    warnedFor: 'Avertissements pour',
+    recent: 'Les 4 dernières semaines',
+    week: 'Semaine du',
+    times: (n) => `${n}×`,
+    none: "Rien n'a été enregistré cette semaine.",
+    print: 'Imprimer',
+    back: 'Retour à la semaine',
+  },
   // History tab
   history: {
     title: 'Historique',

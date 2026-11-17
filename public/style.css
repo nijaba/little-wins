@@ -694,3 +694,82 @@ select {
 .ring-text {
   fill: var(--heading);
 }
+
+/* Weekly review (parents): points by day, the last weeks side by side, and printing */
+.row.rv-day > div.rv-d {
+  flex: 0 0 5.5em;
+}
+
+.row.rv-day > div.rv-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+.row.rv-day > div.rv-n {
+  flex: 0 0 auto;
+  min-width: 4.5em;
+  justify-content: flex-end;
+}
+
+.rv-table table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.rv-table th,
+.rv-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rv-table th:first-child,
+.rv-table td:first-child {
+  text-align: left;
+}
+
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --text: #000;
+    --heading: #1f3a5f;
+    --muted: #444;
+    --l: #eef3f5;
+    --track: #dde1ea;
+    --border: #bbb;
+    --shadow: transparent;
+    --perfect-bg: #cdeedd;
+    --perfect: #12633a;
+    --ok-bg: #fff1c2;
+    --ok: #7a5b00;
+    --bad-bg: #f7d4d0;
+    --bad: #9b2c20;
+  }
+
+  body {
+    padding: 0;
+  }
+
+  .tabs,
+  .chips,
+  .demo-bar,
+  .tour-offer,
+  #toast,
+  .noprint {
+    /* biome-ignore lint/complexity/noImportantStyles: the toast is shown with an inline style */
+    display: none !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    border: 1px solid var(--border);
+  }
+
+  .bar,
+  .bar i,
+  .strip .d {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

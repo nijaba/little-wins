@@ -78,7 +78,9 @@ test('TH-01 every text color reads at 4.5:1 or more on its background, in light 
 });
 
 test('TH-02 colors live in the theme tokens: the rest of the stylesheet uses var(--…)', () => {
-  const rules = css.slice(css.indexOf('body {'));
+  // Token definitions (the light and dark palettes, and the light one forced for printing) aside.
+  const rules = css.slice(css.indexOf('body {')).split('@media print {')[0];
+  assert.match(css, /@media print \{\n {2}:root \{/, 'printing uses the light palette');
   const literal = [...rules.matchAll(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/g)].map((m) => m[0]);
   // White text on colored buttons and the header, the dimmed overlay of a celebration, the tour's
   // orange outline, the video's black frame and dark shadows look the same in both themes.

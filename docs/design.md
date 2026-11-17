@@ -80,6 +80,12 @@ These hold in both hosting modes. With several children **(target)**, each rule 
 - The next reward not yet unlocked is shown as a progress ring.
 - Each device shows a celebration the first time it sees a newly unlocked reward.
 
+### Weekly review
+
+- Parents open **Weekly review** at the bottom of the Week tab: one child, one week (the week shown, browsable like the Week tab).
+- It shows stars won, points earned and points lost to penalties (the entries' own amounts, before the balance's floor at 0), warnings, perfect and bad days; points by day as bars; each challenge's marks; the five behaviors done most often; warnings by behavior; and the last four weeks side by side.
+- **Print** prints it (or saves a PDF), for a counselor or a teacher, with no account for them: print styles use the light colors and hide buttons and tabs. It is computed by `GET /api/review?child=&week=` (parents only, one child of the session's family; read-only) from the same entries as everything else.
+
 ### What the child sees
 
 - Today: their points, stars, the next reward, and the ways to earn points (no buttons).
