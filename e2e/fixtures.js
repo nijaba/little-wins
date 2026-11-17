@@ -229,7 +229,7 @@ const SIZES = [
   { width: 390, height: 844 },
   { width: 430, height: 932 },
 ];
-const FOLDS = ['fam', 'kids', 'par', 'target', 'penalty', 'challenge', 'rew', 'dev'];
+const FOLDS = ['fam', 'kids', 'par', 'target', 'penalty', 'challenge', 'rew', 'dev', 'rem'];
 
 /** No sideways scroll, and (when there is a tab bar) the last item ends above it. */
 async function checkFits(page, label) {

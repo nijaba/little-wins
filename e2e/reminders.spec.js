@@ -22,3 +22,19 @@ test('E2E-150 Settings offers the evening reminder, and the service worker regis
     await expect(rem).toContainText("This browser can't show reminders.");
   }
 });
+
+test('E2E-151 a parent turns notices on and off for a child in Settings -> Children', async ({
+  page,
+}) => {
+  await startFamily(page, { child: 'Robin' });
+  await goTab(page, 'Settings');
+  const kids = await openFold(page, 'kids');
+  const bell = kids.locator('.bell');
+  await expect(bell).toHaveText('🔔 Notices on their device: off');
+  await expect(bell).toHaveAttribute('aria-pressed', 'false');
+  await bell.click();
+  await expect(bell).toHaveText('🔔 Notices on their device: on');
+  await expect(bell).toHaveAttribute('aria-pressed', 'true');
+  await bell.click();
+  await expect(bell).toHaveText('🔔 Notices on their device: off');
+});

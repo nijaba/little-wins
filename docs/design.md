@@ -95,6 +95,13 @@ These hold in both hosting modes. With several children **(target)**, each rule 
 - **No open relay.** A subscription's endpoint must be an `https` URL on a known push service (FCM, Mozilla, Apple, Windows), so a client can't make the server send requests elsewhere.
 - `public/sw.js`, the service worker, only shows the reminder and opens the app when it is tapped; it caches nothing.
 
+### Notices on a child's device
+
+- **Allowed per child, turned on on the device.** A parent allows notices for a child in Settings → Children (**🔔 Notices on their device**, off by default; `children.notify`). That child's device then shows a one-time **Turn on notifications** card on Today; tapping it asks the device for permission and subscribes it (`kind='child'` in `push_subscriptions`, migration 10). Children still type nothing. Stopping notices removes their devices' subscriptions. Off in demos.
+- **What is sent.** Right after a parent's action (points, a mark) newly unlocks a reward meant for that child, completes a streak of 3 or more perfect days, or makes this week the best so far: "⭐ You unlocked <reward>!", "🔥 N perfect days in a row!", "🏅 Your best week so far!", in the family's language. Only good news: penalties and warnings never send anything.
+- **Once each.** Every notice has a key (the reward, the streak's first day, the week) recorded in `child_notices`, so undoing and redoing an entry doesn't send it again.
+- **The wider exception** (owner's decision, 2026-11-17). Unlike the parents' reminder, a child notice names the reward or milestone. The text is encrypted for the device, so the push service still sees only that the child's device got a notice, and when. Child subscriptions never get the evening reminder.
+
 ### Weekly review
 
 - Parents open **Weekly review** at the bottom of the Week tab: one child, one week (the week shown, browsable like the Week tab).
@@ -118,10 +125,11 @@ Every table except `users` and `family_invites` has a `family_id`, and every que
 | `memberships` | family_id, user_id, role (`owner`/`parent`), created |
 | `invites` | id, family_id, token_hash, role, created_by, expires, used_at |
 | `family_invites` | id, token_hash, created_by, created, expires, used_by, used_at, family_id (set when the invited parent's family is created). Installation-wide, not family-scoped: only the operator page reaches it. |
-| `children` | id, family_id, name, sort, created |
+| `children` | id, family_id, name, sort, created, notify (notices on their device allowed) |
 | `items` | id, family_id, kind (`target`/`penalty`/`challenge`), name, note, pmin, pmax, sort, active, for_all |
-| `push_subscriptions` | session_id, family_id, endpoint, p256dh, auth, time (HH:MM), last_day, created: a parent device's evening reminder |
+| `push_subscriptions` | session_id, family_id, endpoint, p256dh, auth, time (HH:MM), last_day, kind (`parent`: evening reminder; `child`: notices), created |
 | `app_settings` | key, value: installation-wide values (the VAPID keys) |
+| `child_notices` | child_id, family_id, key, sent: notices already sent to a child's devices (each once) |
 | `item_children`, `reward_children` | item_id or reward_id, child_id, family_id: who a limited item or reward is for |
 | `rewards` | id, family_id, name, stars, points, sort, for_all |
 | `entries` | id, family_id, child_id, item_id, kind (`points`/`warn`/`mark`), points, day, ts, user_id, note, undone |
@@ -216,7 +224,7 @@ Defaults for hosted mode, each overridable by environment variable:
 - **Minimal data.** A child is a first name or nickname. No birthdate, photo, school or contact details.
 - **Children never provide data.** They have no account and can't type anything into the app.
 - **Parents' notes** are visible to parents only and are excluded from the child's view and from logs.
-- **No third parties.** No analytics, trackers or external fonts; the only third parties are the sign-in providers, which see only that someone signed in to this app, and, for a parent who turns on the evening reminder on a device, that device's push service (see "Evening reminders"). The push exception was the owner's decision (2026-11-17).
+- **No third parties.** No analytics, trackers or external fonts; the only third parties are the sign-in providers, which see only that someone signed in to this app, and, for a parent who turns on the evening reminder on a device, that device's push service (see "Evening reminders"). The push exception was the owner's decision (2026-11-17), widened the same day to notices on a child's device that a parent allowed (see "Notices on a child's device").
 - **Idle families** (`DELETE_IDLE_FAMILIES_DAYS`, default 365; `0` turns it off; owner's decision: the operator sets it, on by default). A family that no device, parent's or child's, has used for that many days is deleted with everything it owns, like a family deleted by its owner; its parents' accounts go too unless they belong to another family. Each family keeps `last_active`, updated when any of its devices uses the app (at most every 5 minutes). The server sweeps at startup and every 6 hours and logs only the count. Families without parents (unclaimed, migrated data) are kept for their owner. Settings → Family tells parents the rule. There is no warning before deletion: opening the app is what keeps a family, so a warning shown in the app would never be needed, and the app has no email to send one. The operator page shows the setting.
 - **Export and delete.** The owner can download the family's data as JSON, and delete the family. Deletion removes all its rows at once; backups age out within the stated retention period (30 days by default).
 - **Logs.** The app writes no request log. It logs only startup, warnings (such as a failed sign-in at the provider) and errors, never names, notes or tokens. Request logs, if any, are the reverse proxy's; the operator sets how long they are kept and says so in the privacy policy.

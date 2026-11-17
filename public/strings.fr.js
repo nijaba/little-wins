@@ -150,6 +150,13 @@ window.LW_STRINGS.fr = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  notices: {
+    on: '🔔 Notifications sur son appareil : activées',
+    off: '🔔 Notifications sur son appareil : désactivées',
+    offer:
+      'Reçois une notification sur cet appareil quand tu débloques une récompense ou atteins un palier.',
+    turnOn: 'Activer les notifications',
+  },
   reminder: {
     title: 'Rappel du soir',
     help: "Un rappel sur ce téléphone pour noter les défis du jour, envoyé seulement s'il reste quelque chose à noter. Il passe par le service de notifications du fabricant (Apple, Google ou Mozilla), qui ne peut pas le lire.",

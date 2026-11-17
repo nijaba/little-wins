@@ -73,10 +73,8 @@ const until = async (check, ms = 3000) => {
 
 test('RM-01 a parent device subscribes with a time; bad endpoints, keys and times are refused', async () => {
   const f = await srv.newFamily();
-  assert.match(
-    f.state.push?.key || (await srv.api(f.jar, '/api/state')).json.push.key,
-    /^B[\w-]{86}$/,
-  );
+  assert.match(f.state.push.key, /^B[\w-]{86}$/, 'the setup reply already offers it');
+  assert.equal(f.state.push.key, (await srv.api(f.jar, '/api/state')).json.push.key);
   const { keys } = device();
   const sub = (body) =>
     srv.api(f.jar, '/api/push/subscribe', {

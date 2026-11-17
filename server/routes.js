@@ -44,6 +44,9 @@ const DEMO_OFF = new Set([
   '/api/operator/invite/revoke',
   '/api/push/subscribe',
   '/api/push/unsubscribe',
+  '/api/push/child-subscribe',
+  '/api/push/child-unsubscribe',
+  '/api/child/notify',
   '/api/setup',
   '/api/logout',
   '/api/operator',
@@ -61,7 +64,15 @@ const DEMO_OFF = new Set([
  * `demo` is set only for the demo families' router (server/demo.js): their own repo and
  * sessions, plus { idleSeconds, sweep, full, create, touch, leave }.
  */
-function createRouter({ repo, sessions, limiter, clientIp, demo = null, reminders = null }) {
+function createRouter({
+  repo,
+  sessions,
+  limiter,
+  clientIp,
+  demo = null,
+  reminders = null,
+  notices = null,
+}) {
   /** [409, …] when the family already has as many of `what` as its limit allows, else null. */
   function full(fid, what, day) {
     if (repo.count(fid, what, day) < config.limits[what]) return null;
@@ -153,19 +164,19 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null, reminder
     // Evening reminder for this device (Web Push): its subscription and time.
     '/api/push/subscribe'({ b, s, fid, state }) {
       if (!reminders) return [404, apiError('notFound')];
-      const endpoint = String(b.endpoint || '');
-      const p256dh = String(b.keys?.p256dh || '');
-      const auth = String(b.keys?.auth || '');
+      const sub = subscription(b);
       const time = String(b.time || '');
-      const ok =
-        endpoint.length <= 2048 &&
-        webpush.allowedEndpoint(endpoint, config.isLocal) &&
-        Buffer.from(p256dh, 'base64url').length === 65 &&
-        Buffer.from(auth, 'base64url').length === 16 &&
-        /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
-      if (!ok) return [400, apiError('badRequest')];
-      repo.setPush(fid, s.id, { endpoint, p256dh, auth, time });
+      if (!sub || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return [400, apiError('badRequest')];
+      repo.setPush(fid, s.id, { ...sub, time });
       return [200, state()];
+    },
+    // Notices on a child's device: a parent allows (or stops) them for that child.
+    '/api/child/notify'({ b, fid, state }) {
+      if (!notices) return [404, apiError('notFound')];
+      const cid = id(b.child_id);
+      return repo.setNotify(fid, cid, !!b.on)
+        ? [200, state({ child: cid })]
+        : [404, apiError('notFound')];
     },
     '/api/push/unsubscribe'({ s, fid, state }) {
       repo.clearPush(fid, s.id);
@@ -259,8 +270,29 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null, reminder
     },
   };
 
+  /** A push subscription from a request ({ endpoint, keys }), checked; or null. */
+  function subscription(b) {
+    const endpoint = String(b.endpoint || '');
+    const p256dh = String(b.keys?.p256dh || '');
+    const auth = String(b.keys?.auth || '');
+    const ok =
+      endpoint.length <= 2048 &&
+      webpush.allowedEndpoint(endpoint, config.isLocal) &&
+      Buffer.from(p256dh, 'base64url').length === 65 &&
+      Buffer.from(auth, 'base64url').length === 16;
+    return ok ? { endpoint, p256dh, auth } : null;
+  }
+
   /** Points, warnings and marks for one child of the family. */
-  function record({ b, s, fid, state }, kind) {
+  function record(ctx, kind) {
+    // What the child had before, so a reward or milestone this unlocks can be announced to them.
+    const was = notices ? notices.before(ctx.fid, id(ctx.b.child_id)) : null;
+    const reply = recordEntry(ctx, kind);
+    if (was && reply[0] === 200) notices.after(ctx.fid, id(ctx.b.child_id), was).catch(() => {});
+    return reply;
+  }
+
+  function recordEntry({ b, s, fid, state }, kind) {
     const child = repo.child(fid, id(b.child_id));
     const item = repo.item(fid, id(b.item_id));
     if (!child || !item) return [404, apiError('notFound')];
@@ -398,7 +430,12 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null, reminder
     const operator = isOperator(s.userId);
     return [
       200,
-      { ...buildState(repo, { ...s, familyId: fid }, {}), ...(operator ? { operator: true } : {}) },
+      {
+        ...buildState(repo, { ...s, familyId: fid }, {}),
+        ...(operator ? { operator: true } : {}),
+        // Like every parent state: the evening reminder's key (nothing on yet for a new family).
+        ...(reminders ? { push: { key: reminders.publicKey(), time: null } } : {}),
+      },
     ];
   }
 
@@ -515,6 +552,16 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null, reminder
             push: { key: reminders.publicKey(), time: repo.pushOf(s.familyId, s.id)?.time || null },
           }
         : {}),
+      // A child's device: whether a parent allowed notices, and whether this device has them on.
+      ...(notices && s.kind === 'child' && !demo
+        ? {
+            notices: {
+              allowed: !!repo.child(s.familyId, s.childId)?.notify,
+              key: reminders?.publicKey() || null,
+              on: !!repo.pushOf(s.familyId, s.id),
+            },
+          }
+        : {}),
     });
     if (path === '/api/state') {
       // Unchanged since the page last asked? Then 304 and no body.
@@ -531,6 +578,20 @@ function createRouter({ repo, sessions, limiter, clientIp, demo = null, reminder
         return res.end();
       }
       return send([200, state(), { ETag: tag, 'Cache-Control': 'no-cache' }]);
+    }
+    // A child's device turns its own notices on or off, once a parent allowed them.
+    if (s.kind === 'child' && path === '/api/push/child-subscribe') {
+      if (!notices || !repo.child(s.familyId, s.childId)?.notify) {
+        return send([403, apiError('viewOnly')]);
+      }
+      const sub = subscription(b);
+      if (!sub) return send([400, apiError('badRequest')]);
+      repo.setPush(s.familyId, s.id, { ...sub, time: '-', kind: 'child' });
+      return send([200, state()]);
+    }
+    if (s.kind === 'child' && path === '/api/push/child-unsubscribe') {
+      repo.clearPush(s.familyId, s.id);
+      return send([200, state()]);
     }
     if (s.kind !== 'parent') return send([403, apiError('viewOnly')]);
     if (path === '/api/review') {

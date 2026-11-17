@@ -149,6 +149,13 @@ window.LW_STRINGS.de = {
     pointsPlus: (n) => `+ ${n} Pkt.`,
   },
 
+  notices: {
+    on: '🔔 Mitteilungen auf dem Gerät: an',
+    off: '🔔 Mitteilungen auf dem Gerät: aus',
+    offer:
+      'Bekomme eine Mitteilung auf diesem Gerät, wenn du eine Belohnung freischaltest oder ein Ziel erreichst.',
+    turnOn: 'Mitteilungen einschalten',
+  },
   reminder: {
     title: 'Abenderinnerung',
     help: 'Eine Erinnerung auf diesem Telefon, die Aufgaben des Tages einzutragen, nur wenn noch etwas offen ist. Sie läuft über den Benachrichtigungsdienst des Herstellers (Apple, Google oder Mozilla), der sie nicht lesen kann.',

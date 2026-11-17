@@ -22,6 +22,12 @@ module.exports = {
   },
 
   // The made-up family of a demo (server/demo.js): never a real person.
+  // Notices on a child's device (server/notices.js): good news only.
+  notice: {
+    reward: (name) => `⭐ You unlocked ${name}!`,
+    streak: (n) => `🔥 ${n} perfect days in a row!`,
+    best: '🏅 Your best week so far!',
+  },
   // The evening reminder (server/reminders.js), as the phone shows it.
   reminder: { title: 'Little Wins', body: "Time to mark today's challenges." },
 

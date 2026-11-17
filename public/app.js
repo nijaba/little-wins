@@ -908,6 +908,8 @@
     },
     note: (d) => note(+d.id),
     'rem-on': () => reminderOn(),
+    'child-notices': () => childNoticesOn(),
+    notify: (d) => api('child/notify', { child_id: +d.id, on: d.on === '1' }),
     'rem-off': () => reminderOff(),
     msg: () => writeMessage(),
     'msg-clear': () => api('message', { child_id: S.childId, text: '' }),
@@ -981,6 +983,11 @@
   function cheers() {
     const E = STR.cheer;
     let h = '';
+    // A child's device: offer notices once a parent allowed them.
+    const N = S.notices;
+    if (N?.allowed && !N.on && N.key && pushOK() && Notification.permission !== 'denied') {
+      h += `<div class="card msg"><p class=p0>🔔 ${STR.notices.offer}</p><p class=p8><button class=b data-action=child-notices>${STR.notices.turnOn}</button></p></div>`;
+    }
     const m = S.message;
     if (m) {
       h += `<div class="card msg"><p class=p0>💬 ${esc(m.text)}</p><small>${E.from(esc(m.who))}</small>${
@@ -1235,6 +1242,25 @@
     }
   }
 
+  // A child's device: turn on notices (a parent allowed them), the same way as the reminder.
+  async function childNoticesOn() {
+    try {
+      if ((await Notification.requestPermission()) !== 'granted') return render();
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      const sub =
+        (await reg.pushManager.getSubscription()) ||
+        (await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: keyBytes(S.notices.key),
+        }));
+      const j = sub.toJSON();
+      await api('push/child-subscribe', { endpoint: j.endpoint, keys: j.keys });
+    } catch {
+      toast(STR.reminder.failed);
+    }
+  }
+
   async function reminderOff() {
     try {
       const reg = await navigator.serviceWorker.getRegistration('/');
@@ -1265,7 +1291,12 @@
     );
     let c = '';
     for (const k of S.children) {
-      c += `<div class=card><div class="row stk"><div>${esc(k.name)}</div><div><button class=b data-action=edit data-t=c data-id=${k.id}>${st.rename}</button>${S.children.length > 1 ? ` <button class="b r" data-action=del-child data-id=${k.id}>${st.remove}</button>` : ''}</div></div></div>`;
+      // Notices on this child's device (rewards, milestones), when the installation has push.
+      const bell =
+        S.push && !demo
+          ? `<br><button class="b g bell" data-action=notify data-id=${k.id} data-on=${k.notify ? 0 : 1} aria-pressed=${k.notify ? 'true' : 'false'}>${k.notify ? STR.notices.on : STR.notices.off}</button>`
+          : '';
+      c += `<div class=card><div class="row stk"><div>${esc(k.name)}${bell}</div><div><button class=b data-action=edit data-t=c data-id=${k.id}>${st.rename}</button>${S.children.length > 1 ? ` <button class="b r" data-action=del-child data-id=${k.id}>${st.remove}</button>` : ''}</div></div></div>`;
     }
     c += `<button class=b data-action=edit data-t=c data-id=0>${st.addChild}</button>`;
     h += fold('kids', st.children, S.children.length, c);

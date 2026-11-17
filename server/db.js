@@ -169,6 +169,18 @@ const migrations = [
         p256dh TEXT NOT NULL, auth TEXT NOT NULL, time TEXT NOT NULL, last_day TEXT, created TEXT NOT NULL);
     `);
   },
+
+  // 10: notices on a child's device (a reward unlocked, a milestone): allowed per child by a
+  // parent; subscriptions now say whose they are; each notice is sent once (child_notices).
+  (db) => {
+    addColumn(db, 'children', 'notify', 'INT NOT NULL DEFAULT 0');
+    addColumn(db, 'push_subscriptions', 'kind', "TEXT NOT NULL DEFAULT 'parent'");
+    db.exec(`
+      CREATE TABLE child_notices(child_id INT NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+        family_id INT NOT NULL REFERENCES families(id) ON DELETE CASCADE, key TEXT NOT NULL,
+        sent TEXT NOT NULL, PRIMARY KEY(child_id, key));
+    `);
+  },
 ];
 
 function migrate(db) {

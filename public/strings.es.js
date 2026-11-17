@@ -148,6 +148,13 @@ window.LW_STRINGS.es = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  notices: {
+    on: '🔔 Avisos en su dispositivo: activados',
+    off: '🔔 Avisos en su dispositivo: desactivados',
+    offer:
+      'Recibe un aviso en este dispositivo cuando desbloquees una recompensa o alcances un logro.',
+    turnOn: 'Activar los avisos',
+  },
   reminder: {
     title: 'Recordatorio de la tarde',
     help: 'Un recordatorio en este teléfono para marcar los retos del día, solo si queda algo sin marcar. Pasa por el servicio de notificaciones del fabricante (Apple, Google o Mozilla), que no puede leerlo.',

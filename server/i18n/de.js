@@ -18,6 +18,12 @@ module.exports = {
     tooManyTries: (seconds) => `Zu viele Versuche. Versuch es in ${seconds} s noch einmal.`,
   },
 
+  // Notices on a child's device (server/notices.js): good news only.
+  notice: {
+    reward: (name) => `⭐ Du hast ${name} freigeschaltet!`,
+    streak: (n) => `🔥 ${n} perfekte Tage in Folge!`,
+    best: '🏅 Deine beste Woche bisher!',
+  },
   // The evening reminder (server/reminders.js), as the phone shows it.
   reminder: { title: 'Little Wins', body: 'Zeit, die heutigen Aufgaben einzutragen.' },
 

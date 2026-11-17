@@ -320,3 +320,25 @@ test('LG-14 the sign-in problem pages follow Accept-Language', async () => {
   assert.notEqual(i18n.pages('de').signInExpired, i18n.pages('en').signInExpired);
   assert.notEqual(i18n.pages('zh').signInExpired, i18n.pages('en').signInExpired);
 });
+
+test('LG-15 every server text in every language is filled in, and its functions give text', () => {
+  for (const lang of LANGUAGES) {
+    const bundle = require(`../server/i18n/${lang}`);
+    const walk = (o, at) => {
+      for (const [k, v] of Object.entries(o)) {
+        const where = `${lang}: ${at}${k}`;
+        if (typeof v === 'function') {
+          const out = v('Lego', 3);
+          assert.ok(typeof out === 'string' && out.length > 0, where);
+          assert.ok(out.includes('Lego') || out.includes('3'), `${where} uses its argument`);
+        } else if (typeof v === 'string') assert.ok(v.length > 0, where);
+        else if (v && typeof v === 'object') walk(v, `${at}${k}.`);
+      }
+    };
+    walk(
+      { pages: bundle.pages, notice: bundle.notice, reminder: bundle.reminder, demo: bundle.demo },
+      '',
+    );
+    assert.equal(typeof i18n.notice(lang).reward, 'function', `${lang}: notice texts`);
+  }
+});

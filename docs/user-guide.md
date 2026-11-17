@@ -208,7 +208,9 @@ Everything in **Settings** is in folding sections. Each header shows a count; ta
 
 - **Family:** the family's name, time zone, which day the week starts, and the language. **Save** applies them
   to every device in the family.
-- **Children:** rename a child, add one, or delete one (with all their history, after a confirmation; a family
+- **Children:** **🔔 Notices on their device** lets your child's phone or tablet get a notice when they unlock
+  a reward or reach a milestone ("⭐ You unlocked New book!"). Turn it on here, then tap **Turn on
+  notifications** on their device. Only good news is ever sent. Rename a child, add one, or delete one (with all their history, after a confirmation; a family
   keeps at least one child).
 - **Parents:** who's in the family, invites, and for the owner, **Make owner** and **Remove**.
 - **Behaviors, Penalties, Weekly challenges, Rewards:** **Edit** changes one, **+ Add** creates one, ▲ and ▼

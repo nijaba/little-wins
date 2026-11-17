@@ -149,6 +149,12 @@ window.LW_STRINGS.en = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  notices: {
+    on: '🔔 Notices on their device: on',
+    off: '🔔 Notices on their device: off',
+    offer: 'Get a notice on this device when you unlock a reward or reach a milestone.',
+    turnOn: 'Turn on notifications',
+  },
   reminder: {
     title: 'Evening reminder',
     help: "A reminder on this phone to mark the day's challenges, sent only when something is still unmarked. It goes through your phone maker's push service (Apple, Google or Mozilla), which can't read it.",

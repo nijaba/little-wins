@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Notices on a child's device: once a parent allows them for that child, a reward unlocked or a milestone reached sends a Web Push to the child's device, once each.
 - Evening reminder, opt-in per parent phone: one Web Push a day at the chosen time when a challenge is still unmarked (encrypted, no dependency; `PUSH_REMINDERS=0` turns it off).
 - Behaviors, penalties, challenges and rewards can be for some children only ("Who is it for?" in the edit form); each child's Today, Week and Rewards show only theirs.
 - Encouragement: a parent's message on the child's Today (a week, or until changed), and milestones the app spots (perfect days in a row, best week so far).
