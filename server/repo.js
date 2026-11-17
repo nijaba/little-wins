@@ -62,9 +62,9 @@ function createRepo(db) {
       const fid = Number(
         db
           .prepare(
-            'INSERT INTO families(name,timezone,week_start,language,created) VALUES(?,?,?,?,?)',
+            'INSERT INTO families(name,timezone,week_start,language,created,last_active) VALUES(?,?,?,?,?,?)',
           )
-          .run(name, timezone, weekStart, language, now()).lastInsertRowid,
+          .run(name, timezone, weekStart, language, now(), now()).lastInsertRowid,
       );
       db.prepare('INSERT INTO memberships(family_id,user_id,role,created) VALUES(?,?,?,?)').run(
         fid,
@@ -262,6 +262,23 @@ function createRepo(db) {
 
   /** How many real families the installation holds (for LIMIT_FAMILIES). */
   const familyCount = () => db.prepare('SELECT COUNT(*) n FROM families').get().n;
+
+  /**
+   * Deletes families no device has used since `before` (an ISO time), with everything they own.
+   * Families without parents (unclaimed, migrated data) wait for their owner and are kept.
+   * Returns how many were deleted.
+   */
+  function deleteIdleFamilies(before) {
+    const ids = db
+      .prepare(
+        `SELECT f.id FROM families f WHERE COALESCE(f.last_active, f.created) < ?
+           AND EXISTS (SELECT 1 FROM memberships m WHERE m.family_id = f.id)`,
+      )
+      .all(before)
+      .map((r) => r.id);
+    for (const fid of ids) deleteFamily(fid);
+    return ids.length;
+  }
 
   /** True when LIMIT_FAMILIES is set and reached: no new family can be created. */
   const familiesFull = () => config.familyLimit != null && familyCount() >= config.familyLimit;
@@ -573,6 +590,7 @@ function createRepo(db) {
     spendFamilyInvite,
     familyCount,
     familiesFull,
+    deleteIdleFamilies,
     identityOf,
     family,
     updateFamily,

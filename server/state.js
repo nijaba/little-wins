@@ -2,6 +2,7 @@
  * Builds the JSON state sent to the page for one session: the family, the selected child's
  * points, stars and week, and (for parents) the family's settings, parents and devices.
  */
+const config = require('./config');
 const { today } = require('./clock');
 const scoring = require('./scoring');
 
@@ -67,6 +68,8 @@ function buildState(
 
   // A demo family: the banner gives its idle time.
   if (demo) state.demo = { idleSeconds: demo.idleSeconds };
+  // Parents are told how long an unused family is kept (DELETE_IDLE_FAMILIES_DAYS).
+  else if (parent && config.idleFamilyDays) state.idleDays = config.idleFamilyDays;
 
   if (parent) {
     const myRole = repo.role(fid, session.userId);

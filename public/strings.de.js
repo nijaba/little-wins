@@ -42,6 +42,9 @@ window.LW_STRINGS.de = {
   },
   legal: { privacy: 'Datenschutz', terms: 'Nutzungsbedingungen' },
   operator: {
+    idleAfter: 'Inaktive Familien gelöscht nach',
+    days: (n) => `${n} Tagen`,
+    never: 'nie',
     ofLimit: (n, max) => `${n} / ${max}`,
     familyInvites: 'Familien-Einladungen',
     familyInvitesHelp:
@@ -157,6 +160,8 @@ window.LW_STRINGS.de = {
 
   // Settings tab
   settings: {
+    idleNote: (days) =>
+      `Eine Familie, die ${days} Tage lang von keinem Telefon oder Browser genutzt wird, wird mit allen Daten gelöscht.`,
     family: 'Familie',
     familyName: 'Familienname',
     timeZone: 'Zeitzone',

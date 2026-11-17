@@ -429,6 +429,16 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
 
+## IF: Idle families
+
+Families no device has used for `DELETE_IDLE_FAMILIES_DAYS` are deleted.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| IF-01 | A family unused for longer than the limit is deleted with everything it owns; active and unclaimed ones stay | API |
+| IF-02 | Any device using the app keeps its family active | API |
+| IF-03 | Parents are told the rule; 0 turns deletion off; a bad value stops the server | API |
+
 ## IC: App icons
 
 The favicon, the home-screen icons (`scripts/icons.js`) and the manifest.

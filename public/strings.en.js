@@ -42,6 +42,9 @@ window.LW_STRINGS.en = {
   },
   legal: { privacy: 'Privacy', terms: 'Terms' },
   operator: {
+    idleAfter: 'Idle families deleted after',
+    days: (n) => `${n} days`,
+    never: 'never',
     ofLimit: (n, max) => `${n} / ${max}`,
     familyInvites: 'Family invites',
     familyInvitesHelp:
@@ -157,6 +160,8 @@ window.LW_STRINGS.en = {
 
   // Settings tab
   settings: {
+    idleNote: (days) =>
+      `A family that no phone or browser uses for ${days} days is deleted, with all its data.`,
     family: 'Family',
     familyName: 'Family name',
     timeZone: 'Time zone',

@@ -514,6 +514,7 @@
     const row = (k, v) => `<div class=row><div>${k}</div><div><b>${v}</b></div></div>`;
     return `<div class=card>${[
       [o.families, ops.familyLimit ? o.ofLimit(ops.families, ops.familyLimit) : ops.families],
+      [o.idleAfter, ops.idleFamilyDays ? o.days(ops.idleFamilyDays) : o.never],
       [o.unclaimedFamilies, ops.unclaimedFamilies],
       [o.parents, ops.parents],
       [o.children, ops.children],
@@ -1070,7 +1071,7 @@
       'fam',
       st.family,
       esc(fam.name),
-      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p>${weekRadios('f_week', st, fam.weekStart)}${langRadios('f_lang', st.language, fam.language || 'en')}<button class=b data-action=save-family>${st.save}</button></div>${S.me.owner && !demo ? ownerTools() : ''}`,
+      `<div class=card><p class=p0><label for=f_fam>${st.familyName}</label><br><input id=f_fam maxlength=60 value="${esc(fam.name)}"></p><p><label for=f_tz>${st.timeZone}</label><br><input id=f_tz maxlength=60 value="${esc(fam.timezone)}"></p>${weekRadios('f_week', st, fam.weekStart)}${langRadios('f_lang', st.language, fam.language || 'en')}<button class=b data-action=save-family>${st.save}</button></div>${S.me.owner && !demo ? ownerTools() : ''}${S.idleDays ? `<p class=hint><small>${st.idleNote(S.idleDays)}</small></p>` : ''}`,
     );
     let c = '';
     for (const k of S.children) {

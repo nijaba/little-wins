@@ -92,7 +92,7 @@ Every table except `users` and `family_invites` has a `family_id`, and every que
 
 | Table | Columns (main ones) |
 |---|---|
-| `families` | id, name, timezone (IANA, e.g. `America/Chicago`), week_start, language (`en`, `zh`, `es`, `fr`, `de`; phase 5b), created |
+| `families` | id, name, timezone (IANA, e.g. `America/Chicago`), week_start, language (`en`, `zh`, `es`, `fr`, `de`; phase 5b), created, last_active (any device's latest use) |
 | `users` | id, provider (`google`/`github`), subject (stable provider ID), email, login, display name, created, last_seen. Unique on (provider, subject). |
 | `memberships` | family_id, user_id, role (`owner`/`parent`), created |
 | `invites` | id, family_id, token_hash, role, created_by, expires, used_at |
@@ -192,6 +192,7 @@ Defaults for hosted mode, each overridable by environment variable:
 - **Children never provide data.** They have no account and can't type anything into the app.
 - **Parents' notes** are visible to parents only and are excluded from the child's view and from logs.
 - **No third parties.** No analytics, trackers or external fonts; the only third parties are the sign-in providers, which see only that someone signed in to this app.
+- **Idle families** (`DELETE_IDLE_FAMILIES_DAYS`, default 365; `0` turns it off; owner's decision: the operator sets it, on by default). A family that no device, parent's or child's, has used for that many days is deleted with everything it owns, like a family deleted by its owner; its parents' accounts go too unless they belong to another family. Each family keeps `last_active`, updated when any of its devices uses the app (at most every 5 minutes). The server sweeps at startup and every 6 hours and logs only the count. Families without parents (unclaimed, migrated data) are kept for their owner. Settings → Family tells parents the rule. There is no warning before deletion: opening the app is what keeps a family, so a warning shown in the app would never be needed, and the app has no email to send one. The operator page shows the setting.
 - **Export and delete.** The owner can download the family's data as JSON, and delete the family. Deletion removes all its rows at once; backups age out within the stated retention period (30 days by default).
 - **Logs.** The app writes no request log. It logs only startup, warnings (such as a failed sign-in at the provider) and errors, never names, notes or tokens. Request logs, if any, are the reverse proxy's; the operator sets how long they are kept and says so in the privacy policy.
 - **Cookies** are strictly necessary (the session and the sign-in state), so no consent banner is needed.
@@ -238,6 +239,7 @@ These hold in both modes.
 | `PARENT_ALLOWLIST` | Who may create a family when sign-up is closed | Empty |
 | `OPERATOR_ALLOWLIST` | Who sees the operator page | Empty |
 | `PRIVACY_URL`, `TERMS_URL` | Legal pages, hosted mode | Empty |
+| `DELETE_IDLE_FAMILIES_DAYS` | Days without use before a family is deleted (`0`: never; at least 30) | 365 |
 | `LIMIT_FAMILIES` | Most families the installation holds (see "Sign-up and abuse") | No cap |
 | `SIGNUP_CONTACT_URL` | "Ask for a place" link on the private and full pages | None |
 | `DATABASE_PATH` | SQLite file | `/data/little-wins.db` |
