@@ -95,3 +95,7 @@ Tick a box when the item is done and tested.
 - [x] Repository made public (early, before the rest of phase 6, to enable branch protection and CodeQL)
 - [x] Apply `.github/rulesets/main.json` (branch protection) right after the repository goes public
 - [ ] Launch announcement (blog post), linked from the README and the project page
+
+## Later (not yet scheduled)
+
+- [ ] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons
