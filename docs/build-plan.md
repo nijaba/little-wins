@@ -116,9 +116,9 @@ Proposed after launch prep and accepted by the owner (2026-11-17). Defaults are 
 The owner's priorities for the hosted service (2026-11-17), before phase 8. Deployment details stay in the git-ignored
 `deploy.local.md`, not here.
 
-- [ ] Encrypted off-site backups for the hosted service: a backup key kept off the server, `BACKUP_PUBLIC_KEY` on the
+- [x] Encrypted off-site backups for the hosted service: a backup key kept off the server, `BACKUP_PUBLIC_KEY` on the
   nightly job, and the `offsite` folder copied to another machine (see the admin guide, "Encrypted copies for off-site")
-- [ ] "Ask for a place" on the hosted service: `SIGNUP_CONTACT_URL` set, so families who find it full or private know
+- [x] "Ask for a place" on the hosted service: `SIGNUP_CONTACT_URL` set, so families who find it full or private know
   whom to ask
 
 ## Phase 8 (priority 2): a more fun app
