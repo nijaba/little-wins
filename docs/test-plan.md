@@ -532,6 +532,7 @@ The favicon, the home-screen icons (`scripts/icons.js`) and the manifest.
 | IC-01 | The page links its favicon and iOS icon, and the server serves each with its type | API |
 | IC-02 | Every manifest icon exists at the size it claims, with a maskable one | Unit |
 | IC-03 | favicon.ico holds one 32 x 32 PNG image | Unit |
+| IC-04 | The manifest makes Little Wins installable: id, scope, screenshots at their sizes, shortcuts | Unit |
 
 ## TH: Themes
 

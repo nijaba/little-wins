@@ -84,3 +84,6 @@ app is meant to open are handled with `expectDialog`.
 | E2E-201 | locked rewards say what is left; unlocked ones sparkle                    |
 | E2E-202 | empty lists say something kind instead of nothing                         |
 | E2E-210 | History groups entries under Today with its points; the best moment on top|
+| E2E-220 | where the browser offers it, Today shows Install; it opens the dialog; Not now sticks|
+| E2E-221 | iPhone gets the Add to Home Screen hint; the code screen says to install first|
+| E2E-222 | a home-screen shortcut opens its tab (/?tab=week)                        |

@@ -22,6 +22,8 @@ window.LW_STRINGS.zh = {
 
   // Signed-out screen, invite and setup
   login: {
+    codeIOS:
+      '在 iPhone 或 iPad 上，请先把 Little Wins 添加到主屏幕（分享 ⬆️ → “添加到主屏幕”），再从主屏幕打开，并在 App 中输入代码。',
     signupTitle: '你受邀创建一个家庭',
     signupHelp: '登录以在此 Little Wins 上创建你的家庭。邀请只能使用一次。',
     signInWith: { google: '使用 Google 登录', github: '使用 GitHub 登录' },
@@ -184,6 +186,14 @@ window.LW_STRINGS.zh = {
       '此浏览器无法显示提醒。在 iPhone 上，请先把 Little Wins 添加到主屏幕（分享 → 添加到主屏幕），再从主屏幕打开。',
     failed: '无法开启提醒，请重试。',
   },
+  // Adding Little Wins to the home screen
+  install: {
+    title: '📲 把 Little Wins 添加到主屏幕',
+    help: '像 App 一样打开：全屏显示，一点即开。',
+    button: '安装',
+    notNow: '以后再说',
+    ios: '在 iPhone 或 iPad 上：点按 分享 ⬆️，然后选择“添加到主屏幕”。',
+  },
   cheer: {
     from: (who) => `来自 ${who}`,
     write: (name) => `💬 给${name}写一句话`,
@@ -241,6 +251,7 @@ window.LW_STRINGS.zh = {
 
   // Settings tab
   settings: {
+    pairIOS: '在 iPhone 或 iPad 上，请先把 Little Wins 添加到主屏幕，再在 App 中输入代码。',
     fieldEmoji: '表情',
     noEmoji: '不用表情',
     forLabel: (names) => `适用：${names}`,

@@ -21,6 +21,8 @@ window.LW_STRINGS.es = {
 
   // Signed-out screen, invite and setup
   login: {
+    codeIOS:
+      'En iPhone o iPad, añade primero Little Wins a la pantalla de inicio (Compartir ⬆️ y «Añadir a pantalla de inicio»), ábrelo desde ahí y escribe el código en la app.',
     signupTitle: 'Te han invitado a crear una familia',
     signupHelp:
       'Inicia sesión para crear tu familia en este Little Wins. La invitación funciona una sola vez.',
@@ -189,6 +191,14 @@ window.LW_STRINGS.es = {
       'Este navegador no puede mostrar recordatorios. En iPhone, añade primero Little Wins a la pantalla de inicio (Compartir, luego Añadir a pantalla de inicio) y ábrelo desde ahí.',
     failed: 'No se pudo activar el recordatorio. Inténtalo de nuevo.',
   },
+  // Adding Little Wins to the home screen
+  install: {
+    title: '📲 Añade Little Wins a la pantalla de inicio',
+    help: 'Se abre como una app: a pantalla completa, a un toque.',
+    button: 'Instalar',
+    notNow: 'Ahora no',
+    ios: 'En iPhone o iPad: toca Compartir ⬆️ y luego «Añadir a pantalla de inicio».',
+  },
   cheer: {
     from: (who) => `de ${who}`,
     write: (name) => `💬 Escribir un mensaje a ${name}`,
@@ -246,6 +256,8 @@ window.LW_STRINGS.es = {
 
   // Settings tab
   settings: {
+    pairIOS:
+      'En un iPhone o iPad, añade primero Little Wins a su pantalla de inicio y luego escribe el código en la app.',
     fieldEmoji: 'Emoji',
     noEmoji: 'Sin emoji',
     forLabel: (names) => `Para: ${names}`,

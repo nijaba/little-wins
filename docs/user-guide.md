@@ -103,12 +103,18 @@ If the code has expired, or "didn't work", just make a new one.
 
 ### Put it on the home screen
 
+Little Wins offers it itself: a banner on Today says **Add Little Wins to your home screen**. On Android, tap
+**Install**; on iPhone and iPad, follow the hint (Share ⬆️, then **Add to Home Screen**).
+
+
 Little Wins works in the browser, but it feels like an app from the home screen, with no address bar:
 
 - **iPhone and iPad (Safari):** the Share button, then **Add to Home Screen**.
 - **Android (Chrome):** the ⋮ menu, then **Add to Home screen** or **Install app**.
 
-Do this on your child's device too, after connecting it.
+On your child's device, **on an iPhone or iPad add it to the Home Screen first, then open it from there and type
+the code in the app**: the home-screen app doesn't share its sign-in with Safari, so a device connected in Safari
+would have to be connected again. On Android it doesn't matter which you do first.
 
 ## Every day
 

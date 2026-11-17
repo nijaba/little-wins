@@ -144,7 +144,18 @@ async function main() {
     await browser.close();
     server.stop();
   }
-  console.log(`wrote ${shots.map((s) => `docs/images/${s}.png`).join(', ')}`);
+  // Two of them are also the manifest's screenshots (Android shows them when installing).
+  fs.copyFileSync(
+    path.join(OUT, 'parent-today.png'),
+    path.join(ROOT, 'public', 'screenshot-parent.png'),
+  );
+  fs.copyFileSync(
+    path.join(OUT, 'child-today.png'),
+    path.join(ROOT, 'public', 'screenshot-child.png'),
+  );
+  console.log(
+    `wrote ${shots.map((s) => `docs/images/${s}.png`).join(', ')}, public/screenshot-*.png`,
+  );
 }
 
 if (require.main === module) {
