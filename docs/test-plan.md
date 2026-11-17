@@ -501,6 +501,14 @@ Families no device has used for `DELETE_IDLE_FAMILIES_DAYS` are deleted.
 | BK-03 | The command line makes a key it never overwrites, and encrypts and decrypts streams | Unit |
 | BK-04 | backup.sh with BACKUP_PUBLIC_KEY writes an encrypted copy that restores the database | Unit |
 
+## FT: Friendly touches
+
+The child's greeting and today line, reward goals and empty lists (the page; see E2E-200..202).
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| FT-01 | todayPoints counts the chosen child's positive points from today only | API |
+
 ## EM: Emoji
 
 An emoji for each behavior, penalty, challenge, reward and child.

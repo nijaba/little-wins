@@ -122,6 +122,8 @@ window.LW_STRINGS.zh = {
 
   // Today tab
   today: {
+    soFar: (n) => `今天已得 +${n}，真棒！`,
+    noneYet: '今天还没有积分，加油！',
     earn: '赚积分',
     waysToEarn: '赚积分的方法',
     penalties: '扣分',
@@ -150,6 +152,12 @@ window.LW_STRINGS.zh = {
 
   // Rewards tab
   rewards: {
+    toGo: (stars, points) =>
+      stars && points !== '0'
+        ? `还差 ${stars} ★ 和 ${points} 积分！`
+        : stars
+          ? `还差 ${stars} ★！`
+          : `还差 ${points} 积分！`,
     yourStars: (n) => `你的星星：${n}`,
     toNext: (n, name) => `再得 ${n} 颗 ★ 就能换${name}`,
     title: '奖励',
@@ -185,6 +193,20 @@ window.LW_STRINGS.zh = {
       `给${name}的一句话（最多 140 个字符），会在“今天”页面显示一周。留空即可删除。`,
     streak: (n) => `🔥 连续 ${n} 天完美！`,
     best: '🏅 目前最好的一周！',
+  },
+  // The child's greeting on Today, by time of day
+  greet: {
+    morning: (n) => `早上好，${n}！`,
+    afternoon: (n) => `下午好，${n}！`,
+    evening: (n) => `晚上好，${n}！`,
+  },
+  // Kind words where a list is empty
+  empty: {
+    history: '这里还没有记录，第一个小进步就要来了！',
+    rewards: '还没有奖励，请家长添加吧！',
+    rewardsParent: '还没有奖励，在 设置 → 奖励 中添加第一个。',
+    challenges: '本周没有挑战，好好享受积分吧！',
+    challengesParent: '还没有每周挑战，在 设置 → 每周挑战 中添加一个。',
   },
   review: {
     open: '本周回顾',
