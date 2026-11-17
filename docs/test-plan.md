@@ -429,6 +429,16 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
 
+## IC: App icons
+
+The favicon, the home-screen icons (`scripts/icons.js`) and the manifest.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| IC-01 | The page links its favicon and iOS icon, and the server serves each with its type | API |
+| IC-02 | Every manifest icon exists at the size it claims, with a maskable one | Unit |
+| IC-03 | favicon.ico holds one 32 x 32 PNG image | Unit |
+
 ## TH: Themes
 
 Light and dark, following the device (`prefers-color-scheme`).

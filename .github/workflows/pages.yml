@@ -10,6 +10,8 @@ on:
       - docs/images/**
       - docs/video/tour-poster.png
       - public/tour.mp4
+      - public/icon.svg
+      - public/apple-touch-icon.png
       - scripts/build-site.sh
       - .github/workflows/pages.yml
   workflow_dispatch:

@@ -96,6 +96,7 @@ Design: "Demo families", "Tour" and "Guide pictures and the tour video". Decided
 - [x] Security review document, with fixes
 - [x] Repository made public (early, before the rest of phase 6, to enable branch protection and CodeQL)
 - [x] Apply `.github/rulesets/main.json` (branch protection) right after the repository goes public
+- [x] App icon: favicon, home-screen icons and manifest icons, also on the project page
 - [ ] Launch announcement (blog post), linked from the README and the project page
 
 ## Later (not yet scheduled)
