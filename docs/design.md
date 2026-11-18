@@ -79,6 +79,7 @@ These hold in both hosting modes. With several children **(target)**, each rule 
 - A reward unlocks when the child has its stars and its points. Rewards are milestones: nothing is spent. **(Open question: redeeming rewards.)**
 - The next reward not yet unlocked is shown as a progress ring.
 - Each device shows a celebration the first time it sees a newly unlocked reward.
+- **No pictures on rewards** (owner's decision, 2026-11-18; issue #52). A reward has a name and an emoji, never an uploaded picture: a photo can show a child, which would break the promise that the app stores no photos; keeping people and unsuitable images out would need an outside checking service (a third party and a runtime dependency); and hosts would become responsible for what is uploaded. Emoji, including any pasted one and the child's own picks, cover the need to recognize a reward without reading.
 
 ### Encouragement
 
