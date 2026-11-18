@@ -1,5 +1,5 @@
 /** The only place that reads the clock for "today": YYYY-MM-DD in the given IANA time zone. */
-const today = (timeZone = 'UTC') => new Date().toLocaleDateString('en-CA', { timeZone });
+const today = (timeZone = 'UTC', now = new Date()) => now.toLocaleDateString('en-CA', { timeZone });
 
 /** Is this a time zone the runtime knows (e.g. "America/Chicago", "UTC")? */
 function validTimeZone(timeZone) {

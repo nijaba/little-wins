@@ -186,6 +186,12 @@ window.LW_STRINGS.fr = {
     offer:
       'Reçois une notification sur cet appareil quand tu débloques une récompense ou atteins un palier.',
     turnOn: 'Activer les notifications',
+    paired: (name) => `Ce téléphone est maintenant celui de ${name}.`,
+    pairOffer:
+      'Activez les notifications pendant que vous l’avez en main : touchez Activer les notifications, puis Autoriser.',
+    pairHint:
+      'Des notifications sur son téléphone ? Autorisez-les ici avant de saisir le code : le téléphone les proposera dès qu’il sera connecté.',
+    notNow: 'Plus tard',
   },
   reminder: {
     title: 'Rappel du soir',

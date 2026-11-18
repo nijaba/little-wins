@@ -184,6 +184,11 @@ window.LW_STRINGS.en = {
     off: '🔔 Notices on their device: off',
     offer: 'Get a notice on this device when you unlock a reward or reach a milestone.',
     turnOn: 'Turn on notifications',
+    paired: (name) => `This phone is now ${name}'s.`,
+    pairOffer: 'Turn on notices while you have it in hand: tap Turn on notifications, then Allow.',
+    pairHint:
+      'Notices on their phone? Allow them here before entering the code, and the phone offers them as soon as it connects.',
+    notNow: 'Not now',
   },
   reminder: {
     title: 'Evening reminder',

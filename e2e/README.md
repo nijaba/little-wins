@@ -48,6 +48,7 @@ project page skips them. So run them locally after any change to the page or the
 | E2E-62 | a wrong code shows a message on the sign-in screen                                   |
 | E2E-63 | a parent joins through an invite link                                                |
 | E2E-64 | "Not now" on an invite screen goes back to the sign-in screen                        |
+| E2E-65 | notices allowed from the pairing box are offered on the child device as it connects |
 | E2E-70 | the sign-in and setup screens fit phone screens (360x640, 375x667, 390x844, 430x932) |
 | E2E-71 | every main screen and every Settings section fits phone screens                      |
 | E2E-80 | the sign-in screen follows the browser's language (de, zh; unsupported → English)    |

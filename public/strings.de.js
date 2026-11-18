@@ -185,6 +185,12 @@ window.LW_STRINGS.de = {
     offer:
       'Bekomme eine Mitteilung auf diesem Gerät, wenn du eine Belohnung freischaltest oder ein Ziel erreichst.',
     turnOn: 'Mitteilungen einschalten',
+    paired: (name) => `Dieses Telefon gehört jetzt ${name}.`,
+    pairOffer:
+      'Schalte die Mitteilungen gleich ein, solange du es in der Hand hast: Tippe auf Mitteilungen einschalten, dann auf Erlauben.',
+    pairHint:
+      'Mitteilungen auf dem Telefon? Erlaube sie hier, bevor du den Code eingibst; das Telefon bietet sie dann gleich beim Verbinden an.',
+    notNow: 'Nicht jetzt',
   },
   reminder: {
     title: 'Abenderinnerung',
