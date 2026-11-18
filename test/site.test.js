@@ -73,3 +73,14 @@ test('SITE-04 the header stars and the app icon are decoration: hidden from scre
     'the app icon, in the top bar and above the title',
   );
 });
+
+test('SITE-05 the page says how to add Little Wins to the home screen, with the iPhone pairing order', () => {
+  const section = html.match(/<section[^>]*id="install"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(section, 'an install section');
+  assert.match(section, /Add to Home Screen/);
+  assert.match(section, /Install app/);
+  assert.match(section, /Home Screen first/);
+  // Plain and shaded bands still alternate.
+  const bands = [...html.matchAll(/<section class="band( alt)?"/g)].map((m) => !!m[1]);
+  for (let i = 1; i < bands.length; i++) assert.notEqual(bands[i], bands[i - 1], `band ${i}`);
+});
