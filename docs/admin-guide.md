@@ -281,7 +281,7 @@ An optional bot for a Telegram group (the project's is [little-wins](https://t.m
 
 **Turn it off:** `docker compose -f bot/docker-compose.yml down`. Members already in the group stay; new ones join without a check. To remove it for good, also remove the bot from the group and revoke its token with BotFather (`/revoke`) and the Claude and GitHub keys.
 
-**Troubleshooting:** "Refusing to start" names the setting to fix. If new members aren't muted, or the bot answers nothing, check it is an admin with Delete messages and Ban users. If it answers only some messages, that's by design: a message not addressed to it must look like a question or a report, and be about Little Wins.
+**Troubleshooting:** "Refusing to start" names the setting to fix. `…; trying again in N s` means Telegram didn't answer (it can return `Bad Gateway` for a while right after a bot is created): the bot waits and tries again by itself, slower each time. `Unauthorized` means the token was revoked or mistyped: get it again from BotFather (`/mybots` → the bot → API Token), put it in `bot/.env`, and `docker compose -f bot/docker-compose.yml up -d`. If new members aren't muted, or the bot answers nothing, check it is an admin with Delete messages and Ban users. If it answers only some messages, that's by design: a message not addressed to it must look like a question or a report, and be about Little Wins.
 
 ## Limits
 

@@ -426,3 +426,40 @@ test('BT-10 the bot refuses to start without its token, chat ID format, Claude k
   ])
     assert.match(example, new RegExp(`^#? ?${name}=`, 'm'), name);
 });
+
+test('BT-11 when Telegram fails, the bot waits longer each time (or as Telegram asks) and stops only for a rejected token', async () => {
+  const { createBackoff, untilItWorks } = require('../bot/src/telegram');
+  const waits = [];
+  const backoff = createBackoff({
+    start: 5,
+    max: 40,
+    sleep: async (s) => waits.push(s),
+    log: () => {},
+  });
+  let n = 0;
+  const flaky = async () => {
+    n += 1;
+    if (n <= 5)
+      throw Object.assign(new Error('Telegram getMe: Bad Gateway'), {
+        code: 502,
+        retryAfter: n === 2 ? 30 : undefined,
+      });
+    return { username: 'ok' };
+  };
+  assert.deepEqual(await untilItWorks(flaky, backoff), { username: 'ok' });
+  assert.deepEqual(waits, [5, 30, 20, 40, 40], 'doubling, capped, and retry_after honored');
+  // After a success it starts again from the shortest wait.
+  await backoff.wait(new Error('x'));
+  assert.equal(waits.at(-1), 5);
+  // A rejected token or an unknown bot is not retried.
+  for (const code of [401, 404]) {
+    const before = waits.length;
+    await assert.rejects(
+      untilItWorks(async () => {
+        throw Object.assign(new Error('Unauthorized'), { code });
+      }, backoff),
+      /Unauthorized/,
+    );
+    assert.equal(waits.length, before);
+  }
+});

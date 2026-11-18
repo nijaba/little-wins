@@ -86,6 +86,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- The Telegram bot no longer exits and restarts every few seconds when Telegram fails; it waits and tries again, slower each time (up to 5 minutes), and stops only for a rejected token.
 - A child's device: after turning notices on, the offer came back a few seconds later (the next refresh got a stale copy of the page's data). Turning notices on or off now counts as a change, like every other write.
 - The evening reminder's "already sent today" check read the day from the clock instead of the time it was given (only a test noticed).
 - `scripts/backup.sh` on a host without Node 22: the encrypted copy now runs in the Little Wins container started from the app folder by any compose file. It used to look only at the root `docker-compose.yml`, so with `deploy/nginx` or `deploy/caddy` it failed.

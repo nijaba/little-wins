@@ -46,4 +46,41 @@ function createGithub({ token, repo, fetchFn = fetch }) {
   return { openIssue };
 }
 
-module.exports = { createTelegram, createGithub };
+/**
+ * Waiting after a failed call to Telegram: 5 seconds, doubling up to 5 minutes, or longer when
+ * Telegram says so (retry_after). reset() after a call that worked.
+ */
+function createBackoff({ start = 5, max = 300, sleep = (s) => new Promise((r) => setTimeout(r, s * 1000)), log = console.warn } = {}) {
+  let delay = start;
+  return {
+    async wait(err) {
+      const s = Math.max(delay, err?.retryAfter || 0);
+      log(`${err?.message || 'Telegram failed'}; trying again in ${s} s`);
+      delay = Math.min(delay * 2, max);
+      await sleep(s);
+      return s;
+    },
+    reset() {
+      delay = start;
+    },
+  };
+}
+
+/**
+ * Calls fn until it works, waiting longer each time. A rejected token (401) or an unknown bot
+ * (404) stops at once: trying again can't fix it.
+ */
+async function untilItWorks(fn, backoff) {
+  for (;;) {
+    try {
+      const out = await fn();
+      backoff.reset();
+      return out;
+    } catch (err) {
+      if (err.code === 401 || err.code === 404) throw err;
+      await backoff.wait(err);
+    }
+  }
+}
+
+module.exports = { createTelegram, createGithub, createBackoff, untilItWorks };

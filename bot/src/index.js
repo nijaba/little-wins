@@ -6,7 +6,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { readConfig } = require('./config');
-const { createTelegram, createGithub } = require('./telegram');
+const { createTelegram, createGithub, createBackoff, untilItWorks } = require('./telegram');
 const { createStore } = require('./store');
 const { createVerifier } = require('./verify');
 const { createAnswerer } = require('./answer');
@@ -27,7 +27,10 @@ function readKnowledge(dir) {
 
 async function main() {
   const tg = createTelegram({ token: config.token });
-  const me = await tg.call('getMe');
+  // Telegram can fail for a while (a 502 right after a bot is created, a network blip): wait and
+  // try again, slower each time, instead of exiting and being restarted every few seconds.
+  const backoff = createBackoff();
+  const me = await untilItWorks(() => tg.call('getMe'), backoff);
   console.log(`Signed in to Telegram as @${me.username}`);
   let offset = 0;
 
@@ -35,7 +38,7 @@ async function main() {
     // Discovery: say which chats the bot is in, and do nothing else.
     console.log('TELEGRAM_CHAT_ID is not set: logging the chats I see, nothing else.');
     for (;;) {
-      const updates = await tg.call('getUpdates', { offset, timeout: 50 }).catch(() => []);
+      const updates = await untilItWorks(() => tg.call('getUpdates', { offset, timeout: 50 }), backoff);
       for (const u of updates) {
         offset = u.update_id + 1;
         const chat = u.message?.chat || u.my_chat_member?.chat;
@@ -63,18 +66,10 @@ async function main() {
   setInterval(() => verifier.sweep().catch((err) => console.warn(`Sweep: ${err.message}`)), 15e3).unref();
   console.log(`Serving chat ${config.chatId} with ${config.model}${config.github ? `, issues on ${config.github.repo}` : ''}`);
   for (;;) {
-    let updates = [];
-    try {
-      updates = await tg.call('getUpdates', {
-        offset,
-        timeout: 50,
-        allowed_updates: ['message', 'callback_query', 'chat_member'],
-      });
-    } catch (err) {
-      console.warn(err.message);
-      await new Promise((r) => setTimeout(r, (err.retryAfter || 5) * 1000));
-      continue;
-    }
+    const updates = await untilItWorks(
+      () => tg.call('getUpdates', { offset, timeout: 50, allowed_updates: ['message', 'callback_query', 'chat_member'] }),
+      backoff,
+    );
     for (const u of updates) {
       offset = u.update_id + 1;
       // One update at a time; a failure is logged (without content) and the bot moves on.
