@@ -270,3 +270,91 @@ test('OM-05 idle deletions say how many; a turned-away email goes at most once a
   assert.match(sent[2].text, /It now holds 2 families \(limit 5\)\./);
   assert.match(sent[2].text, /-- Little Wins at https:\/\/little\.example\.test/);
 });
+
+/** Runs `node server/mailer.js test` with these settings; resolves { code, out }. */
+function runTestCommand(env) {
+  const { spawn } = require('node:child_process');
+  return new Promise((ok) => {
+    const child = spawn(
+      process.execPath,
+      [path.join(__dirname, '..', 'server', 'mailer.js'), 'test'],
+      {
+        env: { PATH: process.env.PATH, ...env },
+      },
+    );
+    let out = '';
+    child.stdout.on('data', (d) => {
+      out += d;
+    });
+    child.stderr.on('data', (d) => {
+      out += d;
+    });
+    child.on('close', (code) => ok({ code, out }));
+  });
+}
+
+test('OM-06 `node server/mailer.js test` sends a test email, or says exactly why not', async () => {
+  const local = {
+    APP_BASE_URL: 'http://localhost:3999',
+    LITTLE_WINS_FAKE_SSO: '1',
+    DATABASE_PATH: path.join(tmpDir('mailtest'), 'x.db'),
+  };
+  const smtp = await fakeSmtp();
+  try {
+    let r = await runTestCommand({ ...local, ...smtpEnv(smtp.port) });
+    assert.equal(r.code, 0, r.out);
+    assert.match(r.out, /Sent to operator@example.test\./);
+    const [m] = await smtp.wait(1);
+    assert.equal(subject(m), 'Little Wins: test email');
+    assert.match(m.data, /They will be sent for: signup, full, turned-away, deleted\./);
+
+    r = await runTestCommand(local);
+    assert.equal(r.code, 1);
+    assert.match(r.out, /NOTIFY_EMAIL is not set/);
+
+    r = await runTestCommand({ ...local, NOTIFY_EMAIL: 'operator@example.test' });
+    assert.equal(r.code, 1);
+    assert.match(r.out, /SMTP_HOST is required/);
+  } finally {
+    await smtp.close();
+  }
+  const refusing = await fakeSmtp({ reject: true });
+  try {
+    const r = await runTestCommand({ ...local, ...smtpEnv(refusing.port) });
+    assert.equal(r.code, 1);
+    assert.match(r.out, /Could not send the test email: AUTH: 535 5\.7\.8 bad credentials/);
+    assert.doesNotMatch(r.out, /app-password-for-tests/);
+    assert.equal(refusing.messages.length, 0);
+  } finally {
+    await refusing.close();
+  }
+});
+
+test('OM-07 at startup the server signs in to the mail server, sending nothing, and logs the result', async () => {
+  const waitFor = async (srv, re) => {
+    const until = Date.now() + 5000;
+    while (!re.test(srv.output()) && Date.now() < until)
+      await new Promise((ok) => setTimeout(ok, 20));
+    assert.match(srv.output(), re);
+  };
+  const smtp = await fakeSmtp();
+  const srv = await startServer({ signup: 'open', env: smtpEnv(smtp.port) });
+  try {
+    await waitFor(srv, /Mail server sign-in OK/);
+    assert.equal(smtp.auth.length, 1);
+    assert.equal(smtp.messages.length, 0, 'nothing sent');
+  } finally {
+    await srv.close();
+    await smtp.close();
+  }
+  const refusing = await fakeSmtp({ reject: true });
+  const srv2 = await startServer({ signup: 'open', env: smtpEnv(refusing.port) });
+  try {
+    await waitFor(srv2, /Mail server sign-in failed: AUTH: 535/);
+    assert.equal((await srv2.api(null, '/api/config')).status, 200, 'the app runs anyway');
+    assert.doesNotMatch(srv2.output(), /app-password-for-tests/);
+  } finally {
+    await srv2.close();
+    await refusing.close();
+  }
+});

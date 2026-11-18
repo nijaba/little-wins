@@ -216,7 +216,14 @@ They go through a mail server you have an account on. With Google Workspace or G
    SMTP_PASS=abcdefghijklmnop
    ```
 
-4. Restart (see [Changing settings or secrets](#changing-settings-or-secrets)). The log says `Operator emails are ON`.
+4. Restart (see [Changing settings or secrets](#changing-settings-or-secrets)). The log says `Operator emails are ON`, then `Mail server sign-in OK`: at startup the app signs in to the mail server, sending nothing, so a wrong password shows right away (`Mail server sign-in failed: AUTH: 535 …`; the app runs anyway).
+5. Send a test email to `NOTIFY_EMAIL`, with the same settings as the app:
+
+   ```bash
+   docker compose -f deploy/nginx/docker-compose.yml exec little-wins node server/mailer.js test
+   ```
+
+   It prints `Sent to you@example.com.` or the mail server's exact refusal, and exits with 0 or 1. Run it again whenever you change the settings or the app password.
 
 Port 465 with TLS is the default; for a server on 587 set `SMTP_PORT=587` (STARTTLS is then used). If an email can't be sent, the log says `Could not send the "signup" email: …` and nothing else is affected. Revoke the app password in your Google account to stop it for good.
 

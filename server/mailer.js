@@ -79,9 +79,10 @@ function message({ from, to, subject, text, date = new Date() }) {
 
 /**
  * Sends one message. smtp: { host, port, tls ('tls' | 'starttls' | 'none'), user, pass, from }.
- * Resolves when the server accepted it; rejects with the server's reply otherwise.
+ * Resolves when the server accepted it; rejects with the server's reply otherwise. Without a
+ * message it only signs in and leaves (checkLogin).
  */
-async function sendMail(smtp, { to, subject, text }) {
+async function sendMail(smtp, msg) {
   const connect = () =>
     smtp.tls === 'tls'
       ? tls.connect({ host: smtp.host, port: smtp.port, servername: smtp.host })
@@ -117,6 +118,11 @@ async function sendMail(smtp, { to, subject, text }) {
     const auth = Buffer.from(`\0${smtp.user}\0${smtp.pass}`, 'utf8').toString('base64');
     write(`AUTH PLAIN ${auth}`);
     await expect(235, 'AUTH');
+    if (!msg) {
+      write('QUIT');
+      return;
+    }
+    const { to, subject, text } = msg;
     write(`MAIL FROM:<${smtp.from}>`);
     await expect(250, 'MAIL FROM');
     for (const rcpt of to) {
@@ -135,4 +141,45 @@ async function sendMail(smtp, { to, subject, text }) {
   }
 }
 
-module.exports = { sendMail, message };
+/** Signs in to the mail server and leaves, sending nothing: checks the settings at startup. */
+const checkLogin = (smtp) => sendMail(smtp, null);
+
+/** The test email: `node server/mailer.js test`, with the app's settings. */
+async function sendTest(cfg) {
+  if (!cfg.notify) {
+    return { ok: false, text: 'NOTIFY_EMAIL is not set, so operator emails are off.' };
+  }
+  try {
+    await sendMail(cfg.notify.smtp, {
+      to: cfg.notify.to,
+      subject: 'Little Wins: test email',
+      text: [
+        'This is a test email from Little Wins. If you can read it, operator emails work.',
+        `They will be sent for: ${[...cfg.notify.events].join(', ')}.`,
+        '',
+        `-- Little Wins at ${cfg.baseUrl}`,
+      ].join('\n'),
+    });
+    return { ok: true, text: `Sent to ${cfg.notify.to.join(', ')}.` };
+  } catch (err) {
+    return { ok: false, text: `Could not send the test email: ${err.message}` };
+  }
+}
+
+module.exports = { sendMail, checkLogin, sendTest, message };
+
+if (require.main === module) {
+  if (process.argv[2] !== 'test') {
+    console.error('Usage: node server/mailer.js test   (sends a test email to NOTIFY_EMAIL)');
+    process.exit(2);
+  }
+  const cfg = require('./config');
+  if (cfg.problems.length) {
+    console.error(`The settings have problems:\n- ${cfg.problems.join('\n- ')}`);
+    process.exit(1);
+  }
+  sendTest(cfg).then((r) => {
+    (r.ok ? console.log : console.error)(r.text);
+    process.exit(r.ok ? 0 : 1);
+  });
+}
