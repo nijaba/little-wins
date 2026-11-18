@@ -1,6 +1,7 @@
 # Lint, API tests (Node 22 and 24) with coverage, browser tests (Chromium and WebKit) and the
-# container image. Linux runners only. Docs-only changes skip the heavy jobs, but every job
-# still reports under the same name, so required checks keep working.
+# container image. Linux runners only. Docs-only changes skip the heavy jobs, and the browser
+# tests also skip when nothing they cover changed (the page, the server, the browser tests, the
+# packages, this workflow). Only "CI passed" is required, so skipped jobs never block a merge.
 name: CI
 
 on:
@@ -23,24 +24,33 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      e2e: ${{ steps.diff.outputs.e2e }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
       - id: diff
-        name: Docs-only?
+        name: Docs-only? Browser tests needed?
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          # Fail safe: anything we can't diff counts as code.
+          # Fail safe: anything we can't diff counts as code, with browser tests.
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+            printf 'code=true\ne2e=true\n' >> "$GITHUB_OUTPUT"; exit 0
           fi
-          if git diff --name-only "$BASE" HEAD | grep -qvE '^(docs/|site/|.*\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/)'; then
+          changed=$(git diff --name-only "$BASE" HEAD)
+          if grep -qvE '^(docs/|site/|.*\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/)' <<< "$changed"; then
             echo "code=true" >> "$GITHUB_OUTPUT"
           else
             echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+          # Browser tests run the real server and page: only changes there (or to the tests, the
+          # packages, their settings or this workflow) can change what they see.
+          if grep -qE '^(public/|server/|e2e/|package\.json$|package-lock\.json$|playwright\.config\.js$|\.github/workflows/ci\.yml$)' <<< "$changed"; then
+            echo "e2e=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "e2e=false" >> "$GITHUB_OUTPUT"
           fi
 
   lint:
@@ -96,12 +106,21 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  # Side by side: Chromium in one job with 4 workers (the runner has 4 cores); WebKit, which needs
+  # more of the machine (with 4 workers its tests timed out), in two halves with 2 workers each.
   e2e:
-    name: Browser tests
+    name: Browser tests (${{ matrix.browser }} ${{ matrix.part }}/${{ matrix.parts }})
     needs: changes
-    if: ${{ needs.changes.outputs.code != 'false' }}
+    if: ${{ needs.changes.outputs.code != 'false' && needs.changes.outputs.e2e != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { browser: chromium, part: 1, parts: 1, workers: 4 }
+          - { browser: webkit, part: 1, parts: 2, workers: 2 }
+          - { browser: webkit, part: 2, parts: 2, workers: 2 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -114,17 +133,19 @@ jobs:
       # The browsers and the system packages they need, kept between runs. The install usually
       # takes about 40 s, but a slow package mirror once made it take 18 minutes; from the cache
       # it needs no mirror. The key changes when package-lock.json (Playwright's version) does.
-      - name: Restore the browsers and their packages
+      - name: Restore the browser and its packages
         id: browsers
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.cache/ms-playwright
             ~/.cache/browser-debs
-          key: browsers-v1-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: browsers-v2-${{ matrix.browser }}-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       # Each try gets 5 minutes; a second try follows a failure or a hang.
-      - name: Install the browsers
+      - name: Install the browser
         timeout-minutes: 12
+        env:
+          BROWSER: ${{ matrix.browser }}
         run: |
           echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' |
             sudo tee /etc/apt/apt.conf.d/99keep-debs >/dev/null
@@ -134,7 +155,7 @@ jobs:
           fi
           ok=
           for try in 1 2; do
-            if timeout --kill-after=15s 5m npx playwright install --with-deps chromium webkit; then
+            if timeout --kill-after=15s 5m npx playwright install --with-deps "$BROWSER"; then
               ok=1
               break
             fi
@@ -142,7 +163,7 @@ jobs:
           done
           [ -n "$ok" ] || exit 1
           cp /var/cache/apt/archives/*.deb ~/.cache/browser-debs/ 2>/dev/null || true
-      - name: Keep the browsers and their packages
+      - name: Keep the browser and its packages
         if: ${{ steps.browsers.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -150,12 +171,17 @@ jobs:
             ~/.cache/ms-playwright
             ~/.cache/browser-debs
           key: ${{ steps.browsers.outputs.cache-primary-key }}
-      - run: npx playwright test
+      - name: Run the browser tests
+        env:
+          BROWSER: ${{ matrix.browser }}
+          SHARD: ${{ matrix.part }}/${{ matrix.parts }}
+          WORKERS: ${{ matrix.workers }}
+        run: npx playwright test --project="$BROWSER" --shard="$SHARD" --workers="$WORKERS"
       - name: Report
         if: ${{ failure() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.part }}
           path: playwright-report/
           retention-days: 7
 
@@ -183,7 +209,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - name: All jobs passed or were skipped for docs-only changes
+      - name: All jobs passed, or were skipped because nothing they cover changed
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |

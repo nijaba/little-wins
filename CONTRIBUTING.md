@@ -71,7 +71,7 @@ Do not put real names, emails, hostnames, accounts or family details in code, do
 
 - Branch from `main` and open the pull request against `main`.
 - Fill in the template.
-- The "CI passed" check must be green. `main` is protected: changes arrive only through a pull request, with no force-push.
+- The "CI passed" check must be green. Browser tests run in CI only when the page, the server, the browser tests, the packages or the CI workflow changed (see `e2e/README.md`). `main` is protected: changes arrive only through a pull request, with no force-push.
 - Signed commits are not required by the repository ruleset.
 - Keep the build plan and docs up to date when your change affects them.
 
