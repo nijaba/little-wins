@@ -65,6 +65,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- A child's device: after turning notices on, the offer came back a few seconds later (the next refresh got a stale copy of the page's data). Turning notices on or off now counts as a change, like every other write.
+- The evening reminder's "already sent today" check read the day from the clock instead of the time it was given (only a test noticed).
 - `scripts/backup.sh` on a host without Node 22: the encrypted copy now runs in the Little Wins container started from the app folder by any compose file. It used to look only at the root `docker-compose.yml`, so with `deploy/nginx` or `deploy/caddy` it failed.
 - CI: browser tests run side by side (Chromium with 4 workers, WebKit in two halves with 2 workers each), and are skipped when nothing they cover changed (the page, the server, the browser tests, the packages, the CI workflow).
 - CI: the browsers and their system packages are cached between runs, and their install has 5 minutes per try and a second try, so a slow package mirror or a stalled download no longer runs into the browser tests' 20-minute limit.

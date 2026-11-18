@@ -173,3 +173,24 @@ test('CN-03 a third perfect day in a row sends a streak notice; the evening remi
     "never the parents' reminder",
   );
 });
+
+test("CN-04 turning notices on or off on a child's device changes its ETag, so the next poll isn't a stale 304", async () => {
+  const f = await srv.newFamily({ child: 'Robin' });
+  const dev = await srv.pairChild(f.jar, f.childId);
+  await srv.api(f.jar, '/api/child/notify', { child_id: f.childId, on: true });
+  const read = (tag) =>
+    srv.api(dev.jar, '/api/state', undefined, { headers: tag ? { 'If-None-Match': tag } : {} });
+  const before = (await read()).headers.get('etag');
+  await srv.api(dev.jar, '/api/push/child-subscribe', {
+    endpoint: `${pushUrl}/cn4`,
+    keys: device().keys,
+  });
+  let r = await read(before);
+  assert.equal(r.status, 200, 'a new tag after turning on');
+  assert.equal(r.json.notices.on, true);
+  const on = r.headers.get('etag');
+  await srv.api(dev.jar, '/api/push/child-unsubscribe', {});
+  r = await read(on);
+  assert.equal(r.status, 200, 'a new tag after turning off');
+  assert.equal(r.json.notices.on, false);
+});
