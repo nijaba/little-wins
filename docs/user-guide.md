@@ -220,7 +220,8 @@ Everything in **Settings** is in folding sections. Each header shows a count; ta
 - **Children:** **🔔 Notices on their device** lets your child's phone or tablet get a notice when they unlock
   a reward or reach a milestone ("⭐ You unlocked New book!"). Turn it on here, then tap **Turn on
   notifications** on their device (it's also under a new device's code, see
-  [Connect your child's phone](#connect-your-childs-phone)). Only good news is ever sent. Rename a child, add one, or delete one (with all their history, after a confirmation; a family
+  [Connect your child's phone](#connect-your-childs-phone)). Only good news is ever sent. **🥚 Easter egg** is on
+  unless you turn it off; what it does is for your child to find out. Rename a child, add one, or delete one (with all their history, after a confirmation; a family
   keeps at least one child).
 - **Parents:** who's in the family, invites, and for the owner, **Make owner** and **Remove**.
 - **Behaviors, Penalties, Weekly challenges, Rewards:** **Edit** changes one, **+ Add** creates one, ▲ and ▼
@@ -270,6 +271,8 @@ brings a small burst of confetti. The ring glows when the next reward is nearly 
 
 It **never** shows penalties, warnings, Settings, the other parents, or a brother's or sister's progress. It
 can't record anything: a child can look, but only a parent can change things.
+
+Children who look very closely at their stars may find a way to make the app a little more their own.
 
 To see exactly what your child sees, try the demo and choose *child*'s view in the yellow banner.
 

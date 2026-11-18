@@ -171,6 +171,14 @@ window.LW_STRINGS.en = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  egg: {
+    on: '🥚 Easter egg (pick own emoji): on',
+    off: '🥚 Easter egg (pick own emoji): off',
+    found: 'You found the secret! Tap an emoji to change it.',
+    title: 'Pick your emoji',
+    original: 'The original',
+    done: '✓ Done',
+  },
   notices: {
     on: '🔔 Notices on their device: on',
     off: '🔔 Notices on their device: off',

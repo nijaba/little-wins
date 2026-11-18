@@ -224,6 +224,7 @@ No route reaches another family.
 | IS-06 | B's own changes through those routes landed in B only | API |
 | IS-07 | A parent of A is a parent of A only: A2 cannot reach B either | API |
 | IS-08 | B's owner deleting with their own family name deletes B only, never A | API |
+| IS-09 | A child device of B can't pick an emoji for A's items or rewards | API |
 
 ## ED: Edge: headers, proxies, HTTPS, rate limits
 
@@ -472,6 +473,18 @@ A parent's message to a child (`POST /api/message`) and the milestones on Today.
 | EN-01 | A parent writes, replaces and clears a message; the child sees it on their device | API |
 | EN-02 | A message shows for 7 days, belongs to one child, and goes with the child | API |
 | EN-03 | A child's device cannot write a message, and an unknown child is a 404 | API |
+
+## EG: The hidden emoji picker
+
+A child picks their own emoji for what they see (`POST /api/child/emoji`), and the parent's switch per child (`POST /api/child/own-emoji`). See design.md, "Easter egg".
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| EG-01 | On by default; a child's pick shows on that child's devices only, in items, rewards and history; '' goes back | API |
+| EG-02 | A child can't pick for a penalty, an item or reward not meant for them, or with something that isn't one emoji | API |
+| EG-03 | Turned off: the child's device can't pick, its picks are cleared and hidden; a parent can't use the child route | API |
+| EG-04 | Deleting a reward or a child removes its picks; the export includes them | API |
+| EG-05 | Migration 12 turns it on for existing children | API |
 
 ## RV: Weekly review
 

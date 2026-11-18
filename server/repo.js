@@ -286,12 +286,14 @@ function createRepo(db) {
   // --- Children -----------------------------------------------------------------------------
   const children = (fid) =>
     db
-      .prepare('SELECT id, name, emoji, notify FROM children WHERE family_id=? ORDER BY sort, id')
+      .prepare(
+        'SELECT id, name, emoji, notify, own_emoji FROM children WHERE family_id=? ORDER BY sort, id',
+      )
       .all(fid);
 
   const child = (fid, cid) =>
     db
-      .prepare('SELECT id, name, emoji, notify FROM children WHERE family_id=? AND id=?')
+      .prepare('SELECT id, name, emoji, notify, own_emoji FROM children WHERE family_id=? AND id=?')
       .get(fid, cid) ?? null;
 
   function addChild(fid, name, emoji = '') {
@@ -456,8 +458,17 @@ function createRepo(db) {
     return true;
   }
 
-  const deleteReward = (fid, id) =>
-    db.prepare('DELETE FROM rewards WHERE family_id=? AND id=?').run(fid, id).changes > 0;
+  function deleteReward(fid, id) {
+    const ok =
+      db.prepare('DELETE FROM rewards WHERE family_id=? AND id=?').run(fid, id).changes > 0;
+    if (ok) {
+      db.prepare("DELETE FROM child_emoji WHERE family_id=? AND kind='reward' AND ref_id=?").run(
+        fid,
+        id,
+      );
+    }
+    return ok;
+  }
 
   /** Moves an item (within its kind) or a reward one place up (dir < 0) or down. */
   function move(fid, table, id, dir) {
@@ -552,6 +563,42 @@ function createRepo(db) {
     db.prepare(
       'INSERT INTO push_subscriptions(session_id,family_id,endpoint,p256dh,auth,time,kind,created) VALUES(?,?,?,?,?,?,?,?)',
     ).run(sessionId, fid, endpoint, p256dh, auth, time, kind, now());
+  }
+
+  // --- A child's own emoji (the hidden picker on their device) ------------------------------
+  /** Lets a child pick their own emoji, or stops it; stopping clears what they picked. */
+  function setOwnEmoji(fid, cid, on) {
+    const ok =
+      db
+        .prepare('UPDATE children SET own_emoji=? WHERE family_id=? AND id=?')
+        .run(on ? 1 : 0, fid, cid).changes > 0;
+    if (ok && !on)
+      db.prepare('DELETE FROM child_emoji WHERE family_id=? AND child_id=?').run(fid, cid);
+    return ok;
+  }
+
+  /** { item: { id: emoji }, reward: { id: emoji } }: what one child picked. */
+  function childEmoji(fid, cid) {
+    const out = { item: {}, reward: {} };
+    const rows = db
+      .prepare('SELECT kind, ref_id, emoji FROM child_emoji WHERE family_id=? AND child_id=?')
+      .all(fid, cid);
+    for (const r of rows) out[r.kind][r.ref_id] = r.emoji;
+    return out;
+  }
+
+  /** Saves a child's emoji for an item or reward of their family ('' goes back to the family's). */
+  function setChildEmoji(fid, cid, kind, refId, emoji) {
+    if (!emoji) {
+      db.prepare(
+        'DELETE FROM child_emoji WHERE family_id=? AND child_id=? AND kind=? AND ref_id=?',
+      ).run(fid, cid, kind, refId);
+      return;
+    }
+    db.prepare(
+      `INSERT INTO child_emoji(child_id,family_id,kind,ref_id,emoji) VALUES(?,?,?,?,?)
+       ON CONFLICT(child_id,kind,ref_id) DO UPDATE SET emoji=excluded.emoji`,
+    ).run(cid, fid, kind, refId, emoji);
   }
 
   // --- Notices on a child's device -------------------------------------------------------
@@ -717,7 +764,7 @@ function createRepo(db) {
       })),
       children: db
         .prepare(
-          'SELECT id, name, emoji, created FROM children WHERE family_id=? ORDER BY sort, id',
+          'SELECT id, name, emoji, own_emoji, created FROM children WHERE family_id=? ORDER BY sort, id',
         )
         .all(fid),
       items: db
@@ -739,6 +786,12 @@ function createRepo(db) {
       messages: db
         .prepare(
           'SELECT child_id, text, who, created FROM messages WHERE family_id=? ORDER BY child_id',
+        )
+        .all(fid),
+      // Emoji a child picked for themselves (shown on that child's devices only).
+      childEmoji: db
+        .prepare(
+          'SELECT child_id, kind, ref_id, emoji FROM child_emoji WHERE family_id=? ORDER BY child_id, kind, ref_id',
         )
         .all(fid),
       // Items and rewards for some children only (for_all is 0 on those rows).
@@ -837,6 +890,9 @@ function createRepo(db) {
     rewards,
     saveReward,
     deleteReward,
+    setOwnEmoji,
+    childEmoji,
+    setChildEmoji,
     move,
     entries,
     firstEntryDay,

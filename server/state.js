@@ -48,6 +48,11 @@ function buildState(
   const { stars, won } = scoring.stars(marks, range.start, weekStart);
   const { warn, mk } = scoring.todayStatus(entries, td);
   const role = parent ? 'parent' : 'child';
+  // A child's device may show the emoji that child picked (the hidden picker), when allowed.
+  const own = !parent && selected?.own_emoji ? repo.childEmoji(fid, cid) : null;
+  const itemOf = new Map(own ? entries.map((e) => [e.id, e.item_id]) : []);
+  const mineEmoji = (kind) => (r) =>
+    own?.[kind][r.id] ? { ...r, emoji: own[kind][r.id], picked: true } : r;
 
   const state = {
     role,
@@ -61,12 +66,21 @@ function buildState(
     stars,
     // Parents get the whole list (Settings edits it; the page shows the chosen child's part);
     // a child's device gets only what is for that child, and never penalties.
-    items: parent ? items : items.filter((i) => i.kind !== 'penalty' && applies(i)),
-    rewards: parent ? repo.rewards(fid) : repo.rewards(fid).filter(applies),
+    items: parent
+      ? items
+      : items.filter((i) => i.kind !== 'penalty' && applies(i)).map(mineEmoji('item')),
+    rewards: parent
+      ? repo.rewards(fid)
+      : repo.rewards(fid).filter(applies).map(mineEmoji('reward')),
     warn: parent ? warn : {},
     mk,
     won,
-    hist: scoring.history(entries, role),
+    hist: own
+      ? scoring.history(entries, role).map((e) => {
+          const pick = own.item[itemOf.get(e.id)];
+          return pick ? { ...e, emoji: pick } : e;
+        })
+      : scoring.history(entries, role),
     today: td,
     // Points earned today (positive entries only), for the child's Today.
     todayPoints: entries
@@ -74,6 +88,8 @@ function buildState(
       .reduce((sum, e) => sum + e.points, 0),
     milestones: scoring.milestones(entries, td, weekStart),
   };
+
+  if (own) state.ownEmoji = true;
 
   // A parent's encouraging message to this child, shown for 7 days or until replaced.
   const msg = cid ? repo.message(fid, cid) : null;

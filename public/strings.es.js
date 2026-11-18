@@ -170,6 +170,14 @@ window.LW_STRINGS.es = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  egg: {
+    on: '🥚 Sorpresa oculta (elegir sus emojis): activada',
+    off: '🥚 Sorpresa oculta (elegir sus emojis): desactivada',
+    found: '¡Encontraste el secreto! Toca un emoji para cambiarlo.',
+    title: 'Elige tu emoji',
+    original: 'El original',
+    done: '✓ Listo',
+  },
   notices: {
     on: '🔔 Avisos en su dispositivo: activados',
     off: '🔔 Avisos en su dispositivo: desactivados',

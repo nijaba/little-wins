@@ -172,6 +172,14 @@ window.LW_STRINGS.fr = {
     pointsPlus: (n) => `+ ${n} pts`,
   },
 
+  egg: {
+    on: '🥚 Surprise cachée (choisir ses emoji) : activée',
+    off: '🥚 Surprise cachée (choisir ses emoji) : désactivée',
+    found: 'Tu as trouvé le secret ! Touche un emoji pour le changer.',
+    title: 'Choisis ton emoji',
+    original: 'L’original',
+    done: '✓ Terminé',
+  },
   notices: {
     on: '🔔 Notifications sur son appareil : activées',
     off: '🔔 Notifications sur son appareil : désactivées',

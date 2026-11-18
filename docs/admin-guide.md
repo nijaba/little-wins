@@ -192,6 +192,15 @@ With `DEMO_FAMILIES=1` the sign-in page offers **Try a demo**. Each visitor gets
 
 The page offers a short guided tour once per device and role (kept in the browser), and again from **Settings → Take the tour**; it is drawn by the page alone and sends nothing to the server. **Watch the video** on the sign-in page plays the 30-second narrated tour from `/tour.mp4` (`TOUR_VIDEO=0` hides the button). To remake the video or the guide pictures after a screen changes, see `scripts/tour-video.js`, `scripts/tour-voiceover.py` and `scripts/guide-pictures.js` (development machine only; they need Playwright's Chromium, and the voice-over needs its own Python environment described in the script).
 
+## The child's easter egg
+
+Not in the user guide on purpose (it only hints at it), so here is what it is, for when a parent asks.
+
+- **What it does.** A child can change the emoji of the behaviors, challenges and rewards on their own screens. Only their devices show the change; the parents' screens and the family's lists keep theirs.
+- **How to open it.** On the child's device, **Rewards**: tap the star jar's first star, then its last star, then the first again, within 3 seconds. The emoji start to jiggle; tap one to pick another, **The original** to go back, **✓ Done** to finish.
+- **Turning it off.** Per child, in **Settings → Children → 🥚 Easter egg (pick own emoji)**. It is on by default. Turning it off also clears what that child picked; turning it back on starts over from the family's emoji. There is no setting for the whole installation.
+- **Where it is kept.** The `child_emoji` table (one row per child and item or reward), in the backups and the family's export (`childEmoji`). It goes with the child, the reward or the family.
+
 ## Emails to the operator
 
 Set `NOTIFY_EMAIL` to get an email when:

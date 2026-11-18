@@ -171,6 +171,14 @@ window.LW_STRINGS.de = {
     pointsPlus: (n) => `+ ${n} Pkt.`,
   },
 
+  egg: {
+    on: '🥚 Osterei (eigene Emojis wählen): an',
+    off: '🥚 Osterei (eigene Emojis wählen): aus',
+    found: 'Du hast das Geheimnis gefunden! Tippe auf ein Emoji, um es zu ändern.',
+    title: 'Wähle dein Emoji',
+    original: 'Das Original',
+    done: '✓ Fertig',
+  },
   notices: {
     on: '🔔 Mitteilungen auf dem Gerät: an',
     off: '🔔 Mitteilungen auf dem Gerät: aus',

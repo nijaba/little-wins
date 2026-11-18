@@ -17,6 +17,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `SECURITY.md`, `CONTRIBUTING.md`, this changelog, issue and pull request templates, `CODEOWNERS`.
 - Security review (`docs/security-review.md`).
 
+### Added in phase 8 (a more fun app)
+
+- A hidden easter egg on a child's device: a secret tap on the star jar lets the child pick their own emoji for what their screens show. Parents can turn it off per child in Settings → Children (on by default). Migration 12.
+
 ### Added for hosting
 
 - Emails to the operator (`NOTIFY_EMAIL`, `NOTIFY_EVENTS`, `SMTP_*`): a family signed up, the last place taken, a parent turned away because it's full, a family deleted. Counts only; a small built-in SMTP client, no dependency.
