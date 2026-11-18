@@ -843,6 +843,62 @@ function createRepo(db) {
     };
   }
 
+  /**
+   * The operator dashboard's numbers: counts only, never a name, email or anything a family
+   * recorded. Installation-wide (like operatorStats), so no family ID.
+   */
+  function dashboardStats(idleFamilyDays) {
+    const n = (sql, ...args) => db.prepare(sql).get(...args).n;
+    const ago = (days) => new Date(Date.now() - days * 864e5).toISOString();
+    // New families per week, for the last 12 weeks (week 0 is the current 7 days).
+    const weeks = Array.from({ length: 12 }, (_, i) => ({
+      from: ago(7 * (i + 1)).slice(0, 10),
+      families: n(
+        'SELECT COUNT(*) n FROM families WHERE created>=? AND created<?',
+        ago(7 * (i + 1)),
+        ago(7 * i),
+      ),
+    })).reverse();
+    return {
+      ...operatorStats(),
+      parentDevices: n("SELECT COUNT(*) n FROM sessions WHERE kind='parent'"),
+      childDevices: n("SELECT COUNT(*) n FROM sessions WHERE kind='child'"),
+      activeDevices1d: n('SELECT COUNT(*) n FROM sessions WHERE last_seen>?', ago(1)),
+      activeDevices7d: n('SELECT COUNT(*) n FROM sessions WHERE last_seen>?', ago(7)),
+      activeFamilies7d: n('SELECT COUNT(*) n FROM families WHERE last_active>?', ago(7)),
+      activeFamilies30d: n('SELECT COUNT(*) n FROM families WHERE last_active>?', ago(30)),
+      newFamilies30d: n('SELECT COUNT(*) n FROM families WHERE created>?', ago(30)),
+      entries7d: n('SELECT COUNT(*) n FROM entries WHERE ts>?', ago(7)),
+      reminders: n("SELECT COUNT(*) n FROM push_subscriptions WHERE kind='parent'"),
+      childNotices: n("SELECT COUNT(*) n FROM push_subscriptions WHERE kind='child'"),
+      openFamilyInvites: n(
+        'SELECT COUNT(*) n FROM family_invites WHERE used_at IS NULL AND expires>?',
+        new Date().toISOString(),
+      ),
+      // Families that will be deleted as idle within 30 days unless a device opens the app.
+      idleSoon: idleFamilyDays
+        ? n(
+            'SELECT COUNT(*) n FROM families f WHERE COALESCE(last_active, created)<? AND EXISTS (SELECT 1 FROM memberships m WHERE m.family_id=f.id)',
+            ago(idleFamilyDays - 30),
+          )
+        : 0,
+      languages: db
+        .prepare('SELECT language, COUNT(*) n FROM families GROUP BY language ORDER BY n DESC')
+        .all()
+        .map((r) => ({ language: r.language, families: r.n })),
+      weeks,
+    };
+  }
+
+  // Settings changed on the operator dashboard (server/settings.js). Installation-wide.
+  const settings = () => db.prepare('SELECT key, value, updated FROM settings ORDER BY key').all();
+  function setSetting(key, value, userId) {
+    db.prepare(
+      'INSERT INTO settings(key, value, updated, updated_by) VALUES(?,?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated=excluded.updated, updated_by=excluded.updated_by',
+    ).run(key, value, new Date().toISOString(), userId ?? null);
+  }
+  const clearSetting = (key) => db.prepare('DELETE FROM settings WHERE key=?').run(key);
+
   return {
     tx,
     bump,
@@ -850,6 +906,10 @@ function createRepo(db) {
     exportFamily,
     deleteFamily,
     operatorStats,
+    dashboardStats,
+    settings,
+    setSetting,
+    clearSetting,
     createFamilyInvite,
     familyInvites,
     revokeFamilyInvite,

@@ -120,6 +120,8 @@ The owner's priorities for the hosted service (2026-11-17), before phase 8. Depl
   nightly job, and the `offsite` folder copied to another machine (see the admin guide, "Encrypted copies for off-site")
 - [x] "Ask for a place" on the hosted service: `SIGNUP_CONTACT_URL` set, so families who find it full or private know
   whom to ask
+- [x] An operator dashboard for a computer (owner's request, 2026-11-18): the installation's numbers, and the hosting
+  settings changed there, stored in the database and winning over `.env` until reset
 
 ## Phase 8 (priority 2): a more fun app
 

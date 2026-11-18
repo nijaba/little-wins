@@ -300,6 +300,13 @@ Operator page, allowlist and counts.
 | OP-06 | A parent who is also an operator keeps their family and gains the operator page | API |
 | OP-07 | An operator in open or invite mode who has no family sees the operator flag next to setup | API |
 | OP-08 | /api/setup tells an operator so, and not an ordinary parent | API |
+| OD-01 | The dashboard and its settings are for operators only (no session 401; a parent or child device 403; GET/POST mixed up refused) | API |
+| OD-02 | The dashboard's numbers are counts only, with 12 weeks of sign-ups and families by language; no name or email | API |
+| OD-03 | A setting changed on the dashboard applies at once, says where it comes from, and goes back to .env | API |
+| OD-04 | Bad values (with a reason), unknown keys and settings that stay in .env are refused | API |
+| OD-05 | Per-family limits: from .env, from the dashboard, and the sign-up mode's default when empty | API |
+| OD-06 | Dashboard settings hold after a restart; a stored value the app can't read falls back to .env with a warning | API |
+| OD-07 | The dashboard page is served under the strict policy, with no inline style, script or handler | API |
 
 ## FI: Family invites and the cap on families
 

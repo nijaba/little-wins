@@ -52,6 +52,8 @@ const DEMO_OFF = new Set([
   '/api/signup/info',
   '/api/operator/invite/create',
   '/api/operator/invite/revoke',
+  '/api/operator/dashboard',
+  '/api/operator/setting',
   '/api/push/subscribe',
   '/api/push/unsubscribe',
   '/api/push/child-subscribe',
@@ -83,6 +85,8 @@ function createRouter({
   reminders = null,
   notices = null,
   alerts = null,
+  settings = null, // the operator dashboard's settings (server/settings.js); real families only
+  demoCount = () => 0, // demo families alive right now, for the dashboard
 }) {
   /** [409, …] when the family already has as many of `what` as its limit allows, else null. */
   function full(fid, what, day) {
@@ -495,6 +499,35 @@ function createRouter({
   }
 
   /** Handles one /api request. */
+  // Reads: GET only (a POST to one is 405).
+  const GETS = [
+    '/api/state',
+    '/api/export',
+    '/api/operator',
+    '/api/operator/dashboard',
+    '/api/review',
+  ];
+
+  /** The desktop dashboard: counts, health and the settings it can change. */
+  const dashboardReply = (extra = {}) => [
+    200,
+    {
+      stats: repo.dashboardStats(config.idleFamilyDays),
+      familyLimit: config.familyLimit,
+      signupMode: config.signupMode,
+      idleFamilyDays: config.idleFamilyDays,
+      demoFamilies: demoCount(),
+      demoOn: config.demo.on,
+      remindersOn: !!reminders,
+      emailsOn: !!config.notify,
+      settings: settings ? settings.list() : [],
+      version: config.version,
+      node: process.versions.node,
+      uptimeSeconds: Math.round(process.uptime()),
+      ...extra,
+    },
+  ];
+
   return async function handle(req, res) {
     const send = (reply) => sendJson(res, ...reply);
     const url = new URL(req.url, 'http://x');
@@ -503,13 +536,11 @@ function createRouter({
 
     if (req.method === 'GET') {
       if (path === '/api/config') return send(publicConfig());
-      if (!['/api/state', '/api/export', '/api/operator', '/api/review'].includes(path)) {
+      if (!GETS.includes(path)) {
         return send([404, apiError('notFound')]);
       }
     } else if (req.method === 'POST') {
-      if (
-        ['/api/config', '/api/state', '/api/export', '/api/operator', '/api/review'].includes(path)
-      ) {
+      if (path === '/api/config' || GETS.includes(path)) {
         return send([405, apiError('badRequest'), { Allow: 'GET' }]);
       }
       const refused = checkWrite(req);
@@ -565,6 +596,16 @@ function createRouter({
     if (path === '/api/operator' || path.startsWith('/api/operator/')) {
       if (!operator) return send([403, apiError('operatorOnly')]);
       if (path === '/api/operator') return send(operatorReply());
+      if (path === '/api/operator/dashboard') return send(dashboardReply());
+      // Change one setting ({ key, value }) or put it back to .env ({ key, reset: true }).
+      if (path === '/api/operator/setting' && settings) {
+        const key = typeof b.key === 'string' ? b.key : '';
+        const done = b.reset === true ? settings.reset(key) : settings.set(key, b.value, s.userId);
+        if (!done) return send([404, apiError('notFound')]);
+        if (done.error) return send([400, { ...apiError('badRequest'), detail: done.error }]);
+        console.log(`Operator setting ${key} ${b.reset === true ? 'reset to .env' : 'changed'}`);
+        return send(dashboardReply());
+      }
       if (path === '/api/operator/invite/create') {
         const { token, expires } = repo.createFamilyInvite(s.userId, config.familyInviteMs);
         return send(

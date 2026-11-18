@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added for operators
+
+- The operator dashboard (`/operator.html`, linked from Settings → Operator): the installation's numbers for a computer screen (activity, sign-ups per week, devices, notices, languages, families due to be deleted as idle) and the hosting settings (sign-up mode, family cap, contact link, idle days, parent allowlist, per-family limits, legal pages, which operator emails, the tour video). A change there applies at once and wins over `.env` until **Back to .env**. `.env.example` marks these settings `[dashboard]`. Migration 13.
+
 ### Added for the community
 
 - The project page's hero offers the free hosted service ("Start your family, free"), with a note pointing to the Telegram group when it's full.

@@ -233,6 +233,8 @@ const demo = {
 };
 
 module.exports = {
+  LIMIT_DEFAULTS,
+  LIMIT_ENV,
   port,
   baseUrl,
   origin,

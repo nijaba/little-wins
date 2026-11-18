@@ -48,18 +48,19 @@ server/          index.js (wiring), config.js (env, startup check), db.js (migra
                  backup-crypto.js (encrypts off-site backups to a public key; keygen/encrypt/decrypt),
                  webpush.js (RFC 8291 encryption, VAPID), reminders.js (evening reminder scheduler),
                  mailer.js (small SMTP client), alerts.js (emails to the operator: sign-ups, full, deletions),
+                 settings.js (settings the operator changes on the dashboard; they win over .env until reset),
                  static.js (byte ranges for tour.mp4), messages.js (English server strings; keys are the API error codes), clock.js,
                  i18n/ (languages, Accept-Language, server-rendered pages and starter list per language)
 public/          index.html (shell), app.js, strings.en.js (page strings, English base),
                  strings.<lang>.js (zh, es, fr, de; loaded on demand), style.css, manifest.json,
-                 sw.js (service worker for the evening reminder only), icon.svg, icon-maskable.svg and the icons made from them (scripts/icons.js),
+                 sw.js (service worker for the evening reminder only), operator.html/.js/.css (the operator dashboard, English only), icon.svg, icon-maskable.svg and the icons made from them (scripts/icons.js),
                  tour.mp4 (narrated tour video, made by scripts/)
 test/            *.test.js: real server on a temp database, signed in through the fake provider
                  (api, signin, setup, invites, children, pairing, time, startup, unclaimed),
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
                  site (the project page), family-invites (invite mode and the cap on families),
-                 theme (light and dark contrast), icons (favicon and manifest icons), welcome (the sign-in page), emoji, celebrations, stars, friendly (today's points), install, retry (writes sent twice), alerts (emails to the operator), idle (idle families), backup (encrypted backups), review (weekly review), encouragement (messages to a child), egg (the child's own emoji), per-child (lists for some children), webpush and reminders (evening reminders),
+                 theme (light and dark contrast), icons (favicon and manifest icons), welcome (the sign-in page), emoji, celebrations, stars, friendly (today's points), install, retry (writes sent twice), alerts (emails to the operator), idle (idle families), backup (encrypted backups), review (weekly review), encouragement (messages to a child), egg (the child's own emoji), per-child (lists for some children), webpush and reminders (evening reminders), dashboard (the operator dashboard and its settings),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
 scripts/         backup.sh, build-site.sh, icons.js, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)

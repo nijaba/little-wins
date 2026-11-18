@@ -244,6 +244,16 @@ For hosting: the people listed in `OPERATOR_ALLOWLIST` (same entries as `PARENT_
 
 It shows counts only: families, unclaimed families (no parent yet), parents, children, devices, devices active in the last 30 days, entries, database size in MB, version and uptime. It never shows names, history or any other family content, and an operator cannot open another family. Anyone else who asks for it gets a refusal.
 
+### The dashboard (on a computer)
+
+**Open the dashboard** in that section (or `<APP_BASE_URL>/operator.html`, once signed in) opens a page made for a computer screen, in English:
+
+- **Numbers:** families against `LIMIT_FAMILIES`, new families in the last 30 days and per week (a chart of 12 weeks), families and devices active today, this week and this month, parents' and children's devices, entries this week, evening reminders and children's notices turned on, open family invites, demo families right now, families by language, and families that will be deleted as idle within 30 days unless someone opens the app. Plus version, Node, uptime and database size. Counts only, like the section in Settings.
+- **Settings:** the ones marked `[dashboard]` in `.env.example`: `SIGNUP_MODE`, `LIMIT_FAMILIES`, `SIGNUP_CONTACT_URL`, `DELETE_IDLE_FAMILIES_DAYS`, `PARENT_ALLOWLIST`, the per-family `LIMIT_*`, `PRIVACY_URL`, `TERMS_URL`, `NOTIFY_EVENTS` (while `NOTIFY_EMAIL` is set) and `TOUR_VIDEO`. **Save** checks the value like the startup check does and applies it at once, with no restart. Each one says where its value comes from: **From .env**, **Default**, or **Changed here** with the date and what `.env` says.
+- A change made here is stored in the database (table `settings`) and **wins over `.env`**, also after a restart or an update, until you press **Back to .env**. Editing `.env` alone does not undo it. The log says `Operator setting <NAME> changed` (never the value).
+- Secrets, sign-in providers, `APP_BASE_URL`, `OPERATOR_ALLOWLIST`, proxies, the mail server and its recipients, demo families and reminders are never on the dashboard: change them in `.env`.
+- To turn every dashboard change off at once, without the page: `sqlite3 data/little-wins.db 'DELETE FROM settings'` (with a backup first), then restart.
+
 ## Limits
 
 Each family has limits on children, parents, behaviors/penalties/challenges (items), rewards, devices, and entries recorded per day. Set them with `LIMIT_CHILDREN`, `LIMIT_PARENTS`, `LIMIT_ITEMS`, `LIMIT_REWARDS`, `LIMIT_DEVICES` and `LIMIT_ENTRIES_PER_DAY`. Without them the defaults depend on `SIGNUP_MODE`:
@@ -390,6 +400,8 @@ ssh <user>@<server> 'cd ~/little-wins && git checkout <commit> && docker compose
 Run `git checkout main && git pull` to return to the latest version afterwards.
 
 ## Changing settings or secrets
+
+Many hosting settings can be changed on the [dashboard](#the-dashboard-on-a-computer) instead, with no restart. A change made there wins over `.env` until **Back to .env**: if a value you edited here seems ignored, look at the dashboard first.
 
 Edit `~/little-wins/.env` on the server, then recreate the container so it reads the file again:
 

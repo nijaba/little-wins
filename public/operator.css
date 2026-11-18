@@ -1,0 +1,263 @@
+/* The operator dashboard (operator.html): a desktop page, English only. Same colors as the app. */
+:root {
+  color-scheme: light dark;
+  --n: #1f3a5f;
+  --t: #2a7f8e;
+  --l: #e8f1f4;
+  --bg: #f6f8f9;
+  --surface: #fff;
+  --text: #1a1d21;
+  --heading: #1f3a5f;
+  --muted: #5f6b78;
+  --border: #ccd2dc;
+  --err: #b8321f;
+  --good: #1e7e46;
+  --bar: #2a7f8e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --n: #18304f;
+    --l: #20333c;
+    --bg: #101418;
+    --surface: #1b2229;
+    --text: #e6ebf0;
+    --heading: #cfe2f5;
+    --muted: #a0abb7;
+    --border: #2d3742;
+    --err: #ff8f80;
+    --good: #6fd39a;
+    --bar: #5fc4d4;
+  }
+}
+
+body {
+  margin: 0;
+  font:
+    15px -apple-system,
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: var(--n);
+  color: #fff;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: 18px;
+  flex: 1;
+}
+
+.top a {
+  color: #fff;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 24px 48px;
+}
+
+h2 {
+  margin: 28px 0 10px;
+  font-size: 17px;
+  color: var(--heading);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.health {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.stat b {
+  display: block;
+  font-size: 24px;
+  color: var(--heading);
+}
+
+.stat small {
+  color: var(--muted);
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+}
+
+.panel {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart rect {
+  fill: var(--bar);
+}
+
+.chart text {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.chart .val {
+  fill: var(--text);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 3px 0;
+}
+
+td + td {
+  text-align: right;
+}
+
+fieldset {
+  margin: 0 0 12px;
+  padding: 4px 14px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+legend {
+  padding: 0 6px;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.setting {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(220px, 1.3fr) auto;
+  gap: 6px 14px;
+  align-items: start;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.setting:first-of-type {
+  border-top: 0;
+}
+
+.setting label,
+.setting .name {
+  font-weight: 600;
+}
+
+.setting .help,
+.setting .src {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.setting .src.dashboard {
+  color: var(--good);
+}
+
+.setting input[type="text"],
+.setting input[type="number"],
+.setting select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.setting .checks label {
+  display: inline-block;
+  margin: 0 14px 4px 0;
+  font-weight: 400;
+}
+
+.setting .err {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--err);
+}
+
+.btns {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+button {
+  padding: 6px 12px;
+  font: inherit;
+  color: #fff;
+  background: var(--t);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button.g {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.note {
+  padding: 10px 14px;
+  background: var(--l);
+  border-radius: 10px;
+}
+
+@media (max-width: 760px) {
+  .panels,
+  .setting {
+    grid-template-columns: 1fr;
+  }
+}
