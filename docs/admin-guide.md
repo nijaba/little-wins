@@ -254,6 +254,35 @@ It shows counts only: families, unclaimed families (no parent yet), parents, chi
 - Secrets, sign-in providers, `APP_BASE_URL`, `OPERATOR_ALLOWLIST`, proxies, the mail server and its recipients, demo families and reminders are never on the dashboard: change them in `.env`.
 - To turn every dashboard change off at once, without the page: `sqlite3 data/little-wins.db 'DELETE FROM settings'` (with a backup first), then restart.
 
+## The Telegram bot
+
+An optional bot for a Telegram group (the project's is [little-wins](https://t.me/little_wins)): it checks that new members are people (tap the star within 5 minutes, or they're removed and may rejoin later), answers questions about Little Wins from these guides with Claude, and offers to turn bug reports and ideas into GitHub issues. It runs in its own container next to the app; the app doesn't need it. How it behaves: [design](design.md#the-telegram-bot-optional-bot).
+
+**Set it up:**
+
+1. In Telegram, talk to **@BotFather**: `/newbot`, pick a name and a username, and keep the token it gives you.
+2. Get an API key in the Claude Console (API keys), and set a monthly spend limit there. With the default model (Claude Haiku 5.5) and the guides cached, an answer costs a fraction of a cent.
+3. Optional, for issues: on GitHub, **Settings → Developer settings → Fine-grained tokens → Generate new token**, for the one repository, with only **Issues: Read and write**. Create the labels `from-telegram`, `bug` and `enhancement` in the repository if they're missing.
+4. On the server, in the app folder:
+
+   ```bash
+   cp bot/.env.example bot/.env && chmod 600 bot/.env
+   vi bot/.env    # TELEGRAM_BOT_TOKEN, ANTHROPIC_API_KEY, and GITHUB_TOKEN + GITHUB_REPO for issues
+   mkdir -p bot/data && sudo chown -R 10002:10002 bot/data
+   docker compose -f bot/docker-compose.yml up -d --build
+   ```
+
+5. Add the bot to the group, then make it an **admin** with **Delete messages** and **Ban users** (it needs both, and an admin bot also sees every message). Send any message in the group.
+6. `docker compose -f bot/docker-compose.yml logs` shows `Chat -100… (supergroup: …)`. Put that number in `TELEGRAM_CHAT_ID` in `bot/.env`, then `docker compose -f bot/docker-compose.yml up -d`. The log now says `Serving chat …`.
+
+**Day to day:** the logs show only events and counts (`Verified a new member`, `Removed a new member (no answer in time)`, `Answered a question`, `Opened issue #12`). After an update of the app (`git pull`), rebuild the bot too so it answers from the new guides: `docker compose -f bot/docker-compose.yml up -d --build`.
+
+**Settings** (all in `bot/.env`, see `bot/.env.example`): `VERIFY_MINUTES` (5) and `VERIFY_TRIES` (3) for the check; `ANSWERS_PER_USER_PER_HOUR` (10) and `ANSWERS_PER_DAY` (300) for answers; `BOT_MODEL` (`claude-haiku-5-5`); `ISSUES_PER_DAY` (5). Leave `GITHUB_TOKEN` and `GITHUB_REPO` empty to turn issues off.
+
+**Turn it off:** `docker compose -f bot/docker-compose.yml down`. Members already in the group stay; new ones join without a check. To remove it for good, also remove the bot from the group and revoke its token with BotFather (`/revoke`) and the Claude and GitHub keys.
+
+**Troubleshooting:** "Refusing to start" names the setting to fix. If new members aren't muted, or the bot answers nothing, check it is an admin with Delete messages and Ban users. If it answers only some messages, that's by design: a message not addressed to it must look like a question or a report, and be about Little Wins.
+
 ## Limits
 
 Each family has limits on children, parents, behaviors/penalties/challenges (items), rewards, devices, and entries recorded per day. Set them with `LIMIT_CHILDREN`, `LIMIT_PARENTS`, `LIMIT_ITEMS`, `LIMIT_REWARDS`, `LIMIT_DEVICES` and `LIMIT_ENTRIES_PER_DAY`. Without them the defaults depend on `SIGNUP_MODE`:

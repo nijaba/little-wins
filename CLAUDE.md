@@ -11,7 +11,7 @@ A points, stars and rewards tracker for families, used on phones. Parents record
 Decided by the owner. Ask before trading one away.
 
 - Node.js 22+ with built-in `node:sqlite`. No external database, cache or queue. Avoid runtime dependencies; each one needs a reason in design.md.
-- One container, one process, one SQLite file on a mounted volume.
+- One container, one process, one SQLite file on a mounted volume. (The optional Telegram bot in `bot/` is a separate service with its own container and one runtime dependency, the Anthropic SDK: owner's decision, 2026-11-18.)
 - HTTPS only when deployed; `localhost` is the one exception.
 - No analytics, trackers, third-party scripts or third-party fonts. One exception, approved by the owner: the opt-in evening reminder (Web Push) goes through the device's push service (Apple, Google, Mozilla), encrypted and saying nothing about the child; and, where a parent allows it per child, notices of a reward or milestone on that child's device (encrypted).
 - The same code serves self-hosted and hosted modes; the difference is configuration.
@@ -34,6 +34,7 @@ node scripts/guide-pictures.js                  # guide pictures (docs/images/) 
 node scripts/tour-video.js                      # silent tour video (docs/video/tour.webm); then
 ~/.venvs/voice/bin/python scripts/tour-voiceover.py  # narrated public/tour.mp4 + poster (Kokoro, see the script)
 docker compose up -d --build                    # container; real settings go in .env (see .env.example)
+docker compose -f bot/docker-compose.yml up -d --build  # the optional Telegram bot; settings in bot/.env
 scripts/backup.sh                               # consistent backup of data/little-wins.db
 ```
 
@@ -60,9 +61,12 @@ test/            *.test.js: real server on a temp database, signed in through th
                  edge (headers, proxies, rate limits), limits, export, operator, etag,
                  isolation.test.js (cross-family check for every parent route), demo (demo families, video),
                  site (the project page), family-invites (invite mode and the cap on families),
-                 theme (light and dark contrast), icons (favicon and manifest icons), welcome (the sign-in page), emoji, celebrations, stars, friendly (today's points), install, retry (writes sent twice), alerts (emails to the operator), idle (idle families), backup (encrypted backups), review (weekly review), encouragement (messages to a child), egg (the child's own emoji), per-child (lists for some children), webpush and reminders (evening reminders), dashboard (the operator dashboard and its settings),
+                 theme (light and dark contrast), icons (favicon and manifest icons), welcome (the sign-in page), emoji, celebrations, stars, friendly (today's points), install, retry (writes sent twice), alerts (emails to the operator), idle (idle families), backup (encrypted backups), review (weekly review), encouragement (messages to a child), egg (the child's own emoji), per-child (lists for some children), webpush and reminders (evening reminders), bot (the Telegram bot, with fakes), dashboard (the operator dashboard and its settings),
                  scoring.test.js (unit);
                  helpers.js (server, cookie jar, signIn, api, newFamily, pairChild, sql)
+bot/             the optional Telegram bot (own Dockerfile, docker-compose.yml, .env.example, package.json + lockfile):
+                 src/ index.js (wiring, polling), config.js, telegram.js (Telegram and GitHub clients), store.js,
+                 verify.js (welcome check), answer.js (Claude answers, issue drafts), bot.js (routes updates)
 scripts/         backup.sh, build-site.sh, icons.js, guide-pictures.js, tour-video.js, tour-voiceover.py (dev only)
 deploy/          caddy/ (dedicated host, automatic TLS) and nginx/ (behind an existing nginx)
 docs/            design.md, build-plan.md, admin-guide.md, user-guide.md (for families), why.md (the story), test-plan.md,

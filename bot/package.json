@@ -1,0 +1,22 @@
+{
+  "name": "little-wins-bot",
+  "version": "0.1.0",
+  "description": "The Little Wins Telegram group's bot: welcome check, answers about the app, GitHub issues",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.4.0"
+  },
+  "overrides": {
+    "@babel/runtime": "7.29.10",
+    "standardwebhooks": "1.1.1"
+  }
+}

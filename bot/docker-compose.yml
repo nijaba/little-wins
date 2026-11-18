@@ -1,0 +1,17 @@
+# The Little Wins Telegram bot, beside the app on the same host (it needs no port: it asks
+# Telegram for updates). Settings in bot/.env (see bot/.env.example). From the repository root:
+#   docker compose -f bot/docker-compose.yml up -d --build
+# The host bot/data folder must be writable by uid 10002: sudo chown -R 10002:10002 bot/data
+# To stop it: docker compose -f bot/docker-compose.yml down
+services:
+  little-wins-bot:
+    build:
+      context: ..
+      dockerfile: bot/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    volumes: ["./data:/data"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
