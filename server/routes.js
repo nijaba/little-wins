@@ -217,6 +217,13 @@ function createRouter({
         ? [200, state({ child: cid })]
         : [404, apiError('notFound')];
     },
+    // The hidden emoji picker on a child's device: a parent allows (or stops) it for a child.
+    '/api/child/own-emoji'({ b, fid, state }) {
+      const cid = id(b.child_id);
+      return repo.setOwnEmoji(fid, cid, !!b.on)
+        ? [200, state({ child: cid })]
+        : [404, apiError('notFound')];
+    },
     '/api/push/unsubscribe'({ s, fid, state }) {
       repo.clearPush(fid, s.id);
       return [200, state()];
@@ -641,6 +648,25 @@ function createRouter({
     }
     if (s.kind === 'child' && path === '/api/push/child-unsubscribe') {
       repo.clearPush(s.familyId, s.id);
+      return send([200, state()]);
+    }
+    // A child's device picks its own emoji for something it can see (the hidden picker), once
+    // a parent allowed it: shown on this child's devices only; '' goes back to the family's.
+    if (s.kind === 'child' && path === '/api/child/emoji') {
+      const fid = s.familyId;
+      const cid = s.childId;
+      if (!repo.child(fid, cid)?.own_emoji) return send([403, apiError('viewOnly')]);
+      const kind = b.kind === 'reward' ? 'reward' : b.kind === 'item' ? 'item' : null;
+      const emoji = emojiOf(b.emoji ?? '');
+      if (!kind || emoji == null) return send([400, apiError('badRequest')]);
+      const forMe = (r) => r.for === null || r.for.includes(cid);
+      const target =
+        kind === 'item'
+          ? repo.items(fid).find((i) => i.id === id(b.id) && i.kind !== 'penalty' && forMe(i))
+          : repo.rewards(fid).find((r) => r.id === id(b.id) && forMe(r));
+      if (!target) return send([404, apiError('notFound')]);
+      repo.setChildEmoji(fid, cid, kind, target.id, emoji);
+      repo.bump(fid);
       return send([200, state()]);
     }
     if (s.kind !== 'parent') return send([403, apiError('viewOnly')]);

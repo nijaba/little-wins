@@ -180,6 +180,10 @@ const cases = () => {
       [{ child_id: ids.child, on: true }, 404],
       [{ child_id: ids.child, on: false }, 404],
     ],
+    '/api/child/own-emoji': [
+      [{ child_id: ids.child, on: false }, 404],
+      [{ child_id: ids.child2, on: true }, 404],
+    ],
     '/api/message': [
       [{ child_id: ids.child, text: 'from B' }, 404],
       [{ child_id: ids.child, text: '' }, 404],
@@ -280,6 +284,21 @@ test("IS-04 a child device of B asking for A's child still sees only its own chi
   assert.deepEqual(
     K.children.map((c) => c.id),
     [B.childId],
+  );
+});
+
+test("IS-09 a child device of B can't pick an emoji for A's items or rewards", async () => {
+  for (const [kind, ref] of [
+    ['item', ids.target],
+    ['item', ids.challenge],
+    ['reward', ids.reward],
+  ]) {
+    const r = await srv.api(kidDevB.jar, '/api/child/emoji', { kind, id: ref, emoji: '🐉' });
+    assert.equal(r.status, 404, `${kind} ${ref}`);
+  }
+  assert.equal(
+    srv.sql((db) => db.prepare('SELECT COUNT(*) n FROM child_emoji WHERE family_id=?').get(fidA).n),
+    0,
   );
 });
 

@@ -29,7 +29,7 @@ test('E2E-151 a parent turns notices on and off for a child in Settings -> Child
   await startFamily(page, { child: 'Robin' });
   await goTab(page, 'Settings');
   const kids = await openFold(page, 'kids');
-  const bell = kids.locator('.bell');
+  const bell = kids.locator('[data-action=notify]');
   await expect(bell).toHaveText('🔔 Notices on their device: off');
   await expect(bell).toHaveAttribute('aria-pressed', 'false');
   await bell.click();

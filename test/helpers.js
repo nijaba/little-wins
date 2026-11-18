@@ -342,7 +342,7 @@ function parentRouteList() {
   const start = src.indexOf('const parentRoutes = {');
   const end = src.indexOf('\n  };', start);
   assertFound(start >= 0 && end > start, 'could not find parentRoutes in server/routes.js');
-  const routes = [...src.slice(start, end).matchAll(/^ {4}'(\/api\/[\w/]+)'/gm)].map((m) => m[1]);
+  const routes = [...src.slice(start, end).matchAll(/^ {4}'(\/api\/[\w/-]+)'/gm)].map((m) => m[1]);
   assertFound(routes.length > 10, `only found ${routes.length} routes in parentRoutes`);
   return routes;
 }

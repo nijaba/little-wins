@@ -27,6 +27,8 @@
   let rev = null; // the weekly review on show (parents, Week tab), or null
   let cdTimer; // countdown of the device code
   let tour = null; // the guided tour while it runs: { role, steps, i, shown, back }
+  let egg = null; // the child's hidden emoji picker while it is open: { timer }
+  let jarTaps = []; // the child's recent taps on the star jar: [{ i, at }]
   try {
     chSel = +localStorage.getItem('child') || null;
   } catch {}
@@ -758,7 +760,107 @@
 
   // A behavior's, reward's or child's emoji, before its name (none: nothing).
   const emo = (x) => (x?.emoji ? `<span class=emo aria-hidden=true>${esc(x.emoji)}</span>` : '');
-  const named = (x) => `${emo(x)}${esc(x.name)}`;
+  const named = (x) => `${egg ? eggEmo(x) : emo(x)}${esc(x.name)}`;
+
+  // ---- The hidden emoji picker (a child's device; see docs/design.md, "Easter egg") ----
+  // Tapping the star jar's first star, last star, then first again (within 3 s) makes every
+  // emoji the child can see jiggle; tapping one picks another, for this child only.
+
+  const EGG_IDLE_MS = 60e3;
+  function eggEmo(x) {
+    const kind = S.items.includes(x) ? 'item' : S.rewards.includes(x) ? 'reward' : null;
+    if (!kind) return emo(x);
+    return `<button type=button class="emo-egg${x.emoji ? '' : ' none'}" data-action=egg-pick data-kind=${kind} data-id=${x.id} aria-label="${STR.egg.title}">${x.emoji ? esc(x.emoji) : '✨'}</button>`;
+  }
+
+  function jarTap(i, n) {
+    if (P() || !S.ownEmoji || egg) return;
+    const now = Date.now();
+    jarTaps = [...jarTaps.filter((t) => now - t.at < 3000), { i, at: now }].slice(-3);
+    const want = [0, n - 1, 0];
+    if (jarTaps.length === 3 && jarTaps.every((t, k) => t.i === want[k])) {
+      jarTaps = [];
+      eggOpen();
+    }
+  }
+
+  function eggOpen() {
+    const jar = document.querySelector('.jar');
+    if (!still() && jar) {
+      jar.classList.add('shake');
+      // Stars spill out of the jar (placed through the DOM: the CSP allows no style=).
+      const box = jar.getBoundingClientRect();
+      const spill = document.createElement('div');
+      spill.className = 'spill';
+      for (let k = 0; k < 14; k++) {
+        const st = document.createElement('i');
+        st.className = 'spill-star';
+        st.textContent = '★';
+        st.style.left = `${box.left + box.width * (0.2 + Math.random() * 0.6)}px`;
+        st.style.top = `${box.top + box.height / 2}px`;
+        st.style.setProperty('--dx', `${Math.round((Math.random() - 0.5) * 260)}px`);
+        st.style.animationDelay = `${Math.random() * 0.25}s`;
+        spill.appendChild(st);
+      }
+      document.body.appendChild(spill);
+      setTimeout(() => spill.remove(), 2200);
+    }
+    setTimeout(
+      () => {
+        egg = { timer: null };
+        eggAwake();
+        render();
+        toast(STR.egg.found);
+      },
+      still() ? 0 : 700,
+    );
+  }
+
+  // Ends by itself after a minute without a tap.
+  function eggAwake() {
+    if (!egg) return;
+    clearTimeout(egg.timer);
+    egg.timer = setTimeout(eggDone, EGG_IDLE_MS);
+  }
+
+  function eggDone() {
+    if (!egg) return;
+    clearTimeout(egg.timer);
+    egg = null;
+    $('eggpick')?.remove();
+    if (screen === 'app' && S) render();
+  }
+
+  function eggPick(kind, id) {
+    if (!egg || $('eggpick')) return;
+    eggAwake();
+    const x = (kind === 'reward' ? S.rewards : S.items).find((r) => r.id === id);
+    if (!x) return;
+    const E = STR.egg;
+    const box = document.createElement('div');
+    box.id = 'eggpick';
+    box.className = 'player';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-labelledby', 'egg-t');
+    const list = EMOJI[kind === 'reward' ? 'reward' : 'item'];
+    box.innerHTML = `<div class="card egg-box"><h3 id=egg-t class=edit-title>${E.title}</h3><p class=p0>${named({ ...x, emoji: '' })}</p><div class=emoji-pick>${list
+      .map(
+        (e) =>
+          `<button type=button class="emj${e === x.emoji ? ' on' : ''}" data-action=egg-set data-kind=${kind} data-id=${id} data-e="${e}" aria-label="${e}">${e}</button>`,
+      )
+      .join(
+        '',
+      )}</div><p class=p0>${x.picked ? `<button class="b g" data-action=egg-set data-kind=${kind} data-id=${id} data-e="">${E.original}</button> ` : ''}<button class="b g" data-action=egg-close>${STR.settings.cancel}</button></p></div>`;
+    box.addEventListener('click', onClick);
+    document.body.appendChild(box);
+    box.querySelector('.emj')?.focus();
+  }
+
+  async function eggSet(kind, id, emoji) {
+    $('eggpick')?.remove();
+    eggAwake();
+    await api('child/emoji', { kind, id, emoji });
+  }
 
   // Items and rewards can be for some children only (`for`: null = everyone).
   const mine = (r) => r.for == null || r.for.includes(S.childId);
@@ -1028,6 +1130,15 @@
         b.classList.toggle('on', b.dataset.e === d.e);
     },
     'child-notices': () => childNoticesOn(),
+    jar: (d) => jarTap(+d.i, +d.n),
+    'egg-pick': (d) => eggPick(d.kind, +d.id),
+    'egg-set': (d) => eggSet(d.kind, +d.id, d.e),
+    'egg-close': () => {
+      $('eggpick')?.remove();
+      eggAwake();
+    },
+    'egg-done': () => eggDone(),
+    'own-emoji': (d) => api('child/own-emoji', { child_id: +d.id, on: d.on === '1' }),
     notify: (d) => api('child/notify', { child_id: +d.id, on: d.on === '1' }),
     'rem-off': () => reminderOff(),
     msg: () => writeMessage(),
@@ -1330,10 +1441,17 @@
     const need = next && next.stars > S.stars ? next.stars : S.stars;
     const shown = Math.min(need, 20);
     const full = Math.min(S.stars, shown);
+    // With the hidden picker allowed, each star in the jar takes a tap (see jarTap).
+    const n = need > 20 ? 1 : shown;
+    const tap = (k) => (S.ownEmoji ? ` data-action=jar data-i=${k} data-n=${n}` : '');
     const stars =
       need > 20
-        ? `<span class=jar-star>★</span> × ${fmtNum(S.stars)}`
-        : `${'<span class=jar-star>★</span>'.repeat(full)}${'<span class=jar-empty>☆</span>'.repeat(shown - full)}`;
+        ? `<span class=jar-star${tap(0)}>★</span> × ${fmtNum(S.stars)}`
+        : Array.from({ length: shown }, (_, k) =>
+            k < full
+              ? `<span class=jar-star${tap(k)}>★</span>`
+              : `<span class=jar-empty${tap(k)}>☆</span>`,
+          ).join('');
     const left = next && next.stars > S.stars ? next.stars - S.stars : 0;
     return `<div class="card jar"><h3 class=edit-title>${R.yourStars(fmtNum(S.stars))}</h3><p class=jar-row aria-hidden=true>${stars}</p>${
       left ? `<small>${R.toNext(left, named(next))}</small>` : ''
@@ -1640,7 +1758,9 @@
         S.push && !demo
           ? `<br><button class="b g bell" data-action=notify data-id=${k.id} data-on=${k.notify ? 0 : 1} aria-pressed=${k.notify ? 'true' : 'false'}>${k.notify ? STR.notices.on : STR.notices.off}</button>`
           : '';
-      c += `<div class=card><div class="row stk"><div>${named(k)}${bell}</div><div><button class=b data-action=edit data-t=c data-id=${k.id}>${st.rename}</button>${S.children.length > 1 ? ` <button class="b r" data-action=del-child data-id=${k.id}>${st.remove}</button>` : ''}</div></div></div>`;
+      // The hidden emoji picker on this child's device (on by default; off clears their picks).
+      const own = `<br><button class="b g bell egg-switch" data-action=own-emoji data-id=${k.id} data-on=${k.own_emoji ? 0 : 1} aria-pressed=${k.own_emoji ? 'true' : 'false'}>${k.own_emoji ? STR.egg.on : STR.egg.off}</button>`;
+      c += `<div class=card><div class="row stk"><div>${named(k)}${bell}${own}</div><div><button class=b data-action=edit data-t=c data-id=${k.id}>${st.rename}</button>${S.children.length > 1 ? ` <button class="b r" data-action=del-child data-id=${k.id}>${st.remove}</button>` : ''}</div></div></div>`;
     }
     c += `<button class=b data-action=edit data-t=c data-id=0>${st.addChild}</button>`;
     h += fold('kids', st.children, S.children.length, c);
@@ -1762,7 +1882,11 @@
       P()
         ? ''
         : `<div class=who>${emo(S.children.find((c) => c.id === S.childId))}${esc(S.childName)}</div>`
-    }</header>${demoBar()}${tourOffer()}${chips}<main>`;
+    }</header>${demoBar()}${tourOffer()}${chips}<main>${
+      egg && !P()
+        ? `<div class=egg-bar><span aria-hidden=true>✨</span><button class=b data-action=egg-done>${STR.egg.done}</button></div>`
+        : ''
+    }`;
     if (tab === 'today') h += viewToday();
     if (tab === 'week') h += rev ? viewReview() : viewWeek();
     if (tab === 'rew') h += viewRewards();
@@ -1774,6 +1898,7 @@
           `<button class="${k === tab ? 'on' : ''}"${k === tab ? ' aria-current=page' : ''} data-action=tab data-tab=${k}><i aria-hidden=true>${T[k][0]}</i>${T[k][1]}</button>`,
       )
       .join('')}</div>`;
+    if (egg && P()) eggDone();
     applyWidths();
     tickCountdown();
     celebrate();
@@ -1876,6 +2001,7 @@
       S &&
       document.visibilityState === 'visible' &&
       !ed &&
+      !$('eggpick') &&
       !document.activeElement.matches('input, select')
     ) {
       const key = wq();

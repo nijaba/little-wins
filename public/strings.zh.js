@@ -167,6 +167,14 @@ window.LW_STRINGS.zh = {
     pointsPlus: (n) => `+ ${n} 分`,
   },
 
+  egg: {
+    on: '🥚 彩蛋（自己选表情）：开',
+    off: '🥚 彩蛋（自己选表情）：关',
+    found: '你发现了秘密！点一个表情就能换掉它。',
+    title: '选你的表情',
+    original: '原来的',
+    done: '✓ 完成',
+  },
   notices: {
     on: '🔔 孩子设备上的通知：开',
     off: '🔔 孩子设备上的通知：关',

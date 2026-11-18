@@ -138,6 +138,8 @@ strict CSP, in light and dark mode, and still with reduced motion. Each item get
 - [x] Reward cards as goals: progress bars and "3 more ★ to go!" on locked rewards, a sparkle badge on unlocked ones
 - [x] Friendlier empty moments ("No points yet today — let's go!")
 - [x] History grouped by day, with each day's total and its best moment on top
+- [x] An easter egg: a secret tap sequence on the child's star jar lets them pick their own emoji, on their devices only;
+  a parent's switch per child, on by default (owner's request, 2026-11-18)
 
 ## Later (not yet scheduled)
 

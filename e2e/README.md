@@ -94,3 +94,4 @@ project page skips them. So run them locally after any change to the page or the
 | E2E-221 | iPhone gets the Add to Home Screen hint; the code screen says to install first|
 | E2E-222 | a home-screen shortcut opens its tab (/?tab=week)                        |
 | E2E-230 | a save whose first send fails is retried once: saved once, no error      |
+| E2E-240 | first, last, first star in the child's jar opens the emoji picker; the pick is the child's only|

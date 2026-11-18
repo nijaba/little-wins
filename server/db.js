@@ -206,6 +206,18 @@ const migrations = [
       });
     }
   },
+
+  // 12: the hidden emoji picker on a child's device: a parent's switch per child (on by default),
+  // and the emoji a child chose for an item or reward, shown on that child's devices only.
+  (db) => {
+    addColumn(db, 'children', 'own_emoji', 'INT NOT NULL DEFAULT 1');
+    db.exec(`
+      CREATE TABLE child_emoji(child_id INT NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+        family_id INT NOT NULL REFERENCES families(id) ON DELETE CASCADE,
+        kind TEXT NOT NULL, ref_id INT NOT NULL, emoji TEXT NOT NULL,
+        PRIMARY KEY(child_id, kind, ref_id));
+    `);
+  },
 ];
 
 function migrate(db) {
