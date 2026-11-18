@@ -53,6 +53,8 @@ window.LW_STRINGS.en = {
   },
   legal: { about: 'About Little Wins', privacy: 'Privacy', terms: 'Terms' },
   operator: {
+    dashboard: 'Open the dashboard',
+    dashboardHelp: 'More numbers and the settings, on a computer.',
     idleAfter: 'Idle families deleted after',
     days: (n) => `${n} days`,
     never: 'never',

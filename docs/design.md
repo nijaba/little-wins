@@ -125,6 +125,7 @@ Every table except `users` and `family_invites` has a `family_id`, and every que
 | `users` | id, provider (`google`/`github`), subject (stable provider ID), email, login, display name, created, last_seen. Unique on (provider, subject). |
 | `memberships` | family_id, user_id, role (`owner`/`parent`), created |
 | `invites` | id, family_id, token_hash, role, created_by, expires, used_at |
+| `settings` | key, value, updated, updated_by: settings changed on the operator dashboard, winning over `.env` until reset. Installation-wide. |
 | `family_invites` | id, token_hash, created_by, created, expires, used_by, used_at, family_id (set when the invited parent's family is created). Installation-wide, not family-scoped: only the operator page reaches it. |
 | `children` | id, family_id, name, emoji, sort, created, notify (notices on their device allowed), own_emoji (the hidden emoji picker allowed; 1 by default) |
 | `child_emoji` | child_id, family_id, kind (`item`/`reward`), ref_id, emoji: what a child picked for themselves (see "Easter egg") |
@@ -237,6 +238,8 @@ Defaults for hosted mode, each overridable by environment variable:
 ### The operator
 
 - `OPERATOR_ALLOWLIST` (same syntax as `PARENT_ALLOWLIST`) grants an operator page: counts of families, children and active devices, database size, version and health.
+- **The dashboard** (`/operator.html`; owner's decision, 2026-11-18). A page for a computer screen, English only, linked from the Operator section (which stays, translated, for phones). It reads `GET /api/operator/dashboard`: the operator page's counts plus devices by kind and activity (today, 7 and 30 days), families active and new, new families per week for 12 weeks, entries this week, reminder and notice subscriptions, open family invites, live demo families, families by language and those due to be deleted as idle within 30 days. Counts only, never a name, email or anything recorded. Built with DOM calls (no HTML from data), radio buttons instead of `<select>` (WebKit's CSP check), under the same strict CSP.
+- **Settings from the dashboard.** `POST /api/operator/setting` `{key, value}` changes one of: `SIGNUP_MODE`, `LIMIT_FAMILIES`, `SIGNUP_CONTACT_URL`, `DELETE_IDLE_FAMILIES_DAYS`, `PARENT_ALLOWLIST`, `LIMIT_CHILDREN`, `LIMIT_PARENTS`, `LIMIT_ITEMS`, `LIMIT_REWARDS`, `LIMIT_DEVICES`, `LIMIT_ENTRIES_PER_DAY`, `PRIVACY_URL`, `TERMS_URL`, `NOTIFY_EVENTS` (only while `NOTIFY_EMAIL` is set) and `TOUR_VIDEO`; `{key, reset: true}` puts it back to `.env`. The value is a string as `.env` would hold it and is checked like the startup check (`400` with a `detail` when refused; `404` for any other key). It is stored in `settings` (migration 13) and applied to the running configuration at once; at startup stored values are applied over `.env`, and one the app can't read is ignored with a warning. The per-family limits left empty follow the sign-up mode in force. Never on the dashboard: secrets, sign-in providers, `APP_BASE_URL`, `OPERATOR_ALLOWLIST` (an operator could otherwise lock everyone out, or a stolen session add others), `FORWARDED_ALLOW_IPS`, `PORT`, `DATABASE_PATH`, the mail server and `NOTIFY_EMAIL`, and what is only read at startup (`PUSH_REMINDERS`, `DEMO_*`). The log names a changed setting, never its value. `.env.example` marks these settings `[dashboard]`. `server/settings.js` holds the list.
 - Operators can't see any family's content through the app. Support access to a family needs a parent to grant it, for a limited time **(later)**.
 
 ### Performance
@@ -292,7 +295,7 @@ These hold in both modes.
 | `DEMO_MAX`, `DEMO_IDLE_SECONDS` | How many demo families at once; how long one lasts unused | 20; 1800 |
 | `TOUR_VIDEO` | `0` hides **Watch the video** | On |
 
-`DB` is still read as a fallback for `DATABASE_PATH`.
+`DB` is still read as a fallback for `DATABASE_PATH`. An operator can change some of these on the dashboard, which then win over `.env` until reset (see "The operator").
 
 ## Front end
 

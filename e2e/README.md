@@ -96,3 +96,5 @@ project page skips them. So run them locally after any change to the page or the
 | E2E-222 | a home-screen shortcut opens its tab (/?tab=week)                        |
 | E2E-230 | a save whose first send fails is retried once: saved once, no error      |
 | E2E-240 | first, last, first star in the child's jar opens the emoji picker; the pick is the child's only|
+| E2E-250 | the operator opens the dashboard from the app, changes a setting, sees a refusal, resets it |
+| E2E-251 | the dashboard tells a visitor to sign in first                                |

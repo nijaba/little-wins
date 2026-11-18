@@ -164,6 +164,7 @@ test('EG-05 migration 12 turns it on for existing children', () => {
     const db = require('../server/db').open(file);
     // Back to a version-11 database with a family and a child, then migrate again.
     db.exec(`
+      DROP TABLE IF EXISTS settings;
       DROP TABLE child_emoji;
       ALTER TABLE children DROP COLUMN own_emoji;
       PRAGMA user_version = 11;
@@ -179,7 +180,7 @@ test('EG-05 migration 12 turns it on for existing children', () => {
         .map((c) => c.own_emoji),
       [1],
     );
-    assert.equal(again.prepare('PRAGMA user_version').get().user_version, 12);
+    assert.ok(again.prepare('PRAGMA user_version').get().user_version >= 12);
     again.close();
   } finally {
     removeDir(dir);

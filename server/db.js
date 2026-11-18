@@ -218,6 +218,13 @@ const migrations = [
         PRIMARY KEY(child_id, kind, ref_id));
     `);
   },
+
+  // 13: settings the operator changed on the dashboard; each one wins over .env until reset.
+  // Installation-wide, not family-scoped (like family_invites).
+  (db) => {
+    db.exec(`CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL, updated TEXT NOT NULL,
+      updated_by INT REFERENCES users(id) ON DELETE SET NULL);`);
+  },
 ];
 
 function migrate(db) {

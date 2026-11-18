@@ -570,7 +570,9 @@
       [o.uptime, o.duration(ops.uptimeSeconds)],
     ]
       .map(([k, v]) => row(k, v))
-      .join('')}</div>${opsInvites()}`;
+      .join(
+        '',
+      )}</div><p><a class="b lnk" href=/operator.html>${o.dashboard}</a> <small>${o.dashboardHelp}</small></p>${opsInvites()}`;
   };
 
   // Family invites (SIGNUP_MODE=invite): issue a link, list the open ones, cancel one.

@@ -51,6 +51,8 @@ window.LW_STRINGS.zh = {
   },
   legal: { about: '关于 Little Wins', privacy: '隐私', terms: '条款' },
   operator: {
+    dashboard: '打开控制台',
+    dashboardHelp: '更多数据和设置，请在电脑上查看。',
     idleAfter: '闲置家庭删除时间',
     days: (n) => `${n} 天后`,
     never: '从不',

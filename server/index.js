@@ -22,6 +22,8 @@ const { handleFakeSso } = require('./fake-sso');
 const { clientInfo, setSecurityHeaders, redirectToHttps } = require('./web');
 
 const repo = createRepo(db);
+// Settings the operator changed on the dashboard win over .env (server/settings.js).
+const settings = require('./settings').createSettings({ repo });
 // Emails to the operator (NOTIFY_EMAIL): sign-ups, the limit reached, turned away, deletions.
 const alerts = config.notify ? require('./alerts').createAlerts({ repo }) : null;
 if (alerts) {
@@ -56,6 +58,9 @@ const writeLimiter = createRateLimiter({ max: writes, windowMs });
 const auth = createAuth({ repo, sessions, limiter, clientIp });
 // Notices on a child's device (a reward unlocked, a milestone), where a parent allowed them.
 const notices = config.push ? require('./notices').createNotices({ repo }) : null;
+// Demo families, in memory only (DEMO_FAMILIES=1).
+const demo = config.demo.on ? require('./demo').createDemo({ limiter, clientIp }) : null;
+if (demo) console.warn(`Demo families are ON (at most ${config.demo.max})`);
 const handleApi = createRouter({
   repo,
   sessions,
@@ -64,10 +69,9 @@ const handleApi = createRouter({
   reminders,
   notices,
   alerts,
+  settings,
+  demoCount: () => demo?.count() ?? 0,
 });
-// Demo families, in memory only (DEMO_FAMILIES=1).
-const demo = config.demo.on ? require('./demo').createDemo({ limiter, clientIp }) : null;
-if (demo) console.warn(`Demo families are ON (at most ${config.demo.max})`);
 
 const server = http
   .createServer(async (req, res) => {

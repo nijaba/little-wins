@@ -53,6 +53,8 @@ window.LW_STRINGS.fr = {
   },
   legal: { about: 'À propos de Little Wins', privacy: 'Confidentialité', terms: 'Conditions' },
   operator: {
+    dashboard: 'Ouvrir le tableau de bord',
+    dashboardHelp: 'Plus de chiffres et les réglages, sur un ordinateur.',
     idleAfter: 'Familles inactives supprimées après',
     days: (n) => `${n} jours`,
     never: 'jamais',
