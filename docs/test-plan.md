@@ -451,6 +451,7 @@ Web Push without dependencies (`server/webpush.js`), the reminder scheduler (`se
 | CN-01 | A parent allows notices for one child; only that child's device can turn them on | API |
 | CN-02 | Unlocking a reward sends the child one notice, in the family language, and never again | API |
 | CN-03 | A third perfect day in a row sends a streak notice; the evening reminder skips child devices | API |
+| CN-04 | Turning notices on or off on a child's device changes its ETag (no stale 304 bringing the offer back) | API |
 
 ## PC: Lists for some children
 

@@ -637,10 +637,14 @@ function createRouter({
       const sub = subscription(b);
       if (!sub) return send([400, apiError('badRequest')]);
       repo.setPush(s.familyId, s.id, { ...sub, time: '-', kind: 'child' });
+      // A new version, like every write: otherwise the next poll is a 304 and the browser's
+      // cached state (notices off) puts the offer back.
+      repo.bump(s.familyId);
       return send([200, state()]);
     }
     if (s.kind === 'child' && path === '/api/push/child-unsubscribe') {
       repo.clearPush(s.familyId, s.id);
+      repo.bump(s.familyId);
       return send([200, state()]);
     }
     if (s.kind !== 'parent') return send([403, apiError('viewOnly')]);

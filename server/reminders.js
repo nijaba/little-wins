@@ -16,7 +16,7 @@ const minutes = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5
  * (so a server that was down at that time doesn't wake anyone at midnight).
  */
 function isDue(sub, now = new Date()) {
-  const day = today(sub.timezone);
+  const day = today(sub.timezone, now);
   if (sub.last_day === day) return false;
   const late = minutes(timeOfDay(sub.timezone, now)) - minutes(sub.time);
   return late >= 0 && late < 120;
@@ -31,7 +31,7 @@ function createReminders({ repo, send = webpush.send }) {
     let sent = 0;
     for (const sub of repo.allPush()) {
       if (!isDue(sub, now)) continue;
-      const day = today(sub.timezone);
+      const day = today(sub.timezone, now);
       repo.pushSent(sub.session_id, day); // once a day, sent or not
       if (!repo.unmarked(sub.family_id, day)) continue;
       const text = i18n.reminder(sub.language);
