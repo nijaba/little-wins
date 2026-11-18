@@ -545,6 +545,18 @@ The page retries a write once after a network failure, with the same request ID.
 | RT-02 | The same X-Request-Id in another family is that family's own write | API |
 | RT-03 | A failed write is not remembered, so its retry is applied | API |
 
+## OM: Emails to the operator
+
+`NOTIFY_EMAIL`: a fake mail server on localhost receives them.
+
+| ID | Expectation | Level |
+| --- | --- | --- |
+| OM-01 | The mailer signs in (AUTH PLAIN), sends headers and a dot-stuffed body, and reports a refusal | Unit |
+| OM-02 | A sign-up, the last place, a parent turned away and a deletion each send one email, with counts only | API |
+| OM-03 | NOTIFY_EVENTS picks the emails; a mail server that fails never breaks sign-up, and the log has no password | API |
+| OM-04 | The server refuses NOTIFY_EMAIL without SMTP settings, an unknown event, or plain SMTP off localhost | API |
+| OM-05 | Idle deletions say how many; a turned-away email goes at most once a day | Unit |
+
 ## TH: Themes
 
 Light and dark, following the device (`prefers-color-scheme`).

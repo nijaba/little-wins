@@ -82,6 +82,7 @@ function createRouter({
   demo = null,
   reminders = null,
   notices = null,
+  alerts = null,
 }) {
   /** [409, …] when the family already has as many of `what` as its limit allows, else null. */
   function full(fid, what, day) {
@@ -301,6 +302,7 @@ function createRouter({
         return [400, apiError('confirmFamilyName')];
       }
       repo.deleteFamily(fid);
+      alerts?.familyDeleted('owner');
       return [200, { ok: true, deleted: true }, { 'Set-Cookie': clearSessionCookie() }];
     },
 
@@ -450,7 +452,10 @@ function createRouter({
     if (s.kind !== 'parent') return [403, apiError('viewOnly')];
     if (s.familyId != null || repo.membershipOf(s.userId)) return [409, apiError('setupDone')];
     if (!mayCreate(s.userId)) return [403, apiError('privateInstance')];
-    if (repo.familiesFull()) return [409, apiError('serviceFull')];
+    if (repo.familiesFull()) {
+      alerts?.turnedAway();
+      return [409, apiError('serviceFull')];
+    }
     const familyName = text(b.family_name, 60);
     const childName = text(b.child_name, 40);
     if (!familyName || !childName) return [400, apiError('nameRequired')];
@@ -469,6 +474,7 @@ function createRouter({
     });
     repo.spendFamilyInvite(s.userId, fid);
     sessions.joinFamily(s.id, fid);
+    alerts?.familyCreated();
     const operator = isOperator(s.userId);
     return [
       200,
@@ -570,6 +576,8 @@ function createRouter({
     if (s.familyId == null) {
       if (path === '/api/state') {
         const name = repo.user(s.userId)?.name || '';
+        // A parent who may set up a family but can't: Little Wins is full.
+        if (mayCreate(s.userId) && repo.familiesFull()) alerts?.turnedAway();
         return send([
           200,
           {

@@ -188,10 +188,11 @@ What changes when one installation serves many families, and how the design hand
 
 ### Sign-up and abuse
 
-- Sign-up through Google or GitHub means no passwords to store, no email to send, and no bot sign-up form.
+- Sign-up through Google or GitHub means no passwords to store, no email to send to families, and no bot sign-up form.
 - `SIGNUP_MODE`: `closed` (default), `invite`, `open`.
 - **Family invites** (`SIGNUP_MODE=invite`). An operator creates a link on the operator page (**Invite a family**) and sends it to a family any way they like. It works once, for 30 days, and only its SHA-256 is stored. Opening it (`/#signup=…`) says "You're invited to start a family" and offers sign-in; the token rides through sign-in inside the signed state cookie, like a co-parent invite. A parent who signs in with a valid invite and has no family uses it up and goes to setup; the invite then belongs to them until their family is created, so they can finish setup later, from another device too. Open invites are listed on the operator page, with **Cancel**. Without a valid invite, a new parent sees the private page. `PARENT_ALLOWLIST` still works in invite mode.
 - **A cap on families** (`LIMIT_FAMILIES`, optional, in every mode). When the installation holds that many families (demo families never count), a new parent without a family sees "This Little Wins is full for now" instead of setup, and setup is refused (`409`, `serviceFull`). Joining an existing family as a co-parent still works. An invite that meets a full installation is not used up. The operator page shows the families against the cap.
+- **Emails to the operator** (`NOTIFY_EMAIL`, optional; asked for by the owner). The operator can get an email when a family signs up (`signup`), when that family takes the last place under `LIMIT_FAMILIES` (`full`), when a parent who may set up a family is turned away because the installation is full (`turned-away`: at most one a day, kept in memory), and when a family is deleted by its owner or as idle (`deleted`). `NOTIFY_EVENTS` picks among them (default: all). They say counts only ("a new family signed up (7 of 20)"): never a family's name, a parent's name or email, or anything recorded, so no family data leaves the server. They are sent by `server/mailer.js`, a small SMTP client with no dependency: implicit TLS (port 465, the default) or STARTTLS (587) and AUTH PLAIN, from `SMTP_FROM` (default `SMTP_USER`); `SMTP_TLS=none` is allowed only to localhost. Sending is queued after the reply, never delays or fails the request, and a failure is logged without the message or the password. The startup check refuses `NOTIFY_EMAIL` without `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS`, an unknown event, or plain SMTP to another host. Demo families never send any.
 - **Who to ask.** `SIGNUP_CONTACT_URL` (optional, `https://` or `mailto:`) adds "Ask for a place" to the private and full pages, so a family knows whom to ask. The app itself collects no email and has no waiting list.
 - Rate limits per client IP (behind a trusted proxy): sign-in starts, checked sign-in callbacks (each one calls the provider) and pairing 10 a minute; writes 120 a minute; reads 600 a minute. 429 with `Retry-After` when exceeded.
 
@@ -277,6 +278,9 @@ These hold in both modes.
 | `PUSH_REMINDERS` | `0` turns off evening reminders (see "Evening reminders") | On |
 | `LIMIT_FAMILIES` | Most families the installation holds (see "Sign-up and abuse") | No cap |
 | `SIGNUP_CONTACT_URL` | "Ask for a place" link on the private and full pages | None |
+| `NOTIFY_EMAIL` | Operator emails go to these addresses, comma-separated (see "Sign-up and abuse") | Off |
+| `NOTIFY_EVENTS` | Which: `signup`, `full`, `turned-away`, `deleted` | All |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_TLS`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | The mail server for them (`SMTP_TLS`: `tls`, `starttls` or `none` to localhost) | Port 465, `tls` on 465 else `starttls`, from `SMTP_USER` |
 | `DATABASE_PATH` | SQLite file | `/data/little-wins.db` |
 | `FORWARDED_ALLOW_IPS` | Proxies trusted for client IP and scheme | Empty |
 | `PORT` | Listening port | `3000` |

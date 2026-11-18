@@ -42,6 +42,9 @@ All of these are environment variables, normally set in `.env`.
 | `PUSH_REMINDERS` | `0` turns off evening reminders. They are opt-in per parent device, and go through the browser maker's push service (Apple, Google, Mozilla); the server needs outbound HTTPS to those. | On |
 | `LIMIT_FAMILIES` | The most families the installation holds, in any mode. Past it, new parents see "full for now"; co-parents can still join. Demo families don't count. | No cap |
 | `SIGNUP_CONTACT_URL` | An `https://` page or `mailto:` address shown as **Ask for a place** on the private and full screens. The app collects no email itself. | None |
+| `NOTIFY_EMAIL` | Emails to you, the operator, at these addresses (comma-separated): a family signed up, the last place taken, a parent turned away because it's full, a family deleted. Counts only. Needs the `SMTP_` settings. See [Emails to the operator](#emails-to-the-operator). | Off |
+| `NOTIFY_EVENTS` | Which of those: `signup`, `full`, `turned-away`, `deleted`, comma-separated. Empty means all; to get none, unset `NOTIFY_EMAIL`. | All |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_TLS` | The mail server that sends them. `SMTP_TLS` is `tls` (port 465) or `starttls` (587); `none` only to localhost. `SMTP_FROM` defaults to `SMTP_USER`. | Port 465 |
 | `PARENT_ALLOWLIST` | Comma-separated list of who may create a family (or claim a migrated one) when sign-up is not `open`. Entries: `*`, `google:you@example.com`, `github:<login>`, `google-domain:example.com`. See below. | Empty |
 | `FORWARDED_ALLOW_IPS` | Comma-separated proxy addresses whose `X-Forwarded-For` and `X-Forwarded-Proto` the app trusts. Exact IPs, or `*` for any peer (only safe when the app's port is reachable by the proxy alone). Outside localhost the app redirects plain HTTP to `APP_BASE_URL`, and it learns the original scheme from `X-Forwarded-Proto`, so behind a proxy this must be set. See [FORWARDED_ALLOW_IPS](#forwarded_allow_ips). | Empty (forwarded headers ignored) |
 | `SITE_HOST` | Caddy setup only: the host name Caddy serves, the host part of `APP_BASE_URL`. | None |
@@ -188,6 +191,36 @@ With `DEMO_FAMILIES=1` the sign-in page offers **Try a demo**. Each visitor gets
 ## Tour and video
 
 The page offers a short guided tour once per device and role (kept in the browser), and again from **Settings → Take the tour**; it is drawn by the page alone and sends nothing to the server. **Watch the video** on the sign-in page plays the 30-second narrated tour from `/tour.mp4` (`TOUR_VIDEO=0` hides the button). To remake the video or the guide pictures after a screen changes, see `scripts/tour-video.js`, `scripts/tour-voiceover.py` and `scripts/guide-pictures.js` (development machine only; they need Playwright's Chromium, and the voice-over needs its own Python environment described in the script).
+
+## Emails to the operator
+
+Set `NOTIFY_EMAIL` to get an email when:
+
+- a family signs up (`signup`): "Little Wins: a new family signed up (7 of 20)";
+- that family took the last place under `LIMIT_FAMILIES` (`full`);
+- a parent tried to set up a family while it was full (`turned-away`), at most once a day;
+- a family was deleted, by its owner or after `DELETE_IDLE_FAMILIES_DAYS` without use (`deleted`).
+
+`NOTIFY_EVENTS` keeps only some, for example `NOTIFY_EVENTS=full,turned-away`. The emails carry counts only: no family name, no parent's name or email, nothing a family recorded.
+
+They go through a mail server you have an account on. With Google Workspace or Gmail:
+
+1. Turn on 2-Step Verification for the sending account (Google Account → Security).
+2. Create an app password: Google Account → Security → 2-Step Verification → **App passwords**. Name it "Little Wins" and copy the 16 letters.
+3. In `.env`:
+
+   ```bash
+   NOTIFY_EMAIL=you@example.com
+   SMTP_HOST=smtp.gmail.com
+   SMTP_USER=you@example.com
+   SMTP_PASS=abcdefghijklmnop
+   ```
+
+4. Restart (see [Changing settings or secrets](#changing-settings-or-secrets)). The log says `Operator emails are ON`.
+
+Port 465 with TLS is the default; for a server on 587 set `SMTP_PORT=587` (STARTTLS is then used). If an email can't be sent, the log says `Could not send the "signup" email: …` and nothing else is affected. Revoke the app password in your Google account to stop it for good.
+
+**To turn the emails off,** comment out `NOTIFY_EMAIL` in `.env` (`# NOTIFY_EMAIL=…`) and restart; the log no longer says `Operator emails are ON`. The `SMTP_` lines can stay: they are ignored while `NOTIFY_EMAIL` is unset, and removing the `#` turns the emails back on. To keep only some, list them in `NOTIFY_EVENTS`; an empty `NOTIFY_EVENTS` means all four, not none.
 
 ## Operator page
 
