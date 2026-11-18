@@ -7,6 +7,11 @@ Each test starts its own server (`fixtures.js`: temp database, fake sign-in, fre
 family. Every test fails on a CSP violation, an uncaught page error or an unexpected dialog. Dialogs the
 app is meant to open are handled with `expectDialog`.
 
+In CI, Chromium and WebKit run as two jobs side by side, each with 4 workers. They run only when a pull
+request changes what they can see: `public/`, `server/`, `e2e/`, `package.json`, `package-lock.json`,
+`playwright.config.js` or `.github/workflows/ci.yml`. A change to API tests, scripts, `deploy/`, docs or the
+project page skips them. So run them locally after any change to the page or the server.
+
 ## Tests
 
 | ID     | Title                                                                                |
