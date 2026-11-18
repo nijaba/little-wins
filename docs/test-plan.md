@@ -556,6 +556,8 @@ The page retries a write once after a network failure, with the same request ID.
 | OM-03 | NOTIFY_EVENTS picks the emails; a mail server that fails never breaks sign-up, and the log has no password | API |
 | OM-04 | The server refuses NOTIFY_EMAIL without SMTP settings, an unknown event, or plain SMTP off localhost | API |
 | OM-05 | Idle deletions say how many; a turned-away email goes at most once a day | Unit |
+| OM-06 | `node server/mailer.js test` sends a test email, or says exactly why not (off, missing settings, refused) | API |
+| OM-07 | At startup the server signs in to the mail server, sending nothing, and logs the result; the app runs either way | API |
 
 ## TH: Themes
 

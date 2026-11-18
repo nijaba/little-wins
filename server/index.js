@@ -24,7 +24,14 @@ const { clientInfo, setSecurityHeaders, redirectToHttps } = require('./web');
 const repo = createRepo(db);
 // Emails to the operator (NOTIFY_EMAIL): sign-ups, the limit reached, turned away, deletions.
 const alerts = config.notify ? require('./alerts').createAlerts({ repo }) : null;
-if (alerts) console.warn(`Operator emails are ON (${[...config.notify.events].join(', ')})`);
+if (alerts) {
+  console.warn(`Operator emails are ON (${[...config.notify.events].join(', ')})`);
+  // Sign in to the mail server once, sending nothing: a wrong password shows at startup.
+  require('./mailer')
+    .checkLogin(config.notify.smtp)
+    .then(() => console.log('Mail server sign-in OK'))
+    .catch((err) => console.warn(`Mail server sign-in failed: ${err.message}`));
+}
 
 // Families no device has used for DELETE_IDLE_FAMILIES_DAYS are deleted: at startup, then every
 // 6 hours. Only the count is logged.
