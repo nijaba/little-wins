@@ -63,7 +63,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
-- CI: the browser install has 5 minutes per try and a second try, so a stalled download no longer runs into the browser tests' 20-minute limit.
+- CI: the browsers and their system packages are cached between runs, and their install has 5 minutes per try and a second try, so a slow package mirror or a stalled download no longer runs into the browser tests' 20-minute limit.
 - On iPhones, saving after a while in an edit form could say "Can't reach the server": Safari sent the save on a connection the server had already closed. The page now sends a failed write once more, with a request ID the server applies only once.
 - Static files are served from an allowlist and device codes look uniform (CodeQL findings).
 - Radio buttons keep their natural width.
