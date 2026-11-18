@@ -309,7 +309,7 @@ The daily copies are plain SQLite files. Before a copy leaves the server, encryp
    (crontab -l 2>/dev/null | grep -v little-wins/scripts/backup.sh; echo '0 3 * * * BACKUP_PUBLIC_KEY=lwpub1-… $HOME/little-wins/scripts/backup.sh >> $HOME/little-wins-backup/backup.log 2>&1') | crontab -
    ```
 
-   Each night the script then also writes `~/little-wins-backup/offsite/little-wins-YYYY-MM-DD.db.lwb` (set `OFFSITE_DIR` to change it) and keeps `KEEP_DAYS` of them. It encrypts with the host's Node 22+ if there is one, otherwise inside the running container.
+   Each night the script then also writes `~/little-wins-backup/offsite/little-wins-YYYY-MM-DD.db.lwb` (set `OFFSITE_DIR` to change it) and keeps `KEEP_DAYS` of them. It encrypts with the host's Node 22+ if there is one, otherwise inside the running Little Wins container: the one Docker Compose started from this folder, with any of the compose files (`docker-compose.yml`, `deploy/caddy/`, `deploy/nginx/`). If there is neither, the job fails and says so in the log.
 3. **Copy the `offsite` folder** to another machine or to cloud storage, for example with the pull below (point it at `offsite` instead of `daily`), `rclone` or `rsync`.
 
 To restore from an encrypted copy, decrypt it on your own computer, then follow [Restore](#restore):
