@@ -8,6 +8,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - The operator dashboard (`/operator.html`, linked from Settings → Operator): the installation's numbers for a computer screen (activity, sign-ups per week, devices, notices, languages, families due to be deleted as idle) and the hosting settings (sign-up mode, family cap, contact link, idle days, parent allowlist, per-family limits, legal pages, which operator emails, the tour video). A change there applies at once and wins over `.env` until **Back to .env**. `.env.example` marks these settings `[dashboard]`. Migration 13.
 
+### Added for the community
+
+- The project page's hero offers the free hosted service ("Start your family, free"), with a note pointing to the Telegram group when it's full.
+- The [little-wins Telegram group](https://t.me/little_wins) for help, ideas and invitations: on the project page (top bar, hero, footer), in the README, the user guide, the admin guide's troubleshooting and the contributing guide.
+
 ### Added for notices
 
 - Notices on a child's device can be allowed under the code while adding the device, and the device offers to turn them on as soon as it connects, while it's still in the parent's hands.

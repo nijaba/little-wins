@@ -321,4 +321,8 @@ other parent show up on their own.
 
 **We want to stop.** The owner can **Download all our data**, then **Delete this family** in Settings.
 
+**Something else, or an idea?** Ask in the [little-wins Telegram group](https://t.me/little_wins): families,
+the author and people running their own Little Wins are there. It's also where to ask for a place on the free
+hosted service.
+
 Running your own Little Wins? See the [admin guide](admin-guide.md).
