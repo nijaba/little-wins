@@ -23,7 +23,7 @@ npm run e2e:install && npm run test:e2e   # after any change to the page
 
 [docs/design.md](docs/design.md) is the source of truth for how the app behaves. Read the part you are changing.
 
-If you want to change behavior, open an issue first and talk it through. If the design is silent or wrong, we settle it there and update the design in the same pull request.
+If you want to change behavior, open an issue first and talk it through (a quick question or a rough idea can start in the [little-wins Telegram group](https://t.me/little_wins)). If the design is silent or wrong, we settle it there and update the design in the same pull request.
 
 ## Firm constraints
 

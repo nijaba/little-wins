@@ -434,6 +434,7 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-03 | The page has no inline style, script or event handler | API |
 | SITE-04 | The header stars and the app icon are decoration: hidden from screen readers, still with reduced motion | Unit |
 | SITE-05 | The page says how to add Little Wins to the home screen, with the iPhone pairing order; plain and shaded bands alternate | Unit |
+| SITE-06 | The hero offers the hosted service (Start your family, free) and the Telegram group; the footer names the group | Unit |
 
 ## RM: Evening reminders and child notices
 

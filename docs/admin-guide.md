@@ -573,6 +573,8 @@ The image checks `GET /healthz` every 30 seconds. `docker compose ps` shows `Up 
 
 The `ExperimentalWarning: SQLite is an experimental feature` line in the logs is normal on Node 24.
 
+Still stuck? Ask in the [little-wins Telegram group](https://t.me/little_wins), where other people running Little Wins are too. Leave out your secrets, your address and anything about a family.
+
 ## Testing
 
 From the project folder, with Node 22.13 or newer (the image uses Node 24):
