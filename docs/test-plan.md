@@ -432,6 +432,7 @@ Demo families (`DEMO_FAMILIES=1`): memory only, made-up data, parent's and child
 | SITE-02 | The page and its stylesheet link only to the project (no third-party URL, import or script) | API |
 | SITE-03 | The page has no inline style, script or event handler | API |
 | SITE-04 | The header stars and the app icon are decoration: hidden from screen readers, still with reduced motion | Unit |
+| SITE-05 | The page says how to add Little Wins to the home screen, with the iPhone pairing order; plain and shaded bands alternate | Unit |
 
 ## RM: Evening reminders and child notices
 
