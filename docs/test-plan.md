@@ -608,6 +608,7 @@ Light and dark, following the device (`prefers-color-scheme`).
 | BT-08 | A bug report gets a draft; only its author can open the issue, once, summarized without names and labeled; the daily cap holds; no draft without a GitHub token; no content in the log | Unit |
 | BT-09 | The bot leaves groups it doesn't serve, and ignores members still being checked | Unit |
 | BT-10 | The bot refuses to start without its token or Claude key, with a malformed chat ID or half a GitHub setup; bot/.env.example names every setting | Unit |
+| BT-11 | When Telegram fails, the bot waits longer each time (5 s doubling to 5 min, or Telegram's retry_after) and stops only for a rejected token or unknown bot | Unit |
 
 ## E2E: browser tests
 
