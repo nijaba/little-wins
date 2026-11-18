@@ -15,6 +15,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added for hosting
 
+- Emails to the operator (`NOTIFY_EMAIL`, `NOTIFY_EVENTS`, `SMTP_*`): a family signed up, the last place taken, a parent turned away because it's full, a family deleted. Counts only; a small built-in SMTP client, no dependency.
 - Encrypted off-site backups: with `BACKUP_PUBLIC_KEY`, `scripts/backup.sh` also writes a copy only the operator's private key can read (`server/backup-crypto.js`, no dependency).
 - Idle families are deleted after `DELETE_IDLE_FAMILIES_DAYS` without use (default 365, `0` turns it off); parents see the rule in Settings.
 - Family invites from the operator page (`SIGNUP_MODE=invite`): single-use links that last 30 days, listed and cancellable.

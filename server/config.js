@@ -151,6 +151,47 @@ if (env.LIMIT_FAMILIES !== undefined && env.LIMIT_FAMILIES !== '') {
   else familyLimit = n;
 }
 
+// --- Emails to the operator (sign-ups, the limit reached, a parent turned away, deletions) ---
+// Counts only: no family name or email is ever sent. Off unless NOTIFY_EMAIL is set.
+const NOTIFY_EVENT_NAMES = ['signup', 'full', 'turned-away', 'deleted'];
+const emailLike = (v) => /^[^\s@,<>]+@[^\s@,<>]+\.[^\s@,<>]+$/.test(v);
+const csv = (v) =>
+  String(v ?? '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+let notify = null;
+if (env.NOTIFY_EMAIL) {
+  const to = csv(env.NOTIFY_EMAIL);
+  if (!to.length || !to.every(emailLike))
+    problems.push('NOTIFY_EMAIL must be one or more email addresses, separated by commas');
+  const events = env.NOTIFY_EVENTS ? csv(env.NOTIFY_EVENTS) : NOTIFY_EVENT_NAMES;
+  const unknown = events.filter((e) => !NOTIFY_EVENT_NAMES.includes(e));
+  if (unknown.length)
+    problems.push(
+      `NOTIFY_EVENTS: unknown ${unknown.join(', ')} (use ${NOTIFY_EVENT_NAMES.join(', ')})`,
+    );
+  for (const name of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'])
+    if (!env[name]) problems.push(`${name} is required when NOTIFY_EMAIL is set`);
+  const host = env.SMTP_HOST || '';
+  const port = env.SMTP_PORT ? Number(env.SMTP_PORT) : 465;
+  if (!Number.isInteger(port) || port < 1 || port > 65535)
+    problems.push('SMTP_PORT must be a port number');
+  const tlsMode = env.SMTP_TLS || (port === 465 ? 'tls' : 'starttls');
+  if (!['tls', 'starttls', 'none'].includes(tlsMode))
+    problems.push('SMTP_TLS must be tls, starttls or none');
+  // Without TLS the password would cross the network in the clear: only to this machine.
+  if (tlsMode === 'none' && !['localhost', '127.0.0.1', '::1'].includes(host))
+    problems.push('SMTP_TLS=none is only allowed when SMTP_HOST is localhost');
+  const from = env.SMTP_FROM || env.SMTP_USER || '';
+  if (from && !emailLike(from)) problems.push('SMTP_FROM must be an email address');
+  notify = {
+    to,
+    events: new Set(events),
+    smtp: { host, port, tls: tlsMode, user: env.SMTP_USER, pass: env.SMTP_PASS, from },
+  };
+}
+
 // --- Per-family limits: generous for a self-hosted family, tighter when sign-up is open ---
 const LIMIT_DEFAULTS = {
   closed: { children: 20, parents: 10, items: 500, rewards: 200, devices: 50, entriesPerDay: 2000 },
@@ -208,6 +249,7 @@ module.exports = {
   signupContactUrl,
   familyLimit,
   idleFamilyDays,
+  notify,
   push,
   // How often reminders are checked (tests make it shorter).
   pushIntervalMs: Math.max(100, Number(env.PUSH_INTERVAL_MS) || 60e3),

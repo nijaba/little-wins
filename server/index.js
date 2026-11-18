@@ -22,6 +22,9 @@ const { handleFakeSso } = require('./fake-sso');
 const { clientInfo, setSecurityHeaders, redirectToHttps } = require('./web');
 
 const repo = createRepo(db);
+// Emails to the operator (NOTIFY_EMAIL): sign-ups, the limit reached, turned away, deletions.
+const alerts = config.notify ? require('./alerts').createAlerts({ repo }) : null;
+if (alerts) console.warn(`Operator emails are ON (${[...config.notify.events].join(', ')})`);
 
 // Families no device has used for DELETE_IDLE_FAMILIES_DAYS are deleted: at startup, then every
 // 6 hours. Only the count is logged.
@@ -30,6 +33,7 @@ function sweepIdleFamilies() {
   const before = new Date(Date.now() - config.idleFamilyDays * 864e5).toISOString();
   const n = repo.deleteIdleFamilies(before);
   if (n) console.log(`Deleted ${n} idle ${n === 1 ? 'family' : 'families'}`);
+  if (n) alerts?.familyDeleted('idle', n);
 }
 sweepIdleFamilies();
 setInterval(sweepIdleFamilies, 6 * 3600e3).unref();
@@ -45,7 +49,15 @@ const writeLimiter = createRateLimiter({ max: writes, windowMs });
 const auth = createAuth({ repo, sessions, limiter, clientIp });
 // Notices on a child's device (a reward unlocked, a milestone), where a parent allowed them.
 const notices = config.push ? require('./notices').createNotices({ repo }) : null;
-const handleApi = createRouter({ repo, sessions, limiter, clientIp, reminders, notices });
+const handleApi = createRouter({
+  repo,
+  sessions,
+  limiter,
+  clientIp,
+  reminders,
+  notices,
+  alerts,
+});
 // Demo families, in memory only (DEMO_FAMILIES=1).
 const demo = config.demo.on ? require('./demo').createDemo({ limiter, clientIp }) : null;
 if (demo) console.warn(`Demo families are ON (at most ${config.demo.max})`);
