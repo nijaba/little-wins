@@ -176,6 +176,12 @@ window.LW_STRINGS.es = {
     offer:
       'Recibe un aviso en este dispositivo cuando desbloquees una recompensa o alcances un logro.',
     turnOn: 'Activar los avisos',
+    paired: (name) => `Este teléfono ya es de ${name}.`,
+    pairOffer:
+      'Activa los avisos ahora que lo tienes en la mano: toca Activar los avisos y luego Permitir.',
+    pairHint:
+      '¿Avisos en su teléfono? Permítelos aquí antes de escribir el código, y el teléfono los ofrecerá en cuanto se conecte.',
+    notNow: 'Ahora no',
   },
   reminder: {
     title: 'Recordatorio de la tarde',

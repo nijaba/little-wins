@@ -99,6 +99,58 @@ test('E2E-61 a child device pairs by opening the link', async ({ page, newPlayer
   await expect(again.locator('#err')).toContainText("That code doesn't work");
 });
 
+test('E2E-65 notices allowed from the pairing box are offered on the child device as it connects', async ({
+  page,
+  newPlayer,
+}) => {
+  await startFamily(page, { child: 'Kid' });
+  const code = await makeCode(page);
+  const dev = fold(page, 'dev');
+  const bell = dev.locator('.pair-notices [data-action=notify]');
+  await expect(bell).toHaveText('🔔 Notices on their device: off');
+  await bell.click();
+  await expect(bell).toHaveText('🔔 Notices on their device: on');
+  await expect(dev.locator('.code')).toHaveText(code, 'the code stays on show');
+
+  const kid = await newPlayer();
+  // Headless Chromium always answers "denied"; this device hasn't been asked yet. (The test
+  // never taps Turn on, so nothing asks.) WebKit here has no PushManager: no offer at all.
+  await kid.addInitScript(() => {
+    if ('Notification' in window)
+      Object.defineProperty(Notification, 'permission', { get: () => 'default' });
+  });
+  await kid.goto('/');
+  const offers = await kid.evaluate(
+    () =>
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window &&
+      Notification.permission !== 'denied',
+  );
+  await kid.getByLabel('Use a code from a parent').fill(code);
+  await kid.getByRole('button', { name: 'Connect this device' }).click();
+  await expect(kid.locator('header .who')).toHaveText('Kid');
+  const offer = kid.locator('.pair-offer');
+  if (!offers) {
+    // A browser that can't show notices offers nothing.
+    await expect(offer).toHaveCount(0);
+    return;
+  }
+  await expect(offer).toContainText("This phone is now Kid's.");
+  await expect(offer.getByRole('button', { name: 'Turn on notifications' })).toBeVisible();
+  await expect(kid.locator('.tour-offer:not(.pair-offer)')).toHaveCount(0, 'one offer at a time');
+  await expect(kid.locator('main .msg')).toHaveCount(0, 'not twice');
+  await offer.getByRole('button', { name: 'Not now' }).click();
+  await expect(offer).toHaveCount(0);
+  // Not now: Today keeps its usual card, and a reload doesn't bring the offer back.
+  await expect(
+    kid.locator('main .msg').getByRole('button', { name: 'Turn on notifications' }),
+  ).toBeVisible();
+  await kid.reload();
+  await expect(kid.locator('header .who')).toHaveText('Kid');
+  await expect(kid.locator('.pair-offer')).toHaveCount(0);
+});
+
 test('E2E-62 a wrong code shows a message on the sign-in screen', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Use a code from a parent').fill('abcdefghjk');
