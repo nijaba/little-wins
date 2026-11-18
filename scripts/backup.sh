@@ -6,7 +6,8 @@
 # With BACKUP_PUBLIC_KEY (an "lwpub1-..." key from `node server/backup-crypto.js keygen`), it
 # also writes an encrypted copy to OFFSITE_DIR for another machine to pull: only the private
 # key, kept off this server, can read it. The encryption runs with Node 22+ on the host, or in
-# the running container when the host has none.
+# the running Little Wins container when the host has none: the one Docker Compose started from
+# this folder, whichever compose file (docker-compose.yml, deploy/caddy, deploy/nginx) it used.
 #
 #   scripts/backup.sh                     # -> ~/little-wins-backup/daily/little-wins-YYYY-MM-DD.db
 #   BACKUP_DIR=/x KEEP_DAYS=14 scripts/backup.sh   # copies are kept 30 days by default
@@ -46,7 +47,15 @@ if [ -n "${BACKUP_PUBLIC_KEY:-}" ]; then
     node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)'; then
     node "$APP_DIR/server/backup-crypto.js" encrypt "$BACKUP_PUBLIC_KEY" <"$OUT" >"$ENC.tmp"
   else
-    (cd "$APP_DIR" && docker compose exec -T little-wins node server/backup-crypto.js encrypt "$BACKUP_PUBLIC_KEY") <"$OUT" >"$ENC.tmp"
+    # Compose labels each container with its service and the folder of its compose file.
+    container=$(docker ps --filter label=com.docker.compose.service=little-wins \
+      --format '{{.ID}} {{.Label "com.docker.compose.project.working_dir"}}' |
+      awk -v dir="$APP_DIR" '$2 == dir || index($2, dir "/") == 1 { print $1; exit }')
+    if [ -z "$container" ]; then
+      echo "no Node 22+ here and no running little-wins container started from $APP_DIR: no encrypted copy" >&2
+      exit 1
+    fi
+    docker exec -i "$container" node server/backup-crypto.js encrypt "$BACKUP_PUBLIC_KEY" <"$OUT" >"$ENC.tmp"
   fi
   mv "$ENC.tmp" "$ENC"
   find "$OFFSITE" -name 'little-wins-*.db.lwb' -mtime +"$KEEP" -delete

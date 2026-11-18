@@ -501,6 +501,7 @@ Families no device has used for `DELETE_IDLE_FAMILIES_DAYS` are deleted.
 | BK-02 | A wrong key, a changed or cut file, or a bad public key is refused | Unit |
 | BK-03 | The command line makes a key it never overwrites, and encrypts and decrypts streams | Unit |
 | BK-04 | backup.sh with BACKUP_PUBLIC_KEY writes an encrypted copy that restores the database | Unit |
+| BK-05 | Without Node 22 on the host, backup.sh encrypts in the little-wins container started from its folder (any compose file); with none, it fails and says why | Unit |
 
 ## FT: Friendly touches
 

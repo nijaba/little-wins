@@ -116,3 +116,64 @@ test('BK-04 backup.sh with BACKUP_PUBLIC_KEY writes an encrypted copy that resto
     removeDir(dir);
   }
 });
+
+test('BK-05 without Node 22 on the host, backup.sh encrypts in the little-wins container started from its folder', () => {
+  const dir = tmpDir('backup-docker');
+  try {
+    const db = path.join(dir, 'little-wins.db');
+    require('../server/db').open(db).close();
+    const { publicKey, privateKey } = keygen();
+    // Stand-ins first on PATH: a node that is too old, and a docker that lists three containers
+    // (another app's, another checkout's, this folder's nginx setup) and runs `exec` with the real
+    // Node, recording what it was asked.
+    const bin = path.join(dir, 'bin');
+    fs.mkdirSync(bin);
+    const log = path.join(dir, 'docker.log');
+    fs.writeFileSync(path.join(bin, 'node'), '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+    const docker = (containers) =>
+      fs.writeFileSync(
+        path.join(bin, 'docker'),
+        [
+          '#!/bin/sh',
+          `echo "$*" >> "${log}"`,
+          'case "$1" in',
+          `  ps) printf '${containers}' ;;`,
+          `  exec) shift 4; cd "${ROOT}" && exec "${process.execPath}" "$@" ;;`,
+          'esac',
+          '',
+        ].join('\n'),
+        { mode: 0o755 },
+      );
+    docker(
+      `aaa111 /srv/other-app\\nbbb222 ${ROOT}-copy/deploy/nginx\\nccc333 ${ROOT}/deploy/nginx\\n`,
+    );
+    const env = {
+      PATH: `${bin}:${process.env.PATH}`,
+      HOME: dir,
+      DB_FILE: db,
+      BACKUP_DIR: path.join(dir, 'daily'),
+      OFFSITE_DIR: path.join(dir, 'offsite'),
+      BACKUP_PUBLIC_KEY: publicKey,
+    };
+    const run = spawnSync('sh', [path.join(ROOT, 'scripts', 'backup.sh')], { env });
+    assert.equal(run.status, 0, run.stderr.toString());
+    assert.match(
+      fs.readFileSync(log, 'utf8'),
+      /^exec -i ccc333 node server\/backup-crypto\.js encrypt /m,
+    );
+    const [lwb] = fs.readdirSync(env.OFFSITE_DIR);
+    const [plain] = fs.readdirSync(env.BACKUP_DIR);
+    assert.deepEqual(
+      decrypt(fs.readFileSync(path.join(env.OFFSITE_DIR, lwb)), privateKey),
+      fs.readFileSync(path.join(env.BACKUP_DIR, plain)),
+    );
+
+    // No container started from this folder: the job fails and says why.
+    docker('aaa111 /srv/other-app\\n');
+    const none = spawnSync('sh', [path.join(ROOT, 'scripts', 'backup.sh')], { env });
+    assert.notEqual(none.status, 0);
+    assert.match(none.stderr.toString(), /no running little-wins container started from/);
+  } finally {
+    removeDir(dir);
+  }
+});
