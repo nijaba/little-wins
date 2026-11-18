@@ -389,6 +389,25 @@ code {
   background: #f0b410;
 }
 
+.btn-hosted {
+  background: var(--on-navy);
+  color: var(--navy);
+}
+
+.btn-hosted:hover {
+  background: var(--mist);
+}
+
+.hosted-note {
+  margin: 14px 0 0;
+  font-size: 15px;
+  color: var(--on-navy-2);
+}
+
+.hosted-note a {
+  color: var(--on-navy);
+}
+
 .btn-ghost {
   border: 1px solid var(--on-navy-2);
   color: var(--on-navy);
