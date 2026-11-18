@@ -111,7 +111,45 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
+      # The browsers and the system packages they need, kept between runs. The install usually
+      # takes about 40 s, but a slow package mirror once made it take 18 minutes; from the cache
+      # it needs no mirror. The key changes when package-lock.json (Playwright's version) does.
+      - name: Restore the browsers and their packages
+        id: browsers
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/browser-debs
+          key: browsers-v1-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      # Each try gets 5 minutes; a second try follows a failure or a hang.
+      - name: Install the browsers
+        timeout-minutes: 12
+        run: |
+          echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' |
+            sudo tee /etc/apt/apt.conf.d/99keep-debs >/dev/null
+          mkdir -p ~/.cache/browser-debs
+          if compgen -G ~/.cache/browser-debs/'*.deb' >/dev/null; then
+            sudo cp ~/.cache/browser-debs/*.deb /var/cache/apt/archives/
+          fi
+          ok=
+          for try in 1 2; do
+            if timeout --kill-after=15s 5m npx playwright install --with-deps chromium webkit; then
+              ok=1
+              break
+            fi
+            echo "::warning::Browser install try $try failed or took over 5 minutes"
+          done
+          [ -n "$ok" ] || exit 1
+          cp /var/cache/apt/archives/*.deb ~/.cache/browser-debs/ 2>/dev/null || true
+      - name: Keep the browsers and their packages
+        if: ${{ steps.browsers.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/browser-debs
+          key: ${{ steps.browsers.outputs.cache-primary-key }}
       - run: npx playwright test
       - name: Report
         if: ${{ failure() }}
