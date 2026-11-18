@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added for notices
+
+- Notices on a child's device can be allowed under the code while adding the device, and the device offers to turn them on as soon as it connects, while it's still in the parent's hands.
+
 ### Added in phase 6 (documentation and launch)
 
 - Why Little Wins? (`docs/why.md`): the story behind it, linked from the README, the user guide and the project page.

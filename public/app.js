@@ -27,6 +27,7 @@
   let rev = null; // the weekly review on show (parents, Week tab), or null
   let cdTimer; // countdown of the device code
   let tour = null; // the guided tour while it runs: { role, steps, i, shown, back }
+  let paired = false; // this device just connected with a code: offer notices once, at the top
   try {
     chSel = +localStorage.getItem('child') || null;
   } catch {}
@@ -499,7 +500,10 @@
   // Redeem a pairing code; on success load the child's state.
   async function redeem(code) {
     const r = await post('pair', { code }).catch(() => null);
-    if (r?.ok) return api('state');
+    if (r?.ok) {
+      paired = true;
+      return api('state');
+    }
     const j = r ? await r.json().catch(() => ({})) : {};
     const msg = errText(j, STR.login.codeFailed);
     if (!$('err')) login(); // opened from a #pair= link: show the sign-in screen first
@@ -909,6 +913,10 @@
     video: () => openVideo(),
     'video-close': () => closeVideo(),
     tour: () => startTour(),
+    'pair-no': () => {
+      paired = false;
+      render();
+    },
     'tour-no': () => {
       answerOffer();
       render();
@@ -1143,8 +1151,7 @@
     const E = STR.cheer;
     let h = '';
     // A child's device: offer notices once a parent allowed them.
-    const N = S.notices;
-    if (N?.allowed && !N.on && N.key && pushOK() && Notification.permission !== 'denied') {
+    if (canOfferNotices() && !pairOfferShown()) {
       h += `<div class="card msg"><p class=p0>🔔 ${STR.notices.offer}</p><p class=p8><button class=b data-action=child-notices>${STR.notices.turnOn}</button></p></div>`;
     }
     const m = S.message;
@@ -1588,6 +1595,7 @@
 
   // A child's device: turn on notices (a parent allowed them), the same way as the reminder.
   async function childNoticesOn() {
+    paired = false;
     try {
       if ((await Notification.requestPermission()) !== 'granted') return render();
       const reg = await navigator.serviceWorker.register('/sw.js');
@@ -1697,6 +1705,9 @@
     if (iss?.type === 'pairing/create') {
       const k = S.children.find((x) => x.id === iss.child) || {};
       g += issuedBox(st.pairTitle(esc(k.name || '')), `${st.pairHelp} ${st.pairIOS}`, iss.code);
+      // Notices on that device, allowed in the same moment: the phone offers them as it connects.
+      if (S.push && !demo && k.id)
+        g += `<div class="card center pair-notices"><p class=p0><small>${STR.notices.pairHint}</small></p><p><button class="b g bell" data-action=notify data-id=${k.id} data-on=${k.notify ? 0 : 1} aria-pressed=${k.notify ? 'true' : 'false'}>${k.notify ? STR.notices.on : STR.notices.off}</button></p></div>`;
     } else {
       for (const k of S.children)
         g += `<p class=p0${k === S.children[0] ? ' data-tour=device' : ''}><button class=b ${demo ? 'disabled' : `data-action=pair-dev data-id=${k.id}`}>${st.addDevice(esc(k.name))}</button></p>`;
@@ -1762,7 +1773,7 @@
       P()
         ? ''
         : `<div class=who>${emo(S.children.find((c) => c.id === S.childId))}${esc(S.childName)}</div>`
-    }</header>${demoBar()}${tourOffer()}${chips}<main>`;
+    }</header>${demoBar()}${pairOffer() || tourOffer()}${chips}<main>`;
     if (tab === 'today') h += viewToday();
     if (tab === 'week') h += rev ? viewReview() : viewWeek();
     if (tab === 'rew') h += viewRewards();
@@ -1788,6 +1799,24 @@
     const min = Math.max(1, Math.round(S.demo.idleSeconds / 60));
     const view = P() ? D.childView(esc(S.childName)) : D.parentView;
     return `<div class=demo-bar role=region aria-label="${D.bannerLabel}"><p>${D.banner(min)}</p><div class=btns><button class=b data-action=demo-view>${view}</button><button class=b data-action=tour>${STR.tour.take}</button><button class="b g" data-action=demo-leave>${D.leave}</button></div></div>`;
+  }
+
+  // A child's device: may it offer notices? (A parent allowed them, they're not on yet, and the
+  // browser can show them.)
+  function canOfferNotices() {
+    const N = S.notices;
+    return !!(N?.allowed && !N.on && N.key && pushOK() && Notification.permission !== 'denied');
+  }
+
+  const pairOfferShown = () => paired && !P() && canOfferNotices();
+
+  // Right after a child's device connects, while it's still in the parent's hands: turn on
+  // notices now (the browser only asks after a tap on this device). Once; Not now leaves the
+  // card on Today.
+  function pairOffer() {
+    if (!pairOfferShown()) return '';
+    const N = STR.notices;
+    return `<div class="tour-offer pair-offer" role=region aria-label="${N.turnOn}"><p>📱 ${N.paired(esc(S.childName))} 🔔 ${N.pairOffer}</p><div class=btns><button class=b data-action=child-notices>${N.turnOn}</button><button class="b g" data-action=pair-no>${N.notNow}</button></div></div>`;
   }
 
   // The once-only tour offer (never in a demo: its banner offers the tour every time).
