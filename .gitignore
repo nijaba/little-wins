@@ -20,3 +20,6 @@ playwright-report/
 
 # Project page build
 _site/
+
+# The Telegram bot's state (bot/docker-compose.yml)
+bot/data/

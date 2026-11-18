@@ -1,0 +1,8 @@
+# Used instead of the root .dockerignore when building bot/Dockerfile: the bot needs the guides.
+**
+!bot/package.json
+!bot/package-lock.json
+!bot/src/**
+!docs/user-guide.md
+!docs/admin-guide.md
+!docs/design.md

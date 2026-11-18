@@ -12,6 +12,13 @@ updates:
     groups:
       dev-tools:
         dependency-type: development
+  # The Telegram bot's one runtime dependency (bot/package.json).
+  - package-ecosystem: npm
+    directory: /bot
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
   - package-ecosystem: github-actions
     directory: /
     schedule:

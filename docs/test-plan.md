@@ -592,6 +592,23 @@ Light and dark, following the device (`prefers-color-scheme`).
 | TH-01 | Every text color reads at 4.5:1 or more on its background, in light and in dark | Unit |
 | TH-02 | Colors live in the theme tokens: the rest of the stylesheet uses var(--…) | Unit |
 
+## BT: The Telegram bot
+
+`bot/` with fake Telegram, GitHub and Claude clients (see design, "The Telegram bot").
+
+| ID | Case | Level |
+| --- | --- | --- |
+| BT-01 | A new member is muted and welcomed with six shuffled emoji; only their own tap on the star lets them post; no name in the log | Unit |
+| BT-02 | Wrong taps reshuffle; the third, or five minutes without a tap, removes the member as a kick, and the welcome goes | Unit |
+| BT-03 | A member who leaves before passing is tidied up; bots and repeat joins are not checked | Unit |
+| BT-04 | The state file keeps a pending check across a restart | Unit |
+| BT-05 | A question gets an answer from Claude with the guides cached, low effort, JSON output and no sampling parameters; chat that isn't a question never reaches Claude; questions in every language pass the filter | Unit |
+| BT-06 | Off-topic: silent when not asked, a short decline when asked directly; a reply to the bot is directed; refusals and failed calls show only a short apology | Unit |
+| BT-07 | Answers are limited per person per hour and per day | Unit |
+| BT-08 | A bug report gets a draft; only its author can open the issue, once, summarized without names and labeled; the daily cap holds; no draft without a GitHub token; no content in the log | Unit |
+| BT-09 | The bot leaves groups it doesn't serve, and ignores members still being checked | Unit |
+| BT-10 | The bot refuses to start without its token or Claude key, with a malformed chat ID or half a GitHub setup; bot/.env.example names every setting | Unit |
+
 ## E2E: browser tests
 
 Titles and steps are in [e2e/README.md](../e2e/README.md); each test name starts with its ID.

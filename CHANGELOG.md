@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added for the community (Telegram bot)
+
+- An optional Telegram bot for the project's group (`bot/`, its own container): new members tap the star within 5 minutes or are removed (they may rejoin); it answers questions about Little Wins from the guides with Claude (Haiku 5.5 by default), and turns bug reports and ideas into GitHub issues when their author taps a button. Settings in `bot/.env` (see `bot/.env.example`); setup in the admin guide.
+
 ### Added for operators
 
 - The operator dashboard (`/operator.html`, linked from Settings → Operator): the installation's numbers for a computer screen (activity, sign-ups per week, devices, notices, languages, families due to be deleted as idle) and the hosting settings (sign-up mode, family cap, contact link, idle days, parent allowlist, per-family limits, legal pages, which operator emails, the tour video). A change there applies at once and wins over `.env` until **Back to .env**. `.env.example` marks these settings `[dashboard]`. Migration 13.

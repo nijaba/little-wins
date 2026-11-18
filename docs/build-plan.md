@@ -122,6 +122,8 @@ The owner's priorities for the hosted service (2026-11-17), before phase 8. Depl
   whom to ask
 - [x] An operator dashboard for a computer (owner's request, 2026-11-18): the installation's numbers, and the hosting
   settings changed there, stored in the database and winning over `.env` until reset
+- [x] A Telegram bot for the project's group (owner's request, 2026-11-18): a welcome check for new members,
+  answers about the app from its guides, and GitHub issues from bug reports and ideas
 
 ## Phase 8 (priority 2): a more fun app
 
