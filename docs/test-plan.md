@@ -522,6 +522,7 @@ An emoji for each behavior, penalty, challenge, reward and child.
 | EM-04 | History shows the emoji, and the export keeps it | API |
 | EM-05 | Old data gets the starter emoji for names that match the starter list | Unit |
 | EM-06 | The page, its scripts and styles are revalidated on each load (Cache-Control: no-cache) | API |
+| EM-07 | Every emoji the edit form offers is accepted by the server as is, and none is offered twice | Unit |
 
 ## IC: App icons
 

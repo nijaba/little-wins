@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- More emoji to pick for behaviors and penalties: screens, time, church, school, feelings and fights.
 - Easier to install on a phone: an Install banner where the browser supports it, an Add to Home Screen hint on iPhone and iPad, an iPhone tip to install before typing a pairing code, and a fuller manifest (screenshots, shortcuts).
 - The project page's header twinkles with the app's gold stars and warm glow, and shows the app's icon.
 - The app's footer links to the project page; the project page and README link to the demo and the hosted service.
