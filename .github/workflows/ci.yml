@@ -111,7 +111,16 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
+      # Usually about 40 s; a stalled download once hung until the job's limit. Each try gets
+      # 5 minutes, and a second try follows a failure or a hang.
+      - name: Install the browsers
+        timeout-minutes: 12
+        run: |
+          for try in 1 2; do
+            timeout --kill-after=15s 5m npx playwright install --with-deps chromium webkit && exit 0
+            echo "::warning::Browser install try $try failed or took over 5 minutes"
+          done
+          exit 1
       - run: npx playwright test
       - name: Report
         if: ${{ failure() }}
