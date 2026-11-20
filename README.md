@@ -16,7 +16,7 @@ Parents record good behavior and day-by-day marks on a few weekly challenges. Ch
 - **A guided tour** for parents and children, and optional **demo families** anyone can try with no sign-in
 - One small container, one SQLite file, no third-party scripts or trackers
 
-**Try it:** open the [demo](https://little-wins.nijalabs.com/) and tap **Try a demo**: a made-up family, no sign-in, deleted after 30 minutes unused. A free hosted service runs there too, with a limited number of places: sign in and start your family, or ask for a place in the [little-wins Telegram group](https://t.me/little_wins).
+**Try it:** open the [demo](https://little-wins.nijalabs.com/) and tap **Try a demo**: a made-up family, no sign-in, deleted after 30 minutes unused. A free hosted service runs there too, with a limited number of places: sign in and start your family, or ask for a place in the [little-wins Telegram group](https://t.me/+Vx6JOBNmGB9iMzUx).
 
 Project page: [nijaba.github.io/little-wins](https://nijaba.github.io/little-wins/). New to Little Wins? The [user guide](docs/user-guide.md) walks a family through it. [Why Little Wins?](docs/why.md) tells the story behind it.
 
@@ -71,7 +71,7 @@ See [docs/admin-guide.md](docs/admin-guide.md) for Docker setup, updates, backup
 
 ## Community
 
-The [little-wins Telegram group](https://t.me/little_wins) is the place to get help, talk about the app, share ideas, and ask for an invitation to the hosted service. Bugs and feature requests can also go in [GitHub issues](https://github.com/nijaba/little-wins/issues); security problems go through the [security policy](SECURITY.md), never in public.
+The [little-wins Telegram group](https://t.me/+Vx6JOBNmGB9iMzUx) is the place to get help, talk about the app, share ideas, and ask for an invitation to the hosted service. Bugs and feature requests can also go in [GitHub issues](https://github.com/nijaba/little-wins/issues); security problems go through the [security policy](SECURITY.md), never in public.
 
 ## License
 

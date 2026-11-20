@@ -24,7 +24,7 @@ after(() => fs.rmSync(out, { recursive: true, force: true }));
 // The project's own places: the repository, the project page, the author's hosted service and
 // the project's Telegram group.
 const ALLOWED =
-  /^https:\/\/(github\.com\/nijaba\/little-wins|nijaba\.github\.io|little-wins\.nijalabs\.com|t\.me\/little_wins)(\/|#|$)/;
+  /^https:\/\/(github\.com\/nijaba\/little-wins|nijaba\.github\.io|little-wins\.nijalabs\.com|t\.me\/\+Vx6JOBNmGB9iMzUx)(\/|#|$)/;
 
 test('SITE-01 every local href, src and poster in index.html exists in the built folder', () => {
   const refs = [...html.matchAll(/\b(?:href|src|poster)="([^"]*)"/g)].map((m) => m[1]);
@@ -92,7 +92,7 @@ test('SITE-06 the hero offers the hosted service and the Telegram group; the foo
     hero,
     /<a class="btn [^"]*btn-hosted" href="https:\/\/little-wins\.nijalabs\.com\/">Start your family, free<\/a>/,
   );
-  assert.match(hero, /href="https:\/\/t\.me\/little_wins">little-wins Telegram group<\/a>/);
+  assert.match(hero, /href="https:\/\/t\.me\/\+Vx6JOBNmGB9iMzUx">little-wins Telegram group<\/a>/);
   const foot = html.match(/<footer[\s\S]*?<\/footer>/)?.[0] || '';
-  assert.match(foot, /href="https:\/\/t\.me\/little_wins"/);
+  assert.match(foot, /href="https:\/\/t\.me\/\+Vx6JOBNmGB9iMzUx"/);
 });
