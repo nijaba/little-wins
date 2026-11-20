@@ -1,0 +1,45 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "little-wins-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "site-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4100",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "_site"
+      ],
+      "port": 4100
+    },
+    {
+      "name": "operator-preview",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PORT=3100",
+        "APP_BASE_URL=http://localhost:3100",
+        "LITTLE_WINS_FAKE_SSO=1",
+        "DEMO_FAMILIES=1",
+        "SIGNUP_MODE=open",
+        "LIMIT_FAMILIES=20",
+        "OPERATOR_ALLOWLIST=google:bob@example.com",
+        "DATABASE_PATH=/tmp/little-wins-operator-preview.db",
+        "node",
+        "server/index.js"
+      ],
+      "port": 3100
+    }
+  ]
+}
