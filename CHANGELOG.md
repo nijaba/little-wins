@@ -15,7 +15,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Added for the community
 
 - The project page's hero offers the free hosted service ("Start your family, free"), with a note pointing to the Telegram group when it's full.
-- The [little-wins Telegram group](https://t.me/little_wins) for help, ideas and invitations: on the project page (top bar, hero, footer), in the README, the user guide, the admin guide's troubleshooting and the contributing guide.
+- The [little-wins Telegram group](https://t.me/+Vx6JOBNmGB9iMzUx) for help, ideas and invitations: on the project page (top bar, hero, footer), in the README, the user guide, the admin guide's troubleshooting and the contributing guide. Every link uses the group's invite link, the one way to join, for every language.
 
 ### Added for notices
 

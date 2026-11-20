@@ -256,7 +256,7 @@ It shows counts only: families, unclaimed families (no parent yet), parents, chi
 
 ## The Telegram bot
 
-An optional bot for a Telegram group (the project's is [little-wins](https://t.me/little_wins)): it checks that new members are people (tap the star within 5 minutes, or they're removed and may rejoin later), answers questions about Little Wins from these guides with Claude, and offers to turn bug reports and ideas into GitHub issues. It runs in its own container next to the app; the app doesn't need it. How it behaves: [design](design.md#the-telegram-bot-optional-bot).
+An optional bot for a Telegram group (the project's is [little-wins](https://t.me/+Vx6JOBNmGB9iMzUx)): it checks that new members are people (tap the star within 5 minutes, or they're removed and may rejoin later), answers questions about Little Wins from these guides with Claude, and offers to turn bug reports and ideas into GitHub issues. It runs in its own container next to the app; the app doesn't need it. How it behaves: [design](design.md#the-telegram-bot-optional-bot).
 
 **Set it up:**
 
@@ -614,7 +614,7 @@ The image checks `GET /healthz` every 30 seconds. `docker compose ps` shows `Up 
 
 The `ExperimentalWarning: SQLite is an experimental feature` line in the logs is normal on Node 24.
 
-Still stuck? Ask in the [little-wins Telegram group](https://t.me/little_wins), where other people running Little Wins are too. Leave out your secrets, your address and anything about a family.
+Still stuck? Ask in the [little-wins Telegram group](https://t.me/+Vx6JOBNmGB9iMzUx), where other people running Little Wins are too. Leave out your secrets, your address and anything about a family.
 
 ## Testing
 
