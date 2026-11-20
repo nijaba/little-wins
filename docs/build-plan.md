@@ -149,4 +149,6 @@ strict CSP, in light and dark mode, and still with reduced motion. Each item get
 
 - [ ] Launch announcement (blog post), linked from the README and the project page; a draft for parents is in the
   owner's git-ignored notes, waiting for the go-ahead (moved from phase 6, 2026-11-17)
+- [ ] A blog page on the project site (`site/`, published by GitHub Pages) for the launch post and later ones: the same
+  look as the project page, no trackers or third-party scripts, linked from its top bar and footer (2026-11-20)
 - [x] Dark and light mode: follow the device's setting (`prefers-color-scheme`), with colors as CSS variables; check contrast in both, including the progress ring, marks and buttons
