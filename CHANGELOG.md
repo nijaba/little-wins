@@ -1,8 +1,12 @@
 # Changelog
 
-All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). There are no tagged releases yet, so everything so far is under Unreleased. `package.json` says version 0.1.0.
+All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html); each one is a git tag `vX.Y.Z`, which publishes the container image to `ghcr.io/nijaba/little-wins`.
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-11-20
+
+The first release.
 
 ### Added for the community (Telegram bot)
 
@@ -96,3 +100,6 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Static files are served from an allowlist and device codes look uniform (CodeQL findings).
 - Radio buttons keep their natural width.
 - A lone button on a line wraps, so German text fits 360 px.
+
+[Unreleased]: https://github.com/nijaba/little-wins/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/nijaba/little-wins/releases/tag/v0.1.0
