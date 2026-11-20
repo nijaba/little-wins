@@ -1,6 +1,6 @@
 {
   "name": "little-wins-bot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The Little Wins Telegram group's bot: welcome check, answers about the app, GitHub issues",
   "license": "Apache-2.0",
   "private": true,

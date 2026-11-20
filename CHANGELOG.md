@@ -4,9 +4,17 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-20
+
+The first release with a published container image (0.1.0's release stopped at a test).
+
+### Fixed
+
+- The demo's made-up history always has a recent warning for the second child, so its test no longer fails on some weekdays (it stopped the 0.1.0 release before the image was published).
+
 ## [0.1.0] - 2026-11-20
 
-The first release.
+The first release (tagged; no container image was published).
 
 ### Added for the community (Telegram bot)
 
@@ -101,5 +109,6 @@ The first release.
 - Radio buttons keep their natural width.
 - A lone button on a line wraps, so German text fits 360 px.
 
-[Unreleased]: https://github.com/nijaba/little-wins/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/nijaba/little-wins/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/nijaba/little-wins/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/nijaba/little-wins/releases/tag/v0.1.0
