@@ -112,6 +112,18 @@ function seedDemo(repo, { timezone, language, now = Date.now() }) {
           ts: localTime(tz, day, 18, 30),
         });
       }
+      // Always one recent warning for the second child, without drawing from the random stream (which
+      // would change the rest of the history): the random ones can all fall before the last 60 entries
+      // a parent's history shows, depending on the weekday.
+      if (n === 1 && day === shift(td, -2)) {
+        rows.push({
+          kind: 'warn',
+          item: targets[0],
+          points: 0,
+          day,
+          ts: localTime(tz, day, 18, 45),
+        });
+      }
       if (n === 1 && penalty && (day === shift(td, -12) || day === shift(td, -3))) {
         rows.push({
           kind: 'points',
